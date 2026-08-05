@@ -33,7 +33,7 @@
 }
 
 .trackOn {
-  background-color: var(--color-brand);
+  background-color: var(--switch-color-on);
 }
 
 .track:disabled {

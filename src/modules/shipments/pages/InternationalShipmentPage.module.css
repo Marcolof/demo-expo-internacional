@@ -117,3 +117,27 @@
   flex-shrink: 0;
   white-space: nowrap;
 }
+
+/* --- Paso Paquete: medidas ------------------------------------------------ */
+
+/* Fila de tres medidas (largo / ancho / alto), Figma 8040:120214. */
+.measuresRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+  width: 100%;
+}
+
+/* "Guardar medida", alineado a la derecha bajo la fila de medidas. */
+.saveMeasureRow {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.saveMeasure {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-link);
+  text-decoration: underline;
+}
