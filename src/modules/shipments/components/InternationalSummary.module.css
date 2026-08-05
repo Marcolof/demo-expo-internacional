@@ -1,0 +1,108 @@
+/*
+ * Panel Resumen del flujo internacional — diseño de Figma (Mi Correo 2.0,
+ * node 7323:94782 "resumen stepper internacional").
+ *
+ * Tarjeta blanca con: stepper arriba, secciones colapsables
+ * (Declaración / Paquete / Origen / Destino) y botón Pagar al pie.
+ */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow: hidden;
+  background-color: var(--surface-raised);
+  border-radius: 24px; /* Figma: radius 24 */
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  flex: 1 1 auto;
+  padding: var(--space-6) var(--space-6) var(--space-10);
+}
+
+.heading {
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  line-height: 24px;
+}
+
+/* --- Sección colapsable --------------------------------------------------- */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.sectionTitle {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: 24px;
+}
+
+.edit {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+  color: var(--correo-blue);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: 24px;
+}
+
+.chevron {
+  transition: transform var(--transition-base);
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+/* --- Filas etiqueta / valor ---------------------------------------------- */
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.row {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  width: 100%;
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.rowLabel {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.rowValue {
+  flex-shrink: 0;
+  white-space: nowrap;
+}

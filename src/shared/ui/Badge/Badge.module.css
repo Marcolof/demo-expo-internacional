@@ -1,0 +1,48 @@
+/* Píldora de estado. Medidas de los tokens `--badge-*`. */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-width: 100%;
+  padding: var(--badge-padding);
+  border: var(--border-width-thin) solid transparent;
+  border-radius: var(--badge-radius);
+  font-size: var(--badge-font-size);
+  font-weight: var(--badge-font-weight);
+  line-height: var(--line-height-snug);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.neutral {
+  background-color: var(--surface-sunken);
+  color: var(--text-muted);
+  border-color: var(--border-subtle);
+}
+
+.info {
+  background-color: var(--feedback-info-bg);
+  color: var(--feedback-info-text);
+  border-color: var(--border-subtle);
+}
+
+.success {
+  background-color: var(--feedback-success-bg);
+  color: var(--feedback-success-text);
+  border-color: var(--feedback-success-border);
+}
+
+/* Sin `--feedback-warning-border`: se usa el amarillo de marca. */
+.warning {
+  background-color: var(--feedback-warning-bg);
+  color: var(--feedback-warning-text);
+  border-color: var(--border-strong);
+}
+
+.danger {
+  background-color: var(--feedback-danger-bg);
+  color: var(--feedback-danger-text);
+  border-color: var(--feedback-danger-border);
+}

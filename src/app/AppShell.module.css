@@ -1,0 +1,28 @@
+/* Chrome de la aplicación: header fijo arriba, riel a la izquierda, contenido
+ * y pie. Los desplazamientos por el header y el riel se aplican acá. */
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding-top: var(--header-height);
+  background-color: var(--surface-page);
+}
+
+@media (min-width: 768px) {
+  .shell {
+    margin-left: var(--sidebar-rail-width);
+  }
+}
+
+.main {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Deja aire abajo para que la barra de demo fija no tape el contenido. */
+.withDemoToolbar {
+  padding-bottom: 3.5rem;
+}

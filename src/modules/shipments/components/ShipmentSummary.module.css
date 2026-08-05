@@ -1,0 +1,139 @@
+/*
+ * Panel blanco del resumen — `#infoRe > .border.bg-white.p-4.p-md-5.pt-4`
+ * El centrado (col-10) lo aplica el padre en NewShipmentPage.
+ *
+ * Cascada real (confirmada con getComputedStyle sobre el HTML de
+ * referencia): en base sólo aplican `.p-4` + `.pt-4` (24px parejo, `pt-4`
+ * es redundante con el top de `.p-4`). En md+ entra `.p-md-5`, que fija LAS
+ * CUATRO esquinas a 48px — pisa incluso el top de `.pt-4`, porque en la
+ * hoja de estilos aparece después. No queda ningún lado en 24px en md+.
+ *
+ * El botón "Pagar" (`payButton`) va DENTRO de esta misma tarjeta, pegado al
+ * fondo y a todo el ancho. Por eso el padding real vive en `.content`
+ * (un hijo), y `.panel` queda sin padding propio, con `overflow:hidden` +
+ * radio inferior: es la tarjeta la que recorta la esquina del botón, no el
+ * botón (que se renderiza `shape="square"`, sin radio propio).
+ */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--surface-raised);
+  border: var(--border-width-thin) solid var(--white);
+  border-radius: var(--pay-button-clip-radius);
+  overflow: hidden;
+  min-height: 100%;
+}
+
+.content {
+  flex: 1 1 auto;
+  padding: var(--space-6); /* .p-4 + .pt-4 → 24px parejo */
+}
+
+@media (min-width: 768px) {
+  .content {
+    padding: var(--space-12); /* .p-md-5 → 48px parejo, gana en las 4 esquinas */
+  }
+}
+
+/* El botón ocupa todo el ancho de `.panel`, sin el padding de `.content`. */
+.payButtonSlot {
+  flex-shrink: 0;
+}
+
+/* Stepper: ya trae max-width + margin:auto; acá reforzamos el centrado. */
+.stepperWrap {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: var(--space-3);
+}
+
+.title {
+  margin-bottom: var(--space-4);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+/* --- Bloque colapsable -------------------------------------------------- */
+
+.block {
+  margin-bottom: var(--space-4);
+}
+
+.blockHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.blockTitle {
+  flex: 1 1 auto;
+  font-size: 15px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  text-align: left;
+}
+
+.edit {
+  flex-shrink: 0;
+  font-size: var(--summary-edit-size);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-link);
+}
+
+.edit:hover {
+  text-decoration: underline;
+}
+
+.edit:disabled {
+  color: var(--text-disabled);
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+.toggle {
+  flex-shrink: 0;
+  display: inline-flex;
+  color: var(--text-link);
+}
+
+.chevron {
+  transition: transform var(--transition-base);
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+/* --- Cuerpo del bloque -------------------------------------------------- */
+
+.body {
+  margin-top: var(--space-2);
+}
+
+.row {
+  margin-bottom: var(--space-3);
+}
+
+.rowInline {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+}
+
+.label {
+  display: block;
+  font-size: var(--summary-label-size);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-muted);
+}
+
+.value {
+  display: block;
+  font-size: var(--summary-value-size);
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}

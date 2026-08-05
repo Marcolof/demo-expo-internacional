@@ -1,0 +1,138 @@
+/* Sistema de label flotante.
+ * Réplica de `estilos-inputs.css` (.form-group.form-floating). Lo comparten
+ * Input, Select y Textarea para no duplicar el comportamiento.
+ *
+ * El label descansa centrado sobre el campo y sube al enfocarlo o cuando el
+ * campo tiene valor. La detección de "tiene valor" es CSS puro
+ * (`:not(:placeholder-shown)`), igual que en el original — por eso todo input
+ * necesita un `placeholder`. */
+
+.group {
+  margin-bottom: var(--space-1);
+}
+
+/* Referencia de posicionamiento del label flotante: sólo abarca el control,
+ * nunca el hint/error (ver comentario en Field.tsx). */
+.controlWrap {
+  position: relative;
+  width: 100%;
+}
+
+/* --- Label -------------------------------------------------------------- */
+
+.label {
+  position: absolute;
+  top: 50%;
+  left: var(--field-label-offset-x);
+  transform: translateY(-50%);
+  width: auto;
+  height: auto;
+  max-width: calc(100% - var(--field-label-offset-x) * 2);
+  padding: 0;
+  border: none;
+  color: var(--field-label-color);
+  font-size: var(--field-label-font-size);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  transition: var(--transition-fast);
+}
+
+/* El textarea es alto: su label reposa arriba, no en el centro. */
+.labelTextarea {
+  top: 20%;
+}
+
+/* Estado flotado. Se aplica por CSS (input con valor / foco) o por clase
+ * (`.labelFloated`) cuando el control no puede tener placeholder — el select. */
+.control:not(:placeholder-shown) + .label,
+.control:focus + .label,
+.labelFloated {
+  top: 10px;
+  transform: translateY(-110%);
+  padding: var(--field-label-padding-floated);
+  background: var(--field-label-backdrop);
+  font-size: var(--field-label-font-size-floated);
+  color: var(--field-label-color-active);
+}
+
+/* Con valor pero sin foco el label vuelve al gris: sólo se pinta de azul
+ * mientras el campo está activo. */
+.control:not(:focus):not(:placeholder-shown) + .label {
+  color: var(--field-label-color);
+}
+
+.labelFloated:not(.labelActive) {
+  color: var(--field-label-color);
+}
+
+/* --- Control ------------------------------------------------------------ */
+
+.control {
+  display: block;
+  width: 100%;
+  height: var(--field-height);
+  padding: var(--field-padding);
+  border: var(--field-border);
+  border-radius: var(--field-radius);
+  background-color: var(--field-bg);
+  color: var(--field-text);
+  font-family: var(--font-family-base);
+  font-size: var(--field-font-size);
+  line-height: var(--line-height-snug);
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+/* El placeholder duplica el label en el original: se oculta para que no se
+ * lea dos veces la misma etiqueta. */
+.control::placeholder {
+  color: transparent;
+}
+
+.control:focus {
+  border: var(--field-border-focus);
+  box-shadow: none;
+}
+
+/* El borde azul de `:focus` YA es el indicador de foco: no hace falta el
+ * anillo de accesibilidad (`:focus-visible` en globals.css) encima, que
+ * dibujaba un segundo marco exterior. `.group` sube la especificidad para
+ * ganarle a esa regla global sin importar el orden de bundling. */
+.group .control:focus-visible {
+  outline: none;
+}
+
+.control:disabled {
+  background-color: var(--surface-sunken);
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
+.controlTextarea {
+  height: var(--field-textarea-height);
+  resize: none;
+}
+
+.controlInvalid,
+.controlInvalid:focus {
+  border-color: var(--feedback-danger-strong);
+}
+
+/* --- Mensajes ----------------------------------------------------------- */
+
+.hint {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.error {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--feedback-danger-strong);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}

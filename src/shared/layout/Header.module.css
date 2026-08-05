@@ -1,0 +1,260 @@
+/*
+ * Header — layout estable + paddings del HTML de referencia.
+ *
+ * Estructura visual:
+ *   [hamburguesa][logo] -------------------- [Nuevo envío][avatar + texto]
+ *
+ * Padding derecho (>=992px), del borde al texto "Mi cuenta":
+ *   .container-fluid     → 0.75rem   (--bs-gutter-x * 0.5)
+ *   #navbarTogglerDemo01 → 2.5rem    (estilos.css)
+ *   li.px-2              → 0.5rem
+ *   .col-8.pe-4          → 1.5rem
+ */
+
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-header);
+  min-height: var(--header-height);
+  background-color: var(--surface-brand);
+}
+
+/* .container-fluid del navbar */
+.bar {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: var(--header-height);
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+/*
+ * .btn-menu — estático.
+ * En la referencia el `padding` de la clase está COMENTADO (estilos.css:401),
+ * por lo que el <button> real usa el padding por defecto del navegador
+ * (~1px 6px). Como acá es un <span> sin padding de UA, lo fijamos explícito
+ * a 6px horizontal para que el icono arranque en el mismo punto (12px del
+ * container + 6px = 18px), y no en 24px como con el padding comentado.
+ */
+.btnMenu {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0.25rem 0.375rem;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: default;
+}
+
+.togglerIcon {
+  display: block;
+  width: 1.5em;
+  height: 1.5em;
+}
+
+/*
+ * #navbarTogglerDemo01 — .collapse.navbar-collapse.container.px-3
+ * En el HTML de referencia este bloque lleva la clase Bootstrap `.container`:
+ * ancho máximo responsivo + márgenes automáticos (centrado) + padding `.px-3`.
+ * Eso genera el "aire" entre la hamburguesa y el logo, y la indentación del
+ * contenido en pantallas anchas. Reproducimos esos breakpoints de Bootstrap.
+ */
+.main {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: var(--header-height);
+  width: 100%;
+  margin-left: auto; /* .container — centra en el espacio libre */
+  margin-right: auto;
+  padding-left: 1rem; /* .px-3 */
+  padding-right: 1rem;
+}
+
+/* Anchos de contenedor Bootstrap. El navbar es expand-lg → sólo aplican ≥992px. */
+@media (min-width: 992px) {
+  .main {
+    max-width: 960px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .main {
+    max-width: 1140px;
+  }
+}
+
+@media (min-width: 1400px) {
+  .main {
+    max-width: 1320px;
+  }
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-right: 1rem;
+}
+
+/*
+ * .img-fluid del navbar-brand — la referencia no fuerza altura: el PNG
+ * (197×28) se muestra a tamaño natural. Fijamos 28px para replicarlo
+ * exactamente y evitar el logo sobredimensionado.
+ */
+.brandLogo {
+  height: 28px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+/* #indicadores.ms-auto */
+.actions {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* li.px-2 */
+.newShipment {
+  display: inline-flex;
+  align-items: center;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  color: var(--text-on-brand);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  cursor: default;
+}
+
+.newShipmentIcon {
+  width: var(--menu-icon-size);
+  height: var(--menu-icon-size);
+  padding-left: 0.5rem; /* img.px-2 */
+  padding-right: 0.5rem;
+  box-sizing: content-box;
+}
+
+/* Bloque usuario: avatar + texto. pe-4 del .col-8 del reference. */
+.user {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-left: 0.5rem; /* li.px-2 */
+  padding-right: calc(0.5rem + 1.5rem); /* li.px-2 + .pe-4 */
+}
+
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #fff;
+}
+
+.avatarLetter {
+  font-size: larger;
+  font-weight: bolder;
+  color: var(--color-accent);
+  line-height: 1;
+}
+
+.userTrigger {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-on-brand);
+  text-align: left;
+  line-height: normal;
+  cursor: pointer;
+}
+
+.userGreeting {
+  font-size: 15px;
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.userSubtitle {
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+
+.chevron {
+  margin-left: 0.25rem;
+  margin-right: 0.25rem;
+  transition: transform var(--transition-base);
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+@media (max-width: 767.98px) {
+  .userTrigger {
+    display: none;
+  }
+
+  .user {
+    padding-right: 0.5rem;
+  }
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  right: 0;
+  z-index: var(--z-header);
+  min-width: 10rem;
+  max-height: 350px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: var(--dropdown-padding-y) 0;
+  background-color: var(--surface-raised);
+  border: var(--border-width-thin) solid var(--border-subtle);
+  border-radius: 0;
+  box-shadow: var(--dropdown-shadow);
+}
+
+.dropdownItem {
+  display: block;
+  width: 100%;
+  padding: var(--dropdown-item-padding);
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: var(--dropdown-item-font-size);
+  font-weight: var(--font-weight-medium);
+  text-align: left;
+  white-space: nowrap;
+  cursor: default;
+}
+
+.dropdownItem:hover {
+  background-color: var(--surface-sunken);
+  text-decoration: none;
+}
+
+.dropdownDivider {
+  margin: var(--space-1) auto;
+  border-top: var(--border-width-thin) solid var(--border-subtle);
+}

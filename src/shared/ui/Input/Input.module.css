@@ -1,0 +1,14 @@
+/* Ajustes propios del <input>. El look base vive en Field.module.css. */
+
+.input {
+  /* Oculta los spinners de los inputs numéricos: el original usa type="text"
+   * para peso y medidas, y las flechitas rompen el alto de 38px. */
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.input::-webkit-outer-spin-button,
+.input::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}

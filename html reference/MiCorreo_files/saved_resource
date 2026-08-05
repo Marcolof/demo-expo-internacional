@@ -1,0 +1,15 @@
+function loadScript(url){
+  if (document.getElementById('wcchat_script') == null) {
+  var script = document.createElement("script");
+  script.type = "text/javascript";
+  script.id = "wcchat_script";
+  script.src = url;
+  document.getElementsByTagName("head")[0].appendChild(script);
+  }
+}
+
+document.addEventListener('wcxChatLoaded', function() {
+  window.wcxChat.init({"assetHost":"https://wcentrix.net","accountID":"Co3929","wcchatID":"4591bc6a40274298864337974582b6a2","available_agent":false,"show_tab":false,"initStatus":"contracted","codeArea":"SRH27346","tabTooltip":"Chat MiCorreo","tabOffline":"","tabColor":"#152663","tabImageURL":"","automatic_chat":false,"automatic_chat_time":20,"tabBottom":0,"altText":"","language":"es","allowedDomains":[],"openNewWindow":false,"alwaysShowActiveChat":false,"tabPosition":"right"})
+})
+
+loadScript("https://f.wcentrix.com/tabhelp/external/wcbox-dist/wcchat.v6.js")

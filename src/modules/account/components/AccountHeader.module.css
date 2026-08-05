@@ -1,0 +1,81 @@
+/* Tarjeta del perfil. Mismo look que las tarjetas del panel de inicio. */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: var(--space-6);
+  background-color: var(--surface-raised);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-row);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+/* Mismo círculo con inicial que el header de la app. */
+.avatar {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: var(--avatar-size);
+  height: var(--avatar-size);
+  background-color: var(--surface-brand);
+  border-radius: var(--radius-full);
+  color: var(--text-on-brand);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+}
+
+.identity {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.name {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-snug);
+  color: var(--text-primary);
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-4);
+  margin: 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.fieldLabel {
+  font-size: var(--summary-label-size);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-muted);
+}
+
+.fieldValue {
+  margin: 0;
+  font-size: var(--summary-value-size);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}

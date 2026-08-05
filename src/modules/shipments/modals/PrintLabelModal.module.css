@@ -1,0 +1,14 @@
+/* Selección de documentación a imprimir. */
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  text-align: left;
+}
+
+.expiry {
+  margin-top: var(--space-4);
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+}

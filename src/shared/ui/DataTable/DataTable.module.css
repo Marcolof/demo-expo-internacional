@@ -1,0 +1,130 @@
+/* Tabla de datos. Réplica de `.mcr-table` de estilos.css: `border-collapse:
+ * separate` con separación vertical, sombra y radio por fila (la primera celda
+ * redondea a la izquierda y la última a la derecha), encabezado sticky. */
+
+.scroller {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 var(--table-row-gap);
+  font-size: var(--font-size-sm);
+}
+
+.caption {
+  caption-side: top;
+  padding-bottom: var(--space-2);
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+  text-align: left;
+}
+
+/* --- Encabezado --------------------------------------------------------- */
+
+/* No hay token de capa para "dentro de un componente": se usa el más bajo de
+ * la escala que igual queda por debajo del header de la app. */
+.head {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sidebar-rail);
+}
+
+.headerCell {
+  /* El fondo evita que las filas se vean por detrás al scrollear. */
+  background-color: var(--surface-page);
+  padding: var(--space-2) var(--space-3);
+  color: var(--text-primary);
+  font-weight: var(--table-header-font-weight);
+  line-height: var(--line-height-snug);
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+
+.headerHint {
+  display: block;
+  color: var(--text-muted);
+  font-size: var(--table-header-small-size);
+  font-weight: var(--font-weight-medium);
+}
+
+/* --- Filas -------------------------------------------------------------- */
+
+.row {
+  box-shadow: var(--table-row-shadow);
+  border-radius: var(--table-radius);
+}
+
+.cell {
+  background-color: var(--surface-raised);
+  padding: var(--space-3);
+  color: var(--text-primary);
+  line-height: var(--line-height-snug);
+  vertical-align: middle;
+  transition: background-color var(--transition-fast);
+}
+
+.row .cell:first-child {
+  border-radius: var(--table-radius) 0 0 var(--table-radius);
+}
+
+.row .cell:last-child {
+  border-radius: 0 var(--table-radius) var(--table-radius) 0;
+}
+
+.row:hover .cell {
+  background-color: var(--table-row-hover-bg);
+}
+
+.rowClickable {
+  cursor: pointer;
+}
+
+/* --- Vacío y carga ------------------------------------------------------ */
+
+.emptyCell {
+  border-radius: var(--table-radius);
+  padding: 0;
+}
+
+/* La fila del estado vacío no es interactiva: no se pinta al pasar el mouse. */
+.row:hover .emptyCell {
+  background-color: var(--surface-raised);
+}
+
+.skeleton {
+  display: block;
+  width: 100%;
+  height: var(--space-4);
+  border-radius: var(--radius-xs);
+  background-color: var(--surface-sunken);
+  animation: skeletonPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes skeletonPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* --- Alineación --------------------------------------------------------- */
+
+.alignLeft {
+  text-align: left;
+}
+
+.alignCenter {
+  text-align: center;
+}
+
+.alignRight {
+  text-align: right;
+}

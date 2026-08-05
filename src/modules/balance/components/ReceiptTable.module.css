@@ -1,0 +1,25 @@
+/* Grilla de comprobantes. El scroll horizontal lo maneja el propio DataTable. */
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.number {
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-link);
+  white-space: nowrap;
+}
+
+.total {
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.empty {
+  margin: var(--space-0);
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+}

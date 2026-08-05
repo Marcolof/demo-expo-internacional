@@ -1,0 +1,51 @@
+/* Tarjeta de domicilio. Las acciones quedan pegadas abajo para que todas las
+ * tarjetas de la grilla alineen sus botones aunque el texto mida distinto. */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  height: 100%;
+  padding: var(--space-5);
+  background-color: var(--surface-raised);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-row);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.alias {
+  margin: 0;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-link);
+  overflow-wrap: anywhere;
+}
+
+.address {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.observations {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding-top: var(--space-3);
+}

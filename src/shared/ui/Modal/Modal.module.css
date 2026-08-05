@@ -1,0 +1,122 @@
+/* Modal. Réplica de los `.modal` de Bootstrap usados en el HTML de referencia:
+ * esquinas de 25px, header sin borde y footer centrado. */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal-backdrop);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background-color: var(--modal-backdrop);
+  overflow-y: auto;
+}
+
+.dialog {
+  position: relative;
+  z-index: var(--z-modal);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: calc(100vh - var(--space-8));
+  background-color: var(--modal-bg);
+  border-radius: var(--modal-radius);
+  box-shadow: var(--shadow-modal);
+}
+
+.sizeSm {
+  max-width: var(--modal-width-sm);
+}
+
+.sizeMd {
+  max-width: var(--modal-width-md);
+}
+
+.sizeLg {
+  max-width: var(--modal-width-lg);
+}
+
+/* Alto acotado (no relativo al viewport): el body interno scrollea. */
+.sizeXl {
+  max-width: var(--modal-width-xl);
+  max-height: min(var(--modal-max-height-xl), calc(100vh - var(--space-8)));
+}
+
+/* --- Header ------------------------------------------------------------- */
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-6) var(--space-6) 0;
+  border: none;
+}
+
+.headerBare {
+  /* Sin título: sólo la X, alineada a la derecha. */
+  justify-content: flex-end;
+  padding: var(--space-4) var(--space-4) 0;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--modal-title-size);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.close {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  color: var(--text-muted);
+  font-size: var(--font-size-lg);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.close:hover {
+  background-color: var(--surface-sunken);
+  color: var(--text-primary);
+}
+
+/* --- Cuerpo ------------------------------------------------------------- */
+
+.body {
+  padding: var(--space-4) var(--space-6);
+  overflow-y: auto;
+  font-size: var(--modal-body-size);
+  color: var(--text-primary);
+}
+
+.bodyCentered {
+  text-align: center;
+}
+
+/* --- Footer ------------------------------------------------------------- */
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-6) var(--space-8);
+  border: none;
+}
+
+@media (max-width: 575px) {
+  .footer {
+    flex-direction: column-reverse;
+  }
+
+  .footer > * {
+    width: 100%;
+  }
+}

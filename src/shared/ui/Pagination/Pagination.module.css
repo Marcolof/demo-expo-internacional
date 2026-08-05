@@ -1,0 +1,47 @@
+/* Paginador. Los controles son `Button`; acá sólo se ajusta el ancho de los
+ * números (con el padding del botón quedarían muy anchos) y el flujo, que
+ * envuelve en mobile para no generar scroll horizontal. */
+
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) 0;
+}
+
+.range {
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.pages {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.pages button {
+  min-width: var(--space-8);
+  padding-left: var(--space-2);
+  padding-right: var(--space-2);
+}
+
+.gap {
+  padding: 0 var(--space-1);
+  color: var(--text-subtle);
+  font-size: var(--font-size-sm);
+  user-select: none;
+}

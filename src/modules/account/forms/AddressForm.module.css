@@ -1,0 +1,32 @@
+/* Grilla de 4 columnas. Las filas quedan completas: "Calle + Número",
+ * "Piso + Depto + Localidad" y "Provincia + CP". En mobile pasa a una columna. */
+
+.form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-4) var(--space-3);
+}
+
+.full {
+  grid-column: 1 / -1;
+}
+
+.wide {
+  grid-column: span 3;
+}
+
+.half {
+  grid-column: span 2;
+}
+
+@media (max-width: 640px) {
+  .form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .full,
+  .wide,
+  .half {
+    grid-column: 1 / -1;
+  }
+}
