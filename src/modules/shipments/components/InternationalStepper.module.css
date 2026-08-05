@@ -21,22 +21,69 @@
   height: var(--stepper-intl-dot-size);
 }
 
-.dot {
-  display: block; /* es un <span>: sin esto width/height 100% se ignoran (colapsa a 0) */
-  box-sizing: border-box;
+/*
+ * Botón que ocupa `.step`: reset total + centrado, porque el disco del paso
+ * actual (`--stepper-dot-size-active`, 30px) es más grande que el resto
+ * (`--stepper-intl-dot-size`, 24px) y necesita sobresalir simétrico.
+ */
+.hitArea {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   height: 100%;
-  border-radius: 50%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
 }
 
-/* Paso en curso: disco amarillo lleno. */
+.hitArea:disabled {
+  cursor: default;
+}
+
+.dot {
+  display: flex; /* dotCurrent centra su disco interior (::before) adentro */
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border-radius: 50%;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+/* Paso en curso: anillo amarillo + disco amarillo interior (Figma 8040:120236). */
 .dotCurrent {
-  background-color: var(--correo-yellow);
+  width: var(--stepper-dot-size-active);
+  height: var(--stepper-dot-size-active);
+  border: 1px solid var(--stepper-color-active);
+  background-color: var(--stepper-dot-bg);
+}
+
+.dotCurrent::before {
+  content: '';
+  width: var(--stepper-intl-dot-size);
+  height: var(--stepper-intl-dot-size);
+  border-radius: 50%;
+  background-color: var(--stepper-color-active);
+}
+
+/* Paso ya visitado (desbloqueado, no actual): disco azul sólido, clicable para volver. */
+.dotVisited {
+  width: var(--stepper-intl-dot-size);
+  height: var(--stepper-intl-dot-size);
+  border: none;
+  background-color: var(--stepper-color-visited);
+}
+
+.hitArea:not(:disabled):hover .dotVisited {
+  opacity: 0.8;
 }
 
 /* Pasos incompletos: círculo con borde gris. */
 .dotPending {
-  background-color: var(--surface-raised);
+  width: var(--stepper-intl-dot-size);
+  height: var(--stepper-intl-dot-size);
+  background-color: var(--stepper-dot-bg);
   border: 2px solid var(--stepper-color-pending);
 }
 
@@ -58,4 +105,10 @@
   flex: 1 1 0;
   height: 2px;
   background-color: var(--stepper-color-pending);
+  transition: background-color var(--transition-fast);
+}
+
+/* Tramo ya recorrido (hasta el paso actual, inclusive): azul de marca. */
+.connectorPassed {
+  background-color: var(--stepper-color-visited);
 }

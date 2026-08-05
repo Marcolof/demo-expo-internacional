@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 4200
+    },
+    {
+      "name": "micorreo-maqueta-worktree",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "--port", "4310", "--strictPort"],
+      "port": 4310
     }
   ]
 }
