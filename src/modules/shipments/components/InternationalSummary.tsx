@@ -188,9 +188,10 @@ export function InternationalSummary({
   const unlockedIndices =
     unlockedSteps !== undefined
       ? new Set(
-          INTERNATIONAL_STEPS.map((s, i) => i).filter((i) =>
-            unlockedSteps.has(INTERNATIONAL_STEPS[i]),
-          ),
+          INTERNATIONAL_STEPS.map((_, i) => i).filter((i) => {
+            const step = INTERNATIONAL_STEPS[i]
+            return step !== undefined && unlockedSteps.has(step)
+          }),
         )
       : undefined
 
@@ -204,7 +205,10 @@ export function InternationalSummary({
           showLabels
           onStepClick={
             onStepClick !== undefined
-              ? (index) => onStepClick(INTERNATIONAL_STEPS[index])
+              ? (index) => {
+                  const step = INTERNATIONAL_STEPS[index]
+                  if (step !== undefined) onStepClick(step)
+                }
               : undefined
           }
         />
