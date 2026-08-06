@@ -1,0 +1,4 @@
+include:
+  - project: 'aws/shared/gitlab-templates'
+    ref: main
+    file: 'app_pipeline.yml'
