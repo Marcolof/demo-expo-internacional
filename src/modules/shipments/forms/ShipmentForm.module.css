@@ -1,0 +1,168 @@
+/* Columna izquierda del alta de envío.
+ * Reproduce la grilla de dos columnas del original (col-lg-6) con los labels
+ * flotantes de `estilos-inputs.css`. */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.sectionHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+/* `.gilroy-medium` del original: no es un heading, es una etiqueta de sección. */
+.sectionTitle {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
+
+/* Dos columnas desde lg, una sola en mobile — igual que el original. */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0 var(--space-4);
+}
+
+@media (min-width: 992px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Campo que ocupa las dos columnas. */
+.spanFull {
+  grid-column: 1 / -1;
+}
+
+/*
+ * Origen: `col-12 col-lg-6` del HTML de referencia.
+ * Los inputs viven en la mitad izquierda; a la derecha queda el hueco
+ * (mapa oculto en pickup: `#columnaMapCorreo.d-none`).
+ */
+.originColumn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+@media (min-width: 992px) {
+  .originColumn {
+    width: 50%;
+    max-width: 50%;
+  }
+}
+
+/* Radios PickUp / Sucursal — Figma: width 383, height 24, gap 12px */
+.originKind {
+  display: flex;
+  justify-content: flex-start;
+  width: 100%;
+  margin-bottom: var(--space-2);
+}
+
+.originRadios {
+  /* ancho máx del spec de Figma */
+  max-width: 383px;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Cada opción toma solo el ancho que necesita su contenido */
+.originRadios > * {
+  flex: 0 0 auto;
+  max-width: none;
+}
+
+/* Fila de tres medidas (largo / ancho / alto). */
+.measuresRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+  grid-column: 1 / -1;
+}
+
+/* Cód. área + celular van pegados, como en el original. */
+.phoneRow {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: var(--space-2);
+}
+
+/* Input de nº de orden: sin caja, sólo línea inferior (`.input-nro-orden`). */
+.orderNumber {
+  width: 100%;
+  max-width: 320px;
+  margin-bottom: var(--space-4);
+  padding: var(--space-1) 0;
+  border: 0;
+  border-bottom: var(--border-width-thin) solid var(--grey-500);
+  background-color: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+}
+
+.orderNumber:focus {
+  outline: none;
+  border-bottom-color: var(--border-focus);
+}
+
+.orderNumber::placeholder {
+  color: var(--text-muted);
+}
+
+/* Aclaración bajo el valor declarado. */
+.helperText {
+  display: block;
+  margin-top: calc(var(--space-1) * -1);
+  margin-bottom: var(--space-2);
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.saveMeasure {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-link);
+  text-decoration: underline;
+}
+
+/* --- Productos / cotización -------------------------------------------- */
+
+.products {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.productRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.productPrice {
+  font-weight: var(--font-weight-bold);
+  color: var(--text-link);
+  white-space: nowrap;
+}

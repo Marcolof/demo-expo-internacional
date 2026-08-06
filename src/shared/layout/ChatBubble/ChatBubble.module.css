@@ -1,0 +1,15 @@
+/* Botón de chat flotante — chrome decorativo del HTML de referencia
+ * (`position-fixed bottom-0 end-0 mb-5 me-5`). El PNG ya trae su propio
+ * círculo y sus dos tonos: acá sólo se posiciona y se le agrega sombra. */
+
+.button {
+  position: fixed;
+  right: var(--space-6);
+  bottom: var(--space-6);
+  z-index: var(--z-chat-bubble);
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-dropdown);
+  cursor: default;
+}

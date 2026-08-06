@@ -1,0 +1,18 @@
+/* Estilos compartidos por los modales de la cuenta. El `Modal` genérico no
+ * separa los bloques del cuerpo, así que la separación se define acá. */
+
+.notice {
+  margin-bottom: var(--space-4);
+}
+
+.detail {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.detailStrong {
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}

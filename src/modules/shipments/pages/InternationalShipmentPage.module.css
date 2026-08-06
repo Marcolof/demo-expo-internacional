@@ -1,0 +1,233 @@
+/*
+ * Formulario de Declaración (paso 1 del flujo internacional).
+ * Diseño de Figma (Mi Correo 2.0, node 7323:94738). El layout general
+ * (grilla, tabs, alineación del switch) se reutiliza de NewShipmentPage.module.css;
+ * acá viven sólo las secciones propias del formulario.
+ */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8); /* Figma: Form-Sections gap 32 */
+  max-width: 600px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+/* Título de sección: "Seleccioná el país…" / "Declaración jurada…" (18px). */
+.sectionTitle {
+  color: var(--text-primary);
+  font-size: 1.125rem; /* 18px */
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Grupo de inputs dentro de "Declaración jurada", separación 32. */
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  width: 100%;
+}
+
+/* Texto guía (16px medium). */
+.hint {
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+}
+
+/* --- "Agregar artículo" (fila deshabilitada) ------------------------------ */
+
+.addArticle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  padding: var(--space-3);
+  border: var(--border-width-thin) solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface-raised);
+  color: var(--text-disabled);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  text-align: left;
+  cursor: not-allowed;
+  transition: background-color var(--transition-base), border-color var(--transition-base);
+}
+
+.addArticle:disabled {
+  cursor: not-allowed;
+}
+
+.addArticleEnabled {
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.addArticleEnabled:hover {
+  border-color: var(--correo-blue);
+  background-color: var(--surface-sunken);
+}
+
+.addArticleIcon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+}
+
+/* --- Artículos agregados --------------------------------------------------- */
+
+.articleList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+/* --- Totales de la declaración ------------------------------------------- */
+
+.totals {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.totalRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+}
+
+.totalLabel {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.totalValue {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* --- Paso Paquete: medidas ------------------------------------------------ */
+
+.measuresRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.saveMeasureRow {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.saveMeasure {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-link);
+  text-decoration: underline;
+}
+
+/* --- Paso Origen ----------------------------------------------------------- */
+
+/*
+ * Layout de 2 columnas: formulario izquierda + mapa derecha.
+ * Reemplaza el wrapper `.form` para este paso (no tiene max-width fijo).
+ */
+.origenLayout {
+  display: grid;
+  /* SVG: form col ≈376px, map col ≈359px — forma ligeramente más ancha */
+  grid-template-columns: 376fr 359fr;
+  gap: var(--space-5);
+  width: 100%;
+  align-items: start;
+}
+
+.origenForm {
+  min-width: 0;
+}
+
+.origenMap {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-top: var(--space-10); /* alinea visualmente con el formulario */
+}
+
+.branchAddress {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* Subsección dentro de Origen (Remitente / Sucursal). */
+.subsection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.subsectionTitle {
+  margin: 0;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+/* Texto descriptivo debajo de subtítulos. */
+.fieldNote {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* --- Paso Destino ---------------------------------------------------------- */
+
+/* Fila de dos campos lado a lado (nombre/razón, código/teléfono, ciudad/CP). */
+.twoColRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+/* Indicador de país seleccionado en la sección Destino. */
+.destinoCountry {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+}
+
+.destinoCountryLabel {
+  color: var(--text-muted);
+}
+
+.destinoCountryValue {
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+/* Precio de servicio postal en el RadioGroup. */
+.servicePrice {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}

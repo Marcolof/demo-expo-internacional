@@ -1,0 +1,75 @@
+/*
+ * Switch Nacional / Internacional — diseño de Figma (Mi Correo 2.0,
+ * node 5578:12020 "nacional-internacional-toggle").
+ *
+ * Una pastilla amarilla se desliza por detrás de la opción seleccionada.
+ * Colores mapeados a nuestros tokens; geometría (radios 20/18, alto 36,
+ * padding 4/6/16, gap 8/6) según los valores del diseño.
+ */
+
+.track {
+  position: relative;
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  padding: 4px;
+  border-radius: 20px;
+  background-color: var(--surface-sunken); /* Background/light-surface v2 · #f2f2f2 */
+  isolation: isolate;
+}
+
+/*
+ * Pastilla deslizante. Ocupa exactamente el ancho de una opción:
+ * (ancho del track − 2×padding − gap) / 2 = (100% − 16px) / 2.
+ * El 100% acá es la caja de padding del track (bloque contenedor del absolute).
+ */
+.indicator {
+  position: absolute;
+  z-index: 0;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc((100% - 16px) / 2);
+  border-radius: 18px;
+  background-color: var(--correo-yellow); /* Background/color-background-primaryBrand · #ffce00 */
+  transition: transform var(--transition-base);
+}
+
+/* Al elegir "Internacional" la pastilla se corre una opción + el gap. */
+.track[data-selected='internacional'] .indicator {
+  transform: translateX(calc(100% + 8px));
+}
+
+.option {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border: none;
+  background: transparent;
+  color: var(--correo-blue); /* Text/Brand/color-text-secondaryBrand · #152663 */
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm); /* 14px */
+  font-weight: var(--font-weight-semibold); /* Gilroy SemiBold */
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+/* Respeta la preferencia del usuario: sin deslizamiento animado. */
+@media (prefers-reduced-motion: reduce) {
+  .indicator {
+    transition: none;
+  }
+}

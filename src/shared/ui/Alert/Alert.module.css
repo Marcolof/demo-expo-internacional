@@ -1,0 +1,87 @@
+/* Avisos de feedback.
+ * El tono `danger` replica `.error-msg` de estilos-inputs.css: fondo #ffd0d0,
+ * texto #d32f2f, borde #f5c2c2 y radio de 6px — todo vía tokens. */
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width-thin) solid transparent;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+
+.content {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-snug);
+}
+
+.title + .body {
+  margin-top: var(--space-1);
+}
+
+/* Rompe URLs y códigos largos: el aviso nunca debe ensanchar la página. */
+.body {
+  overflow-wrap: anywhere;
+}
+
+.dismiss {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-6);
+  height: var(--space-6);
+  border: none;
+  border-radius: var(--radius-full);
+  background: none;
+  color: inherit;
+  font-size: var(--font-size-lg);
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity var(--transition-fast);
+}
+
+.dismiss:hover {
+  opacity: 1;
+}
+
+/* --- Tonos -------------------------------------------------------------- */
+
+.danger {
+  background-color: var(--feedback-danger-bg);
+  color: var(--feedback-danger-text);
+  border-color: var(--feedback-danger-border);
+}
+
+.success {
+  background-color: var(--feedback-success-bg);
+  color: var(--feedback-success-text);
+  border-color: var(--feedback-success-border);
+}
+
+.info {
+  background-color: var(--feedback-info-bg);
+  color: var(--feedback-info-text);
+  /* No hay `--feedback-info-border`: se usa el borde sutil, que es el mismo
+   * gris del fondo informativo. */
+  border-color: var(--border-subtle);
+}
+
+.warning {
+  background-color: var(--feedback-warning-bg);
+  color: var(--feedback-warning-text);
+  /* Tampoco hay `--feedback-warning-border`: el amarillo de marca es lo más
+   * cercano al ámbar del fondo. */
+  border-color: var(--border-strong);
+}

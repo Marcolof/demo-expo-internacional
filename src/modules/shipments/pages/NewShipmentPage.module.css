@@ -1,0 +1,218 @@
+/*
+ * Layout de `/envioCla` según el HTML de referencia.
+ *
+ * Los paddings de acá NO son estimados: se midieron con getComputedStyle
+ * sobre el HTML de referencia real (`html reference/MiCorreo.html`, servido
+ * por el propio dev server), a 465px (base, <768px) y 1280px (md+, ≥768px),
+ * para resolver correctamente la cascada de utilidades de Bootstrap — varias
+ * de estas clases se pisan entre sí (`px-1 px-5`, `p-4 p-md-5 pt-4`) y el
+ * orden en el que aparecen en el HTML no predice cuál gana.
+ *
+ * #prin.row.justify-content-center
+ *   .carga.col-md-6.px-1.px-5           → formulario. px-5 le gana a px-1
+ *                                          SIEMPRE (misma cascada, sin media
+ *                                          query) → 48px a todo ancho.
+ *   #resumenMobile.col-md-6.resumen
+ *     .row.mx-3.mx-md-2.px-md-4         → 16px margen / 0 padding en base;
+ *                                          8px margen / 24px padding en md+.
+ *     #infoRe.col-10.px-0.px-md-2       → 0 padding en base, 8px en md+.
+ *   .col-md-6.px-1.ps-5.order-md-3      → Cancelar/Siguiente. ps-5 sólo pisa
+ *                                          la IZQUIERDA (48px); la derecha
+ *                                          queda en 4px (px-1). Sin padding
+ *                                          vertical: no hay clase py-* acá.
+ *
+ * #seccionPagar y su letra chica ya no existen: el botón "Pagar" se movió
+ * dentro de la tarjeta del Resumen (ver `payButton` en NewShipmentPage.tsx).
+ */
+
+/* #prin */
+.prin {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    'carga'
+    'resumen'
+    'navActions';
+  width: 100%;
+  align-items: start;
+}
+
+@media (min-width: 768px) {
+  .prin {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      'carga resumen'
+      'navActions .';
+  }
+}
+
+/* .carga.col-12.col-md-6.px-1.px-5 — 48px a TODO ancho (px-5 gana siempre) */
+.carga {
+  grid-area: carga;
+  min-width: 0;
+  padding: 0 var(--space-12);
+}
+
+/* h3 "Nuevo envío | Paquetería" — .mt-3 (16px) + margen inferior por
+ * defecto de Bootstrap para headings (8px), no var(--space-4) parejo. */
+.title {
+  margin: var(--space-4) 0 var(--space-2);
+  font-size: 1.75rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+/* Individual / Masivo */
+/*
+ * Contenedor de tabs — columna `col-12 col-md-8 col-lg-4` de la referencia:
+ * ancho responsivo (100% / 66.6% / 33.3%). En desktop el 33.3% da ~171px, que
+ * deja aire de sobra alrededor de cada label. (NO usar `max-width` fijo ni
+ * `fit-content`: lo primero lo hacía el doble de ancho; lo segundo lo pegaba
+ * al texto sin aire.)
+ */
+.loadTabs {
+  width: 100%;
+  /* Piso de ancho: el contenedor nunca debe quedar más angosto que el texto
+   * de sus tabs (pasaba en pantallas/columnas angostas, donde el 33.3% del
+   * breakpoint lg podía ser menor que "Individual"). */
+  min-width: max-content;
+  margin-bottom: var(--space-5);
+}
+
+@media (min-width: 768px) {
+  .loadTabs {
+    width: 66.6667%; /* .col-md-8 */
+    margin-left: var(--space-1); /* .ms-md-1 */
+  }
+}
+
+@media (min-width: 992px) {
+  .loadTabs {
+    width: 33.3333%; /* .col-lg-4 */
+  }
+}
+
+/*
+ * Los dos tabs (`.col-6`) ocupan 50% cada uno. Grid de dos columnas iguales +
+ * `min-width: 0` para que sean exactamente la mitad (como `col-6`), sin que el
+ * contenido los descompense.
+ */
+.loadTablist {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-bottom: var(--border-width-thick) solid var(--tab-border-color);
+}
+
+.loadTabActive,
+.loadTabInactive {
+  min-width: 0;
+  padding: 5px; /* .btn-ne */
+  border: none;
+  border-radius: var(--tab-radius);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  text-align: center;
+  cursor: default;
+}
+
+.loadTabActive {
+  background-color: var(--tab-active-bg);
+  color: var(--tab-active-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.loadTabInactive {
+  background-color: transparent;
+  color: var(--tab-text);
+  font-weight: var(--font-weight-medium);
+}
+
+/* #resumenMobile */
+.resumen {
+  grid-area: resumen;
+  min-width: 0;
+}
+
+/* .row.justify-content-center.mx-3.mx-md-2.px-md-4 */
+.resumenCenter {
+  display: flex;
+  justify-content: center;
+  min-height: 100%;
+  margin-left: var(--space-4); /* .mx-3 */
+  margin-right: var(--space-4);
+  padding-left: 0;
+  padding-right: 0;
+}
+
+@media (min-width: 768px) {
+  .resumenCenter {
+    margin-left: var(--space-2); /* .mx-md-2 */
+    margin-right: var(--space-2);
+    padding-left: var(--space-6); /* .px-md-4 */
+    padding-right: var(--space-6);
+  }
+}
+
+/* #infoRe.col-10 — 10/12 del ancho de la columna, centrado */
+.infoRe {
+  width: 83.33333333%;
+  max-width: 83.33333333%;
+  margin-top: var(--space-6); /* .mt-4 */
+  padding-left: 0; /* .px-0 */
+  padding-right: 0;
+}
+
+/*
+ * Switch Nacional / Internacional (encima del resumen).
+ * `margin-bottom`: separación con la tarjeta de resumen.
+ */
+.scopeSwitch {
+  margin-bottom: var(--space-5);
+}
+
+/*
+ * En dos columnas (md+), el borde INFERIOR del switch debe coincidir con la
+ * base (borde inferior) de los tabs Individual / Masivo de la izquierda: el
+ * switch queda por encima de esa línea, no por debajo. El offset es el alto de
+ * "título + tabs" menos el alto del propio switch (44px) y el `margin-top` que
+ * ya trae `.infoRe`. Medido sobre el layout real ≈ 35px.
+ */
+@media (min-width: 768px) {
+  .scopeSwitch {
+    margin-top: 35px;
+  }
+}
+
+@media (min-width: 768px) {
+  .infoRe {
+    padding-left: var(--space-2); /* .px-md-2 */
+    padding-right: var(--space-2);
+  }
+}
+
+/* Cancelar / Siguiente — .col-md-6.px-1.ps-5.order-md-3.
+ * Sin padding vertical: el original no tiene ninguna clase py-* acá. */
+.navActions {
+  grid-area: navActions;
+  padding: 0 var(--space-1) 0 var(--space-12); /* ps-5 (izq. 48px) + px-1 (der. 4px) */
+}
+
+.navActionsInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.navActionsStart {
+  flex: 0 0 auto;
+}
+
+.navActionsEnd {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3); /* separa Atrás / Siguiente cuando hay dos botones */
+}
+

@@ -1,0 +1,340 @@
+/* ============================================================================
+ * tokens.css — Design tokens de MiCorreo
+ * ----------------------------------------------------------------------------
+ * Fuente de verdad: `html reference/MiCorreo_files/estilos.css`,
+ * `estilos-inputs.css` y las clases `*-correo-*` agregadas al build
+ * customizado de `bootstrap.css`.
+ *
+ * Arquitectura en tres capas (no saltear capas al consumir):
+ *   1. PRIMITIVE — valores crudos. Nadie los usa directo desde un componente.
+ *   2. SEMANTIC  — rol de uso ("superficie de página", "texto atenuado").
+ *   3. COMPONENT — medidas propias de un componente concreto.
+ *
+ * Regla: los componentes consumen SEMANTIC o COMPONENT. Nunca PRIMITIVE.
+ * ========================================================================= */
+
+:root {
+  /* ==========================================================================
+   * 1. PRIMITIVE
+   * ====================================================================== */
+
+  /* --- Paleta de marca (estilos.css :root) ------------------------------- */
+  --correo-yellow: #ffce00;
+  --correo-blue: #152663;
+  --correo-grey-700: #49454f;
+  --correo-off-white: #fafafa;
+  --correo-near-black: #191919;
+
+  /* --- Escala de grises harvesteada del CSS de referencia ---------------- */
+  --grey-050: #fafafa; /* bg-correo-very-light-grey */
+  --grey-100: #f2f2f2; /* bg-correo-light-grey */
+  --grey-150: #f4efef; /* bg-correo-2 */
+  --grey-200: #eeeeee; /* bg-correo-4 / riel del sidebar */
+  --grey-300: #d9d9d9; /* fondo deshabilitado */
+  --grey-400: #ccc; /* borde de input */
+  --grey-500: #afaeae; /* borde inferior input nro orden */
+  --grey-600: #8a8a8a; /* texto deshabilitado / stepper inactivo */
+  --grey-650: #79747e; /* footer / títulos de gráficos */
+  --grey-700: #49454f; /* text-muted */
+  --grey-800: #212529; /* <small> */
+  --grey-900: #191919; /* color-correo-black */
+  --white: #ffffff;
+
+  /* --- Colores de estado ------------------------------------------------- */
+  --red-100: #ffd0d0; /* fondo alert-danger / error-msg */
+  --red-200: #f5c2c2; /* borde error-msg */
+  --red-600: #d32f2f; /* texto error-msg */
+  --red-700: #ed143d; /* help-block */
+  --blue-focus: #2196f3; /* borde de input enfocado */
+  --green-700: #0f5132;
+  --green-600: #2a8a54; /* Switch activado (Figma 8040:120132) */
+  --green-100: #d1e7dd;
+
+  /* --- Tipografía: familias --------------------------------------------- */
+  /* Se declara una sola familia "Gilroy" con pesos numéricos (ver globals.css).
+   * El CSS original usaba una familia por peso ("Gilroy-Medium" como family);
+   * acá se normaliza a peso, que es la forma correcta y tokenizable. */
+  --font-family-base: 'Gilroy', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* --- Tipografía: pesos ------------------------------------------------- */
+  --font-weight-light: 300; /* Gilroy-Light */
+  --font-weight-regular: 400; /* Gilroy-Regular */
+  --font-weight-medium: 500; /* Gilroy-Medium */
+  --font-weight-semibold: 600; /* Gilroy-SemiBold */
+  --font-weight-bold: 700; /* Gilroy-Bold */
+  --font-weight-heavy: 800; /* Gilroy-Heavy */
+
+  /*
+   * Peso base del cuerpo de texto. Subido a medium (500) para acercar el trazo
+   * al del HTML de referencia. REVERTIBLE: volver a `var(--font-weight-regular)`
+   * para dejar el cuerpo en 400 como antes.
+   */
+  --font-weight-base: var(--font-weight-medium);
+
+  /* --- Tipografía: tamaños ---------------------------------------------- */
+  --font-size-3xs: 0.6875rem; /* 11px — label flotante arriba */
+  --font-size-2xs: 0.71rem; /* fs-correo-7 */
+  --font-size-xs: 0.75rem; /* 12px — fs-correo-ne-gm, footer, editable */
+  --font-size-sm: 0.875rem; /* 14px — inputs, dropdown-item, valores resumen */
+  --font-size-ne: 0.85rem; /* fs-correo-ne — labels de nuevo envío */
+  --font-size-md: 0.9375rem; /* 15px — saludo del header */
+  --font-size-base: 1rem; /* 16px — botones, cuerpo */
+  --font-size-lg: 1.25rem; /* 20px */
+  --font-size-xl: 1.375rem; /* 22px — título de modal genérico */
+  --font-size-2xl: 1.5rem; /* 24px */
+
+  /* --- Interlineado ------------------------------------------------------ */
+  --line-height-tight: 1.2;
+  --line-height-snug: 1.25;
+  --line-height-normal: 1.5;
+
+  /* --- Espaciado (escala de 4px, compatible con los rem de Bootstrap) ---- */
+  --space-0: 0;
+  --space-1: 0.25rem; /* 4px */
+  --space-2: 0.5rem; /* 8px */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem; /* 16px */
+  --space-5: 1.25rem; /* 20px */
+  --space-6: 1.5rem; /* 24px */
+  --space-8: 2rem; /* 32px */
+  --space-10: 2.5rem; /* 40px */
+  --space-12: 3rem; /* 48px */
+
+  /* --- Radios ----------------------------------------------------------- */
+  --radius-xs: 5px; /* inputs, tab superior */
+  --radius-sm: 6px; /* error-msg */
+  --radius-md: 10px; /* filas de tabla */
+  --radius-lg: 15px; /* mapa de sucursal */
+  --radius-xl: 25px; /* modales, botones pill */
+  --radius-2xl: 30px; /* box-acceso */
+  --radius-pill: 32px;
+  --radius-full: 50%;
+
+  /* --- Bordes ----------------------------------------------------------- */
+  --border-width-thin: 1px;
+  --border-width-base: 2px;
+  --border-width-thick: 3px;
+  --border-width-stepper: 4px;
+
+  /* --- Sombras ---------------------------------------------------------- */
+  --shadow-row: 0 2px 2px 1px rgba(195, 195, 195, 0.25);
+  --shadow-dropdown: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  --shadow-modal: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  --shadow-inset-active: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+
+  /* --- Transiciones ----------------------------------------------------- */
+  --transition-fast: 0.2s ease-out;
+  --transition-base: 0.2s ease-in-out;
+
+  /* --- Capas (z-index) -------------------------------------------------- */
+  --z-base: 0;
+  --z-sidebar-rail: 10;
+  --z-header: 20;
+  --z-offcanvas: 30;
+  --z-modal-backdrop: 40;
+  --z-modal: 50;
+  --z-toast: 60;
+  --z-chat-bubble: 65;
+  --z-demo-toolbar: 70;
+
+  /* ==========================================================================
+   * 2. SEMANTIC
+   * ====================================================================== */
+
+  /* --- Marca ------------------------------------------------------------ */
+  --color-brand: var(--correo-yellow);
+  --color-brand-contrast: var(--correo-blue);
+  --color-accent: var(--correo-blue);
+
+  /* --- Superficies ------------------------------------------------------ */
+  --surface-page: var(--grey-050); /* body — bg-correo-very-light-grey */
+  --surface-raised: var(--white); /* tarjetas, panel de resumen */
+  --surface-sunken: var(--grey-100); /* bg-correo-light-grey */
+  --surface-rail: var(--grey-200); /* riel del sidebar */
+  --surface-brand: var(--correo-yellow); /* bg-correo-1 — header */
+  --surface-disabled: var(--grey-300);
+
+  /* --- Texto ------------------------------------------------------------ */
+  --text-primary: var(--grey-900);
+  --text-secondary: var(--grey-800);
+  --text-muted: var(--grey-700);
+  --text-subtle: var(--grey-650);
+  --text-disabled: var(--grey-600);
+  --text-link: var(--correo-blue);
+  --text-on-brand: var(--correo-blue);
+  --text-inverse: var(--white);
+
+  /* --- Bordes ----------------------------------------------------------- */
+  --border-default: var(--grey-400);
+  --border-subtle: var(--grey-200);
+  --border-strong: var(--correo-yellow);
+  --border-focus: var(--blue-focus);
+
+  /* --- Estado: error ---------------------------------------------------- */
+  --feedback-danger-bg: var(--red-100);
+  --feedback-danger-text: var(--red-600);
+  --feedback-danger-border: var(--red-200);
+  --feedback-danger-strong: var(--red-700);
+
+  /* --- Estado: éxito ---------------------------------------------------- */
+  --feedback-success-bg: var(--green-100);
+  --feedback-success-text: var(--green-700);
+  --feedback-success-border: var(--green-700);
+  --feedback-success-strong: var(--green-600);
+
+  /* --- Estado: info / advertencia --------------------------------------- */
+  --feedback-info-bg: var(--grey-200);
+  --feedback-info-text: var(--correo-blue);
+  --feedback-warning-bg: #fff3cd;
+  --feedback-warning-text: #664d03;
+
+  /* ==========================================================================
+   * 3. COMPONENT
+   * ====================================================================== */
+
+  /* --- Chrome de la aplicación ------------------------------------------ */
+  --header-height: 60px; /* .alturaNavbar min-height */
+  --sidebar-rail-width: 61px; /* .ancho-item-menu */
+  --sidebar-drawer-width: 340px; /* .offcanvas max-width */
+  --footer-height: 52px;
+  --footer-height-mobile: 80px;
+  --menu-icon-size: 24px;
+  /* Iconos del sidebar: en el HTML de referencia se muestran a tamaño natural
+   * (~28–32px), más grandes que el resto de los iconos de UI. 30px coincide
+   * con el tamaño nativo de la mayoría de los PNG del riel → sin escalado. */
+  --sidebar-icon-size: 30px;
+  --avatar-size: 40px; /* .circulo */
+
+  /* --- Botones ---------------------------------------------------------- */
+  --button-height: 44px;
+  --button-padding-x: 1.2rem;
+  --button-padding-y: 0.5rem;
+  --button-radius: var(--radius-xl);
+  --button-font-size: var(--font-size-base);
+  --button-font-weight: var(--font-weight-semibold);
+  --button-border-width: var(--border-width-base);
+  --button-width-step: 124px; /* .botonDimensiones */
+  --button-width-summary: 175px; /* #verResumen en mobile */
+
+  /* Primario (btn-correo-primary) */
+  --button-primary-bg: var(--correo-yellow);
+  --button-primary-text: var(--correo-blue);
+  --button-primary-border: var(--correo-yellow);
+  --button-primary-bg-hover: rgba(255, 206, 0, 0.6);
+  --button-primary-text-hover: rgba(21, 38, 99, 0.8);
+
+  /* Secundario (btn-correo-secondary) */
+  --button-secondary-bg: var(--white);
+  --button-secondary-text: var(--correo-blue);
+  --button-secondary-border: var(--correo-yellow);
+  --button-secondary-bg-hover: var(--white);
+  --button-secondary-border-hover: rgba(255, 206, 0, 0.6);
+
+  /* Terciario (btn-correo-tertiary) — subrayado inferior, sin fondo */
+  --button-tertiary-text: var(--correo-blue);
+  --button-tertiary-border: var(--correo-yellow);
+  --button-tertiary-border-width: var(--border-width-thick);
+  --button-tertiary-padding-x: 0.9rem;
+
+  /* Deshabilitado (común a todas las variantes) */
+  --button-disabled-bg: var(--grey-300);
+  --button-disabled-text: var(--grey-600);
+  --button-disabled-border: var(--grey-300);
+
+  /* Botón Pagar (`.btn-pagar` / `.btn-pagar-d`).
+   * En el original el propio botón lleva `border-radius: 0 0 25px 25px`
+   * (esquinas superiores rectas, inferiores redondeadas). Acá el botón usa
+   * `shape="square"` (sin radio propio); es la tarjeta que lo contiene
+   * (`ShipmentSummary` → `.panel`) la que redondea y recorta con
+   * `overflow:hidden`, a todo el ancho — el botón queda pegado al fondo de
+   * esa misma tarjeta, no en una sección aparte. */
+  --pay-button-clip-radius: 0 0 var(--radius-xl) var(--radius-xl);
+
+  /* --- Campos de formulario (estilos-inputs.css) ------------------------ */
+  --field-height: 38px;
+  --field-padding: 10px;
+  --field-font-size: var(--font-size-sm);
+  --field-radius: var(--radius-xs);
+  --field-bg: var(--white);
+  --field-border: var(--border-width-thin) solid var(--border-default);
+  --field-border-focus: var(--border-width-thin) solid var(--border-focus);
+  --field-text: var(--grey-900);
+
+  /* Label flotante: reposa centrado y sube al enfocar / tener valor */
+  --field-label-color: var(--correo-grey-700);
+  --field-label-color-active: var(--blue-focus);
+  --field-label-font-size: var(--font-size-sm);
+  --field-label-font-size-floated: var(--font-size-3xs);
+  --field-label-offset-x: 10px;
+  --field-label-padding-floated: 0 6px;
+  --field-textarea-height: 88px;
+  /* Fondo del "notch" del label flotado. Sobre una tarjeta blanca alcanza el
+   * blanco; sobre la página gris (#fafafa) el original usa un degradado para
+   * que la mitad de arriba matchee la página y la de abajo el campo. */
+  --field-label-backdrop: var(--white);
+  --field-label-backdrop-on-page: linear-gradient(
+    to bottom,
+    var(--grey-050) 55%,
+    var(--white) 45%
+  );
+
+  /* --- Stepper (.tabenvios) --------------------------------------------- */
+  --stepper-dot-size: 22px; /* diámetro del círculo (glifo a 22px en la referencia) */
+  --stepper-dot-size-active: 30px;
+  --stepper-dot-font-size: 22px;
+  --stepper-connector-height: var(--border-width-stepper);
+  --stepper-color-pending: var(--grey-600);
+  --stepper-color-visited: var(--correo-blue);
+  --stepper-color-active: var(--correo-yellow);
+  --stepper-dot-bg: var(--white);
+
+  /* --- Tabs (.nav-tabs) ------------------------------------------------- */
+  --tab-border-color: var(--correo-yellow);
+  --tab-border-width: var(--border-width-base);
+  --tab-text: var(--correo-blue);
+  --tab-active-bg: var(--correo-yellow);
+  --tab-active-text: var(--correo-blue);
+  --tab-radius: var(--radius-xs) var(--radius-xs) 0 0;
+
+  /* --- Tabla (.mcr-table) ---------------------------------------------- */
+  --table-row-gap: 5px;
+  --table-radius: var(--radius-md);
+  --table-row-shadow: var(--shadow-row);
+  --table-row-hover-bg: var(--grey-200);
+  --table-header-font-weight: var(--font-weight-semibold);
+  --table-header-small-size: var(--font-size-xs);
+
+  /* --- Modal ------------------------------------------------------------ */
+  --modal-radius: var(--radius-xl);
+  --modal-bg: var(--white);
+  --modal-backdrop: rgba(0, 0, 0, 0.5);
+  --modal-title-size: var(--font-size-xl);
+  --modal-body-size: var(--font-size-base);
+  --modal-width-sm: 300px;
+  --modal-width-md: 500px;
+  --modal-width-lg: 800px;
+  --modal-width-xl: 600px;
+  --modal-max-height-xl: 750px;
+
+  /* --- Dropdown --------------------------------------------------------- */
+  --dropdown-min-width: 10rem;
+  --dropdown-padding-y: var(--space-2);
+  --dropdown-item-padding: var(--space-1) var(--space-4);
+  --dropdown-item-font-size: var(--font-size-sm);
+  --dropdown-shadow: var(--shadow-dropdown);
+
+  /* --- Badge ------------------------------------------------------------ */
+  --badge-padding: 0.25rem 0.625rem;
+  --badge-radius: var(--radius-pill);
+  --badge-font-size: var(--font-size-xs);
+  --badge-font-weight: var(--font-weight-semibold);
+
+  /* --- Switch (Figma 8040:120132) ---------------------------------------- */
+  --switch-color-on: var(--feedback-success-strong);
+
+  /* --- Panel de resumen ------------------------------------------------- */
+  --summary-label-size: var(--font-size-xs);
+  --summary-value-size: var(--font-size-sm);
+  --summary-edit-size: var(--font-size-xs);
+  --summary-padding: var(--space-8);
+}

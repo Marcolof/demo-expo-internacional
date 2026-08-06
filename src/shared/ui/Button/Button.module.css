@@ -1,0 +1,163 @@
+/* Botones de MiCorreo.
+ * Réplica de `.btn-correo-primary` / `-secondary` / `-tertiary` /
+ * `-link-primary` de estilos.css, con tokens en lugar de literales. */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--button-height);
+  padding: var(--button-padding-y) var(--button-padding-x);
+  border: var(--button-border-width) solid transparent;
+  border-radius: var(--button-radius);
+  font-family: var(--font-family-base);
+  font-size: var(--button-font-size);
+  font-weight: var(--button-font-weight);
+  line-height: var(--line-height-snug);
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color var(--transition-base), color var(--transition-base),
+    border-color var(--transition-base);
+}
+
+.button:hover {
+  text-decoration: none;
+}
+
+.button:disabled,
+.button[aria-disabled='true'] {
+  cursor: not-allowed;
+}
+
+.button:active:not(:disabled) {
+  box-shadow: var(--shadow-inset-active);
+}
+
+/* --- Variante: primaria (amarillo pleno) -------------------------------- */
+
+.primary {
+  background-color: var(--button-primary-bg);
+  color: var(--button-primary-text);
+  border-color: var(--button-primary-border);
+}
+
+.primary:hover:not(:disabled) {
+  background-color: var(--button-primary-bg-hover);
+  border-color: var(--button-primary-bg-hover);
+  color: var(--button-primary-text-hover);
+}
+
+.primary:disabled {
+  background-color: var(--button-disabled-bg);
+  color: var(--button-disabled-text);
+  border-color: var(--button-disabled-border);
+}
+
+/* --- Variante: secundaria (blanco con borde amarillo) ------------------- */
+
+.secondary {
+  background-color: var(--button-secondary-bg);
+  color: var(--button-secondary-text);
+  border-color: var(--button-secondary-border);
+}
+
+.secondary:hover:not(:disabled) {
+  background-color: var(--button-secondary-bg-hover);
+  border-color: var(--button-secondary-border-hover);
+  color: var(--button-primary-text-hover);
+}
+
+.secondary:disabled {
+  background-color: var(--button-secondary-bg);
+  color: var(--button-disabled-text);
+  border-color: var(--button-disabled-border);
+}
+
+/* --- Variante: terciaria (sólo subrayado inferior amarillo) ------------- */
+
+.tertiary {
+  background-color: transparent;
+  color: var(--button-tertiary-text);
+  border: none;
+  border-bottom: var(--button-tertiary-border-width) solid var(--button-tertiary-border);
+  border-radius: 0;
+  padding-left: var(--button-tertiary-padding-x);
+  padding-right: var(--button-tertiary-padding-x);
+}
+
+.tertiary:hover:not(:disabled) {
+  color: var(--button-primary-text-hover);
+  border-bottom-color: var(--button-secondary-border-hover);
+}
+
+.tertiary:disabled {
+  color: var(--button-disabled-text);
+  border-bottom-color: var(--button-disabled-border);
+}
+
+/* --- Variante: link (sin fondo ni borde) -------------------------------- */
+
+.link {
+  background-color: transparent;
+  color: var(--text-link);
+  border: none;
+  border-radius: 0;
+  min-height: auto;
+  padding: 0 0.7rem;
+}
+
+.link:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.link:disabled {
+  color: var(--button-disabled-text);
+}
+
+.link:active:not(:disabled) {
+  box-shadow: none;
+}
+
+/* --- Tamaños ----------------------------------------------------------- */
+
+.sizeSm {
+  min-height: 32px;
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--font-size-sm);
+}
+
+.sizeMd {
+  /* Tamaño por defecto: 44px de alto, como en el original. */
+}
+
+/* Ancho fijo de los botones Atrás / Siguiente del wizard (.botonDimensiones) */
+.sizeStep {
+  width: var(--button-width-step);
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+/* --- Forma: cuadrada ----------------------------------------------------
+ * Sin radio propio: el redondeo lo aporta el contenedor que lo envuelve
+ * (recortando con overflow:hidden). Va DESPUÉS de las variantes de color
+ * a propósito, para ganarles el border-radius sin tocarlas. */
+.shapeSquare {
+  border-radius: 0;
+}
+
+.icon {
+  display: inline-flex;
+  width: var(--menu-icon-size);
+  height: var(--menu-icon-size);
+  flex-shrink: 0;
+}
+
+.icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}

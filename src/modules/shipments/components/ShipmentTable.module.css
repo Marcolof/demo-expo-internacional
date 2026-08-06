@@ -1,0 +1,46 @@
+/* Grilla de envíos. El look de la tabla lo aporta `DataTable`; acá sólo las
+ * celdas propias del dominio. */
+
+.orderCell {
+  display: flex;
+  flex-direction: column;
+}
+
+.orderNumber {
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-link);
+}
+
+.trackingCode {
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.routeCell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 180px;
+}
+
+.routeLabel {
+  color: var(--text-muted);
+  font-size: var(--font-size-3xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.routeValue {
+  font-size: var(--font-size-sm);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  justify-content: flex-end;
+}
+
+.nowrap {
+  white-space: nowrap;
+}

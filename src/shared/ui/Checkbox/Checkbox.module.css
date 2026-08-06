@@ -1,0 +1,129 @@
+/* Casillas y radios. Réplica de `.form-check` con tokens.
+ * El control marcado se pinta con el azul de marca, no con el amarillo:
+ * el amarillo sobre blanco no llega al contraste mínimo. */
+
+.wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.input {
+  appearance: none;
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  margin-top: 0.2rem;
+  border: var(--border-width-thin) solid var(--border-default);
+  background-color: var(--field-bg);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.checkbox {
+  border-radius: var(--radius-xs);
+}
+
+/* Figma: radio 20px, borde gris claro sin seleccionar, sin margin-top (centrado con label) */
+.radio {
+  width: 20px;
+  height: 20px;
+  margin-top: 0;
+  border-color: var(--grey-300);
+  border-radius: var(--radius-full);
+}
+
+.input:checked {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.checkbox:checked {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e");
+  background-size: 100% 100%;
+}
+
+/* Radio seleccionado: fondo blanco + borde azul + punto interno azul (Figma #152663) */
+.radio:checked {
+  background-color: var(--field-bg);
+  border-color: var(--correo-blue);
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='2' fill='%23152663'/%3e%3c/svg%3e");
+  background-size: 100% 100%;
+}
+
+.input:disabled {
+  background-color: var(--surface-disabled);
+  border-color: var(--border-subtle);
+  cursor: not-allowed;
+}
+
+.input:disabled + .labelBlock {
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
+.labelBlock {
+  cursor: pointer;
+}
+
+.label {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-snug);
+  color: var(--text-primary);
+}
+
+.description {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
+
+/* Radios no seleccionados: label en gris (#afaeae ≈ --grey-500) */
+.wrapper:has(.radio:not(:checked)) .label {
+  color: var(--grey-500);
+}
+
+/* Disabled tiene prioridad sobre el gris de no-seleccionado */
+.wrapper:has(.radio:disabled) .label {
+  color: var(--text-disabled);
+}
+
+/* --- Grupo de radios ---------------------------------------------------- */
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  border: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.groupInline {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--space-6);
+}
+
+.groupLegend {
+  padding: 0;
+  margin-bottom: var(--space-2);
+  font-size: var(--font-size-ne);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-muted);
+}
+
+.groupError {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--feedback-danger-strong);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}

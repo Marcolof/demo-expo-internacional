@@ -1,0 +1,17 @@
+/* Diálogo de confirmación. Hereda el encuadre de Modal; acá sólo el contenido. */
+
+.description {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-snug);
+}
+
+.descriptionDanger {
+  color: var(--text-primary);
+}
+
+.extra {
+  margin-top: var(--space-4);
+  text-align: left;
+}

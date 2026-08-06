@@ -1,0 +1,93 @@
+/* Stack de notificaciones, fijo abajo a la derecha.
+ * `--z-toast` lo deja por encima del modal y por debajo de la barra de demo. */
+
+.stack {
+  position: fixed;
+  right: var(--space-4);
+  bottom: var(--space-4);
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-2);
+  /* En mobile ocupa el ancho disponible menos los márgenes laterales. */
+  width: max-content;
+  max-width: calc(100vw - var(--space-8));
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  width: 100%;
+  max-width: var(--modal-width-sm);
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width-thin) solid transparent;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-dropdown);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-snug);
+  /* El stack no recibe eventos para no tapar la página; los toasts sí. */
+  pointer-events: auto;
+  animation: toastIn var(--transition-fast);
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-2));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.dismiss {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-5);
+  height: var(--space-5);
+  border: none;
+  border-radius: var(--radius-full);
+  background: none;
+  color: inherit;
+  font-size: var(--font-size-base);
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity var(--transition-fast);
+}
+
+.dismiss:hover {
+  opacity: 1;
+}
+
+/* --- Tonos -------------------------------------------------------------- */
+
+.success {
+  background-color: var(--feedback-success-bg);
+  color: var(--feedback-success-text);
+  border-color: var(--feedback-success-border);
+}
+
+.danger {
+  background-color: var(--feedback-danger-bg);
+  color: var(--feedback-danger-text);
+  border-color: var(--feedback-danger-border);
+}
+
+.info {
+  background-color: var(--feedback-info-bg);
+  color: var(--feedback-info-text);
+  border-color: var(--border-subtle);
+}

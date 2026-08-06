@@ -1,0 +1,52 @@
+/* Pie de página. Réplica de `.footer2` + `.styleFooter` del original. */
+
+.footer {
+  flex-shrink: 0;
+  min-height: var(--footer-height);
+  padding: var(--space-2) var(--space-5);
+  background-color: var(--surface-page);
+}
+
+.inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  border-top: var(--border-width-thin) solid var(--border-subtle);
+  padding-top: var(--space-2);
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.link,
+.copyright {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-subtle);
+}
+
+.link:hover {
+  color: var(--text-link);
+}
+
+.separator {
+  color: var(--text-subtle);
+  font-size: var(--font-size-xs);
+}
+
+@media (max-width: 599px) {
+  .footer {
+    min-height: var(--footer-height-mobile);
+  }
+
+  .inner {
+    justify-content: center;
+    text-align: center;
+  }
+}

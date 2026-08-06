@@ -1,0 +1,15 @@
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+/* El `title` con el detalle vive acá, así que el cursor lo anuncia. */
+.more {
+  cursor: help;
+}
+
+.none {
+  font-size: var(--font-size-xs);
+  color: var(--text-disabled);
+}

@@ -1,0 +1,33 @@
+/* Envoltorio del contenido de una pantalla.
+ *
+ * Los desplazamientos por el header fijo y el riel lateral los aplica
+ * `AppShell`, no este componente: así una pantalla puede cambiar su ancho sin
+ * saber nada del chrome que la rodea. */
+
+.content {
+  width: 100%;
+  padding: var(--space-4);
+}
+
+/* Ancho cómodo de lectura para formularios y grillas. */
+.narrow {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* `full` deja que la pantalla maneje su propia grilla a todo el ancho. Lo usa
+ * la réplica del alta de envío, que tiene dos columnas propias. */
+.full {
+  max-width: none;
+  padding: 0;
+}
+
+@media (min-width: 768px) {
+  .content {
+    padding: var(--space-6);
+  }
+
+  .full {
+    padding: 0;
+  }
+}

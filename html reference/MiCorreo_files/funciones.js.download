@@ -1,0 +1,1559 @@
+// function test() {
+//     alert("Hola Mundo!!");
+// }
+
+
+const ATTRIBUTION_STORAGE_KEY = 'micorreo_campaign_attribution';
+const ATTRIBUTION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+const ATTRIBUTION_PARAMS = [
+    'utm_source',
+    'utm_medium',
+    'utm_campaign',
+    'utm_id',
+    'utm_term',
+    'utm_content',
+    'gclid',
+    'fbclid'
+];
+
+const captureCampaignAttribution = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    let captured = {};
+    let hasNew = false;
+
+    ATTRIBUTION_PARAMS.forEach((param) => {
+        const value = urlParams.get(param);
+        if (value) {
+            captured[param] = value;
+            hasNew = true;
+        }
+    });
+
+    if (!hasNew) {
+        return;
+    }
+
+    let stored = null;
+    try {
+        const raw = localStorage.getItem(ATTRIBUTION_STORAGE_KEY);
+        if (raw) {
+            stored = JSON.parse(raw);
+        }
+    } catch (e) {
+        stored = null;
+    }
+
+    const now = Date.now();
+    if (stored && stored.expiresAt && stored.expiresAt > now && stored.data) {
+        captured = Object.assign({}, stored.data, captured);
+    }
+
+    if (!captured.lead_capture_date) {
+        captured.lead_capture_date = new Date().toISOString();
+    }
+
+    localStorage.setItem(ATTRIBUTION_STORAGE_KEY, JSON.stringify({
+        data: captured,
+        expiresAt: now + ATTRIBUTION_TTL_MS
+    }));
+};
+
+const getStoredCampaignAttribution = () => {
+    try {
+        const raw = localStorage.getItem(ATTRIBUTION_STORAGE_KEY);
+        if (!raw) {
+            return {};
+        }
+        const stored = JSON.parse(raw);
+        if (!stored.expiresAt || stored.expiresAt <= Date.now()) {
+            localStorage.removeItem(ATTRIBUTION_STORAGE_KEY);
+            return {};
+        }
+        return stored.data || {};
+    } catch (e) {
+        return {};
+    }
+};
+
+const appendAttributionToFormData = (formData) => {
+    const attribution = getStoredCampaignAttribution();
+    Object.keys(attribution).forEach((key) => {
+        if (attribution[key]) {
+            formData += '&' + encodeURIComponent(key) + '=' + encodeURIComponent(attribution[key]);
+        }
+    });
+    return formData;
+};
+
+captureCampaignAttribution();
+
+// function efecto() {
+//     $('#indicadores li').on('click', 'a', function() {
+//         $('#navbarTogglerDemo01').removeClass('show');
+//         var clase = $(this).attr('id');
+//         $('.indicador').addClass('d-none');
+//         $('.'+clase).removeClass('d-none');
+//     });
+// }
+
+    // $(function() {
+    //     // Tu código jQuery o JavaScript aquí
+    //     console.log("El DOM está listo.");
+    //     var miDiv = document.getElementById('card-overlay');
+    //     // Obtener la altura del div
+    //     var alturaDiv = miDiv.offsetHeight;
+
+    //     var segundoDiv = document.getElementById('carouselExampleAutoplaying');
+    //     segundoDiv.style.height = alturaDiv + 'px !important';
+
+
+    //   });
+function DesplegableServicios()
+{
+    if($("#btn-servicios").attr("aria-expanded")== "true")
+    {
+        $('#btn-servicios').removeClass('show');
+        $("#btn-servicios").removeAttr("aria-expanded");
+        $('#desplegable-servicios').removeClass('show');
+        $("#desplegable-servicios").removeAttr("data-bs-popper");  
+    }else{
+        $('#btn-servicios').addClass('show');
+        $("#btn-servicios").attr("aria-expanded", "true");
+        $('#desplegable-servicios').addClass('show');
+        $("#desplegable-servicios").attr("data-bs-popper", "static");                   
+    }
+}
+const initRegister = (selfUrl) => {
+    let typePerson = 'fisica';
+    $("input[name=stepType]").val(typePerson);
+
+    applyMaskFields('form-step-1');
+    applyMaskFields('form-step-2');
+
+    $("#register-modal").on('hide.bs.modal show.bs.modal', function(){
+        cleanForm(typePerson);
+    });
+
+    // hide both
+    $("#register-modal-complete").on('hide.bs.modal', function(){
+        $("#register-modal").modal('hide');
+    });
+
+    $('#cuit_number').change(function() {
+        if($(this).val() != '')
+            typePerson = 'juridica';
+        else
+            typePerson = 'fisica';
+
+        $("input[name=stepType]").val(typePerson);
+        toggleRenaperRegisterFields();
+    });
+
+    $('#doc_type').change(function() {
+        toggleRenaperRegisterFields();
+    });
+
+    toggleRenaperRegisterFields();
+
+    $('#form-step-1').on('input change', '#doc_number, #numero_tramite, #dni_sexo, #name, #lastname', function() {
+        clearRenaperFieldErrors('#form-step-1');
+        hideRenaperToast('#form-step-1-errors-back');
+    });
+
+    $('#provincia').change(function() {
+        let p = $(this).val();
+
+        // clean postal code value
+        $("#cp").val(null);
+
+        if((p == "") || p == null )
+            return;
+
+        getLocalidades(p, selfUrl);
+    });
+
+    $('#localidad').change(function() {
+        // clean postal code value
+        $("#cp").val(null);
+    });
+
+    $('#rubro').change(function() {
+        $('#custom_rubro').val(null);
+        const r = document.getElementById("custom_rubro");
+
+        if($(this).val() === '23') {
+            r.dataset.checkfield = "true";
+            $('.row-custom_rubro').removeClass('d-none');
+            $('.row-custom_rubro').addClass('d-flex');
+        } else {
+            r.dataset.checkfield = "false";
+            $('.row-custom_rubro').addClass('d-none');
+            $('.row-custom_rubro').removeClass('d-flex');
+        }
+    });
+
+    $('#terms').change(function() {
+        if($(this).prop('checked')) {
+            $('#terms-error strong').text("");
+            $('#terms').parent().removeClass('has-error');
+            $('#terms-error').addClass('d-none');
+        }
+    });
+
+    $("#password_confirm.btn-addon-password").click(function() {
+        handlePassToogle("#form-step-1 #password_confirm");
+    });
+
+    $("#password.btn-addon-password").click(function() {
+        handlePassToogle("#form-step-1 #password");
+    });
+
+    $('#btn-next-step').click(function(e) {
+        e.preventDefault();
+        window.dataLayer = window.dataLayer || [];
+        dataLayer.push({
+            'event': 'form_start_micorreo',
+            'form': {
+                'form_id': 'signup_micorreo_01',
+                'step_number': 1
+            }
+        });
+        registerStepOne(selfUrl, typePerson);
+    });
+
+    $('.btn-register').click(function(e) {
+        e.preventDefault();
+        registerStepTwo(selfUrl, typePerson);
+    });
+
+    $('.btn-prev-step').click(function() {
+        goToStep('showPrev', typePerson);
+    });
+
+    $('#btn-resend-email').click(function(e) {
+        e.preventDefault();
+        resendEmail(selfUrl);
+    });
+
+}
+
+const handlePassToogle = (i) => {
+    let passInput = $(i);
+
+    if(passInput.attr('type') === 'password') {
+        passInput.attr('type','text');
+        $(i+'.btn-addon-password').removeClass('bi-eye-fill');
+        $(i+'.btn-addon-password').addClass('bi-eye-slash-fill');
+    } else {
+        passInput.attr('type','password');
+        $(i+'.btn-addon-password').removeClass('bi-eye-slash-fill');
+        $(i+'.btn-addon-password').addClass('bi-eye-fill');
+    }
+}
+
+const applyMaskFields = (f) => {
+    // get the current form
+    const form = document.getElementById(f);
+
+    // get all items with the attr validation
+    const formInputs= form.querySelectorAll("input[data-validation]");
+    formInputs.forEach((input) => applyCustomMask(input));
+}
+
+const applyCustomMask = (input) => {
+    const validationType = input.dataset.validation;
+
+    switch (validationType) {
+        case "onlyNumbers":
+            input.addEventListener("input", () => {
+                const value = input.value;
+                input.value = value.replace(/[^0-9]/g, "");
+            });
+            break;
+        case "onlyLetters":
+            input.addEventListener("input", () => {
+                const value = input.value;
+                input.value = value.replace(/[^a-zA-ZÀ-ÿ ]/g, "");
+            });
+            break;
+        /*case "onlyEmail":
+            input.addEventListener("input", () => {
+                const value = input.value;
+                input.value = value.replace(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g, "");
+            });
+            break;
+        case "customRegex":
+            const regexPattern = input.dataset.regex;
+            const regex = new RegExp(regexPattern);
+            if (!regex.test(value)) {
+                input.value = "";
+                alert("El valor ingresado no cumple con el patrón requerido.");
+            }
+            break;*/
+        // Add more validation types as needed
+        default:
+            break;
+    }
+}
+
+const isRenaperEnabledOnRegister = () => {
+    const form = document.getElementById('form-step-1');
+    return form && form.dataset.renaperEnabled === '1';
+};
+
+const isSelectedDocTypeDni = () => {
+    const selected = $('#doc_type option:selected');
+    if (!selected.length) {
+        return false;
+    }
+
+    const codigo = (selected.data('codigo') || '').toString().toUpperCase();
+    const descripcion = (selected.text() || '').toUpperCase();
+
+    return codigo === '96'
+        || descripcion.indexOf('DNI') !== -1
+        || descripcion.indexOf('DOCUMENTO NAC') !== -1;
+};
+
+const clearRenaperFieldErrors = (formSelector) => {
+    const $form = $(formSelector || '#form-step-1');
+    $form.find('.renaper-field-error').removeClass('renaper-field-error border border-danger');
+    $form.find('.renaper-label-error').removeClass('renaper-label-error');
+};
+
+const highlightRenaperFields = (fields, formSelector) => {
+    const $form = $(formSelector || '#form-step-1');
+    clearRenaperFieldErrors(formSelector);
+
+    if (!fields || !fields.length) {
+        return;
+    }
+
+    fields.forEach(function(field) {
+        const $el = $form.find('[name="' + field + '"], #' + field);
+        if (!$el.length) {
+            return;
+        }
+        $el.addClass('renaper-field-error border border-danger');
+        $el.closest('.form-floating').find('label').addClass('renaper-label-error');
+    });
+};
+
+const showRenaperToast = (toastSelector, data) => {
+    const $toast = $(toastSelector);
+    const html = (data && (data.message_html || data.message))
+        ? (data.message_html || data.message)
+        : '';
+
+    if (!html) {
+        $toast.addClass('d-none');
+        $toast.find('p').html('');
+        return;
+    }
+
+    $toast.removeClass('d-none').addClass('renaper-message-toast alert');
+    $toast.find('p').html(html);
+};
+
+const hideRenaperToast = (toastSelector) => {
+    const $toast = $(toastSelector);
+    $toast.addClass('d-none');
+    $toast.find('p').html('');
+};
+
+/** Listado clásico de validación (varios mensajes), como antes de Renaper. */
+const showClassicStepOneErrors = (errors) => {
+    let err = '';
+    $.each(errors || {}, function (key, value) {
+        if (Array.isArray(value)) {
+            err += value.join('<br>') + '<br>';
+        } else if (value) {
+            err += value + '<br>';
+        }
+    });
+
+    const $box = $('#form-step-1-errors-back');
+    $box.removeClass('d-none renaper-message-toast').addClass('alert alert-danger');
+    $box.find('p').html(err);
+};
+
+const toggleRenaperRegisterFields = () => {
+    if (!isRenaperEnabledOnRegister()) {
+        return;
+    }
+
+    const $row = $('#row-renaper-dni-fields');
+    const $tramite = $('#numero_tramite');
+    const $sexo = $('#dni_sexo');
+    const hasCuit = ($('#cuit_number').val() || '').trim() !== '';
+    const showFields = !hasCuit && isSelectedDocTypeDni();
+
+    if (showFields) {
+        $row.removeClass('d-none');
+        $row.addClass('d-flex');
+        $tramite.attr('data-checkfield', 'true');
+        $sexo.attr('data-checkfield', 'true');
+    } else {
+        $row.addClass('d-none');
+        $row.removeClass('d-flex');
+        $tramite.val(null).attr('data-checkfield', 'false');
+        $sexo.val('').attr('data-checkfield', 'false');
+    }
+};
+
+const validateRenaperDni = (route) => {
+    const $btn = $('#btn-renaper-validate');
+    const $errors = $('#renaper-dni-errors');
+    const token = $("input[name=_token]").val();
+
+    hideRenaperToast('#renaper-dni-errors');
+    clearRenaperFieldErrors('#form-renaper-dni');
+
+    if (checkFields('form-renaper-dni')) {
+        showRenaperToast('#renaper-dni-errors', { message: '* Campo obligatorio' });
+        return false;
+    }
+
+    $btn.attr('disabled', 'disabled');
+    $('.loading-spinner-renaper').attr('hidden', false);
+
+    $.ajax({
+        url: route + '/renaper/validate-dni',
+        type: 'POST',
+        dataType: 'json',
+        data: $('#form-renaper-dni').serialize(),
+        headers: {
+            'x-csrf-token': token
+        },
+        success: function(data) {
+            $btn.removeAttr('disabled');
+            $('.loading-spinner-renaper').attr('hidden', true);
+
+            if (data.mensaje === 'NO_OK') {
+                let fields = data.fields || [];
+                if ((!fields || !fields.length) && data.errors) {
+                    fields = Object.keys(data.errors);
+                }
+                highlightRenaperFields(fields, '#form-renaper-dni');
+                showRenaperToast('#renaper-dni-errors', data);
+                return;
+            }
+
+            Swal.fire({
+                title: 'DNI validado',
+                icon: 'success',
+                html: 'Tu DNI fue validado correctamente con RENAPER.',
+                confirmButtonText: 'Aceptar',
+                confirmButtonColor: '#FFCE00'
+            }).then(function() {
+                location.reload();
+            });
+        },
+        error: function() {
+            $btn.removeAttr('disabled');
+            $('.loading-spinner-renaper').attr('hidden', true);
+            showRenaperToast('#renaper-dni-errors', {
+                message_html: 'No pudimos validar tu identidad porque el servicio no está disponible en este momento. Intentá nuevamente más tarde.'
+            });
+        }
+    });
+};
+
+const registerStepOne = (route, type) => {
+
+    let token = $("input[name=_token]").val();
+    let $btn = $('#btn-next-step');
+
+    if(!validaStepOne()){
+        return false;
+    }
+
+    toggleRenaperRegisterFields();
+    clearRenaperFieldErrors('#form-step-1');
+    hideRenaperToast('#form-step-1-errors-back');
+
+    $btn.attr("disabled", "disabled");
+    $btn.find(".text").html("Validando");
+
+    // show spinner
+    $(".loading-spinner").attr('hidden', false);
+
+    $.ajax({
+        url: route + '/registerStepOne',
+        type: "POST",
+        dataType: 'json',
+        data: $('#form-step-1').serialize(),
+        headers: {
+            'x-csrf-token': token
+        },
+        success: function( data ) {
+            if(data.mensaje == 'NO_OK'){
+
+                // enabled current btn
+                $btn.removeAttr("disabled");
+                $btn.find(".text").html("Siguiente");
+
+                // hide spinner
+                $(".loading-spinner").attr('hidden', true);
+
+                let fields = data.fields || [];
+                if ((!fields || !fields.length) && data.errors) {
+                    fields = Object.keys(data.errors);
+                }
+
+                // Tipado Renaper: un mensaje + highlight de campos.
+                // Validación habitual: listado completo abajo (sin highlight Renaper).
+                if (data.error_code) {
+                    highlightRenaperFields(fields, '#form-step-1');
+                    showRenaperToast('#form-step-1-errors-back', data);
+                } else {
+                    clearRenaperFieldErrors('#form-step-1');
+                    showClassicStepOneErrors(data.errors);
+                }
+
+            } else {
+                if (data.renaper_nombre) {
+                    $('#name').val(data.renaper_nombre);
+                }
+                if (data.renaper_apellido) {
+                    $('#lastname').val(data.renaper_apellido);
+                }
+
+                if (data.renaper_warning) {
+                    showRenaperToast('#form-step-1-errors-back', data);
+                }
+
+                if(data.token)
+                    getDataAfip($("#cuit_number").val(), route);
+
+                setTimeout(function(){
+                    // enabled current btn
+                    $btn.removeAttr("disabled");
+                    $btn.find(".text").html("Siguiente");
+
+                    // hide spinner
+                    $(".loading-spinner").attr('hidden', true);
+                    goToStep('showNext', type);
+                }, data.renaper_warning ? 800 : 300);
+            }
+
+        },
+        error: function (res) {
+            // enabled current btn
+            $btn.removeAttr("disabled");
+            $btn.find(".text").html("Siguiente");
+
+            // hide spinner
+            $(".loading-spinner").attr('hidden', true);
+            console.log('Error:', res);
+        }
+    });
+}
+
+const registerStepTwo = (route, type) => {
+
+    let person = $("input[name=stepType]").val();
+    let token = $("input[name=_token]").val();
+    let $btn = $('.btn-register');
+
+    if(!validaStepTwo(person))
+        return false;
+
+    // show spinner
+    $(".loading-spinner").attr('hidden', false);
+
+    // disabled current btn
+    $btn.attr("disabled", "disabled");
+    $btn.find(".text").html("Validando");
+    const urlParams = new URLSearchParams(window.location.search);
+    let formData = $('#form-step-1, #form-step-2').serialize();
+    if (urlParams.toString()) {
+        formData += `&${urlParams.toString()}`;
+    }
+    formData = appendAttributionToFormData(formData);
+    $.ajax({
+        url: route + '/registerStepTwo',
+        type: "POST",
+        dataType: 'json',
+        data: formData,
+        headers: {
+            'x-csrf-token': token
+        },
+        success: function( data ) {
+            // enabled current btn
+            $btn.find(".text").html("Registrarme");
+
+            // hide spinner
+            $(".loading-spinner").attr('hidden', true);
+
+            // enabled current btn
+            $btn.removeAttr("disabled");
+
+            if(data.mensaje == 'VALIDATOR_FAILS' || data.mensaje == 'NO_OK') {
+                let err = '';
+                // Preferir message (Renaper) antes que errors objeto → evita "[object Object]".
+                if (data.message) {
+                    err = data.message;
+                } else if (typeof data.errors === 'string') {
+                    err = data.errors;
+                } else if (data.errors && typeof data.errors === 'object') {
+                    $.each(data.errors, function (key, value) {
+                        if (Array.isArray(value)) {
+                            err += value.join('\n') + '\n';
+                        } else if (value) {
+                            err += value + '\n';
+                        }
+                    });
+                } else {
+                    err = 'Ocurrió un error al registrar. Intentá nuevamente.';
+                }
+
+                $('#form-step-2-'+ person +'-errors-back p').text($.trim(err));
+                $('#form-step-2-'+ person +'-errors-back').removeClass('d-none');
+
+            } else {
+                window.dataLayer = window.dataLayer || [];
+                dataLayer.push({
+                    'event': 'signup_micorreo',
+                    'user_data': {
+                        'step': '2_of_2',
+                        'registration_status': 'validation_pending'
+                    }
+                });
+                showRegisterComplete();
+            }
+        },
+        error: function (res) {
+            // enabled current btn
+            $btn.removeAttr("disabled");
+            $btn.find(".text").html("Registrarme");
+
+            // hide spinner
+            $(".loading-spinner").attr('hidden', true);
+
+            console.log('Error:', res);
+        }
+    });
+}
+
+const cleanForm = (step) => {
+
+    // hide spinner
+    $(".loading-spinner").attr('hidden', true);
+
+    // hide spinner
+    $(".loading-spinner-email").attr('hidden', true);
+
+    $('#terms').prop('checked', false);
+
+    $('#form-step-1-errors').addClass('d-none');
+    $('#form-step-1 input').removeClass('border border-danger renaper-field-error');
+    $('#form-step-1 select').removeClass('border border-danger renaper-field-error');
+    $('#form-step-1 label').removeClass('renaper-label-error');
+    $('#password.btn-addon-password').removeClass('border border-danger');
+    $('#password_confirm.btn-addon-password').removeClass('border border-danger');
+    hideRenaperToast('#form-step-1-errors-back');
+
+    $('#form-step-2-fisica-errors').addClass('d-none');
+    $('#form-step-2 input').removeClass('border border-danger');
+    $('#form-step-2 select').removeClass('border border-danger');
+    $('#form-step-2-fisica-errors-back p').text('');
+    $('#form-step-2-fisica-errors-back').addClass('d-none');
+
+    $('#form-step-2-juridica-errors').addClass('d-none');
+    $('#form-step-2-juridica-errors-back p').text('');
+    $('#form-step-2-juridica-errors-back').addClass('d-none');
+
+    $.each($('#form-step-1 input, #form-step-1 select, #form-step-2 input, #form-step-2 select'), function (key, element) {
+        if(!$(element).is('[name="_token"]') && !$(element).is('[name="stepType"]'))
+            $(element).val(null);
+    });
+
+    toggleRenaperRegisterFields();
+    goToStep('showPrev', step);
+}
+
+const getDataAfip = (value, route) => {
+    let d = '&cuit=' + value + '&id=' + value;
+    let token = $("input[name=_token]").val();
+
+    Swal.fire({
+        title: "Recuperando datos de AFIP",
+        html: "Aguarde unos instantes"
+    })
+    Swal.showLoading();
+
+    $.ajax({
+        url: route + '/getDataAfip',
+        type: "POST",
+        dataType: 'json',
+        data: d,
+        headers: {
+            'x-csrf-token': token
+        },
+        success: function( res ) {
+
+            if(res.error === 0){
+                setDataAfip(res, route);
+                Swal.close();
+            }else{
+                Swal.fire({
+                    title: 'Error!',
+                    icon: 'error',
+                    html: res.msg,
+                    confirmButtonText: 'Aceptar',
+                    confirmButtonColor: '#FFCE00'
+                }).then((result) => {
+                    if (result.isConfirmed)
+                        $('.btn-prev-step').click();
+                })
+            }
+        },
+        error: function (res) {
+
+            Swal.fire({
+                title: 'Error!',
+                icon: 'error',
+                html: 'Ocurrió un error en la comunicación con los servicios de AFIP. Reintente nuevamente',
+                confirmButtonText: 'Reintentar',
+                confirmButtonColor: '#FFCE00'
+            }).then((result) => {
+                if (result.isConfirmed)
+                    getDataAfip(value, route);
+            })
+            console.log('Error:', res);
+        }
+    });
+}
+
+const setDataAfip = (data, route) => {
+    $("#nameAfip").val(data.razonSocialAfip);
+    $("#cuitAfip").val(data.nroDocumentoAfip);
+    $("#provinciaAfip").val(data.provinciaNombre);
+    $("#cpAfip").val(data.codPostalAfip);
+    $("#domicilioAfip").val(data.direccionAfip);
+    $("#condicionAfip").val(data.codCatFiscalDesc);
+
+    /*if(data.localidadAfip != '')
+        $("#localidadAfip").val(data.localidadAfip);
+    else*/
+        getLocalidades(data.codProvinciaAfip, route, true)
+
+    // hidden inputs
+    $("#catFiscalAfip").val(data.codCatFiscalAfip);
+    $("#codProvinciaAfip").val(data.codProvinciaAfip);
+}
+
+const getLocalidades = (provincia, route, esAfip = false) => {
+    let token = $("input[name=_token]").val();
+
+    let d = '_token = ' + token;
+    let currentInput = "#localidad";
+
+    if(esAfip)
+        currentInput = "#localidadAfip";
+
+    $(currentInput).html('<option value="" id="optionlocdefault" selected="selected">Cargando...</option>');
+
+    $.ajax({
+        url: route + '/localidadesget/' + provincia,
+        type: "GET",
+        data: d,
+        headers: {
+            'x-csrf-token': token
+        },
+        success: function( res ) {
+            $("#optionlocdefault").html("Seleccione");
+            for(var i = 0; i< res.length; i++ )
+                $(currentInput).append("<option value= "+res[i].codigo+">"+res[i].nombre+"</option>");
+        },
+        error: function (res) {
+            console.log('Error:', res);
+        }
+    });
+}
+
+const goToStep = (action, type) => {
+    if(action === 'showNext') {
+        // hide first step
+        $('.card-step-1').removeClass('d-flex');
+        $('.card-step-1').addClass('d-none');
+        // show second step
+        $('.card-step-2-'+type).removeClass('d-none');
+        $('.card-step-2-'+type).addClass('d-flex');
+    }else{
+        // hide current step
+        $('.card-step-2-'+type).removeClass('d-flex');
+        $('.card-step-2-'+type).addClass('d-none');
+
+        // show first step
+        $('.card-step-1').removeClass('d-none');
+        $('.card-step-1').addClass('d-flex');
+    }
+}
+
+const validaStepOne = () => {
+
+    $('#form-step-1-errors').addClass('d-none');
+    clearRenaperFieldErrors('#form-step-1');
+    $('#form-step-1 input').removeClass('border border-danger');
+    $('#form-step-1 select').removeClass('border border-danger');
+    $('#password_button.btn-addon-password').removeClass('border border-danger');
+    $('#password_confirm_button.btn-addon-password').removeClass('border border-danger');
+
+    hideRenaperToast('#form-step-1-errors-back');
+
+    if(!$('#terms').prop('checked')) {
+        $('#terms-error strong').text("Debe aceptar los terminos y condiciones");
+        $('#terms').parent().addClass('has-error');
+        $('#terms-error').removeClass('d-none');
+        return false;
+    }
+
+    toggleRenaperRegisterFields();
+
+    // Campos vacíos / selects sin elegir: bordes rojos + "* Campo obligatorio".
+    // Si todos los obligatorios tienen valor (aunque sea inválido), sigue al backend
+    // y muestra el listado detallado de mensajes.
+    if(checkFields('form-step-1')) {
+        $('#form-step-1-errors').removeClass('d-none');
+
+        if($('.passwordRegister').hasClass('border border-danger')) {
+            $('#password_button.btn-addon-password').addClass('border border-danger');
+        }
+
+        if($('#password_confirm').hasClass('border border-danger')) {
+            $('#password_confirm_button.btn-addon-password').addClass('border border-danger');
+        }
+
+        return false;
+    }
+
+    return true;
+}
+
+const validaStepTwo = (type) => {
+    const provincia = document.getElementById("provincia");
+    const localidad = document.getElementById("localidad");
+    const direccion = document.getElementById("direccion");
+    const cp = document.getElementById("cp");
+    const nameAfip = document.getElementById("nameAfip");
+    const cuitAfip = document.getElementById("cuitAfip");
+    const provinciaAfip = document.getElementById("provinciaAfip");
+    const localidadAfip = document.getElementById("localidadAfip");
+    const cpAfip = document.getElementById("cpAfip");
+    const domicilioAfip = document.getElementById("domicilioAfip");
+    const condicionAfip = document.getElementById("condicionAfip");
+
+    provincia.dataset.checkfield = "false";
+    localidad.dataset.checkfield = "false";
+    direccion.dataset.checkfield = "false";
+    cp.dataset.checkfield = "false";
+    nameAfip.dataset.checkfield = "false";
+    cuitAfip.dataset.checkfield = "false";
+    provinciaAfip.dataset.checkfield = "false";
+    localidadAfip.dataset.checkfield = "false";
+    cpAfip.dataset.checkfield = "false";
+    domicilioAfip.dataset.checkfield = "false";
+    condicionAfip.dataset.checkfield = "false";
+
+    if (type === 'fisica') {
+        provincia.dataset.checkfield = "true";
+        localidad.dataset.checkfield = "true";
+        direccion.dataset.checkfield = "true";
+        cp.dataset.checkfield = "true";
+    } else {
+        nameAfip.dataset.checkfield = "true";
+        cuitAfip.dataset.checkfield = "true";
+        provinciaAfip.dataset.checkfield = "true";
+        localidadAfip.dataset.checkfield = "true";
+        cpAfip.dataset.checkfield = "true";
+        domicilioAfip.dataset.checkfield = "true";
+        condicionAfip.dataset.checkfield = "true";
+    }
+
+    $('#form-step-2-'+type+'-errors').addClass('d-none');
+    $('#form-step-2 input').removeClass('border border-danger');
+    $('#form-step-2 select').removeClass('border border-danger');
+
+    $('#form-step-2-'+type+'-errors-back p').text('');
+    $('#form-step-2-'+type+'-errors-back').addClass('d-none');
+
+    if(checkFields('form-step-2')) {
+        $('#form-step-2-'+type+'-errors').removeClass('d-none');
+        return false;
+    }
+
+    return true;
+}
+
+const checkFields = (_form) => {
+    let fail = false;
+    const form = document.getElementById(_form);
+
+    // get all items with the attr validation
+    const formInputs= form.querySelectorAll("input[data-checkfield]");
+    const formSelects= form.querySelectorAll("select[data-checkfield]");
+
+    formInputs.forEach((input) => {
+        const validation = input.dataset.checkfield;
+        if(validation === 'true') {
+            if(input.value == '') {
+                $(input).addClass('border border-danger');
+                fail = true;
+            }
+        }
+    });
+
+    formSelects.forEach((select) => {
+        const validation = select.dataset.checkfield;
+        if(validation === 'true') {
+            if(select.value == '') {
+                $(select).addClass('border border-danger');
+                fail = true;
+            }
+        }
+    });
+
+    return fail;
+}
+
+const showRegisterComplete = () => {
+    let e = $('#form-step-1 #email').val();
+    let t = 'Te enviamos un correo electrónico a \n' + e + ' para validar tu cuenta. \n Recorda revisar la carpeta de spam o \n correo no deseado';
+
+    // save email
+    $('#reg-email-send').val(e);
+
+    // replace
+    $('#mensaje-content').prop('innerText',t);
+
+    // close first modal
+    $("#register-modal").modal('hide');
+
+    // open the modal
+    $("#register-modal-complete").modal('show');
+}
+
+const resendEmail = (route) => {
+    // console.log('entre')
+    let token = $("#form-step-1 input[name=_token]").val();
+    let $btn = $('#btn-resend-email');
+    let d = '&userEmail=' + $('#reg-email-send').val();
+
+    // show spinner
+    $(".loading-spinner-email").attr('hidden', false);
+
+    // disabled current btn
+    $btn.attr("disabled", "disabled");
+    $btn.find(".text").html("Enviando");
+
+    $.ajax({
+        url: route + '/registerReSendEmail',
+        type: "POST",
+        dataType: 'json',
+        data: d,
+        headers: {
+            'x-csrf-token': token
+        },
+        success: function( data ) {
+            // enabled current btn
+            $btn.removeAttr("disabled");
+            $btn.find(".text").html("Reenviar correo");
+
+            // hide spinner
+            $(".loading-spinner-email").attr('hidden', true);
+
+            if(data.mensaje == 'NO_OK')
+                console.log(data.errors);
+
+        },
+        error: function (res) {
+            // enabled current btn
+            $btn.removeAttr("disabled");
+            $btn.find(".text").html("Reenviar correo");
+
+            // hide spinner
+            $(".loading-spinner-email").attr('hidden', true);
+
+            console.log('Error:', res);
+        }
+    });
+}
+
+function ResetPassword (){
+    // $("#reset-modal-complete").modal("hide");
+
+    let token = $("#form-reset-password input[name=_token]").val();
+    var d=$('#form-reset-password').serialize()
+    
+    var btn= $('#btn-resend-email-reset');
+    // disabled current btn
+    btn.prop('disabled', true);
+    btn.find(".text").html("Enviando");
+    
+    $.ajax({
+        url: url + '/resetpassword',
+        type: "POST",
+        dataType: 'json',
+        data: d,
+        headers: {
+            'x-csrf-token': token
+        },
+        success: function( data ) {
+
+            if(data.error == "1"){
+                $("#error-mensaje-reset").css("display", "block");
+                $("#error-mensaje-reset-content").html(data.msg);
+            }
+            else{
+                btn.prop('disabled', false);
+                btn.find(".text").html("Enviar");
+                $("#error-mensaje-reset").css("display", "none");
+                $("#resetPassword-modal").modal("hide");
+
+                $("#reset-modal-complete").modal("show");
+                // $("#mensaje-reset-header").html("Correo enviado exitosamente")
+                // $("#mensaje-reset-content").html("¡Listo! Te enviamos un enlace para que reestablezcas tu contraseña. Recordá revisar la carpeta de spam o correo no deseado.");
+                // $("#mensaje-reset-content").html(data.msg);
+
+            }
+            console.log(data.msg);
+
+        },
+        error: function (res) {
+            // // enabled current btn
+            // $btn.removeAttr("disabled");
+            // $btn.find(".text").html("Reenviar correo");
+
+            // // hide spinner
+            // $(".loading-spinner-email").attr('hidden', true);
+            $("#error-mensaje-reset").css("display", "block");
+            $("#error-mensaje-reset-content").html("Ha surgido un error, intentelo nuevamente más tarde.");
+
+            console.log('Error:', res);
+        }
+    });
+}
+
+function ShowPassword(id){
+    var tipo = document.getElementById(id);
+    if(tipo.type == "password"){
+        tipo.type = "text";
+    }else{
+        tipo.type = "password";
+    }
+}
+function getSaldo(){
+	var poststr = '_token = ' + el_token;
+	$(".spMontoSaldo").html("Cargando...");
+	window.jQuery.ajax({
+	type: "GET",
+	url: la_url + '/getsaldo',
+	data: poststr,
+	dataType: 'json',
+	success: function(result){
+		var mensaje = "";
+		if (result == undefined || result.saldo == undefined)
+			mensaje = "Hubo un error, intentelo nuevamente.";
+		else	{
+				if (result.error == "2"){
+					alert("Hubo un error, vuelva a intentarlo.");
+					logout();
+					return;
+				} 	else if (result.error == "1") {
+						mensaje = result.msg;
+				}	else	{
+							//mensaje = "&#36;&nbsp;" + result.saldo;
+							mensaje = result.saldo;
+							$(".dvSaldoMonto").html(result.saldo);
+				}
+		}
+		$(".spMontoSaldo").html(mensaje);
+	},
+	error: function(XMLHttpRequest, textStatus, errorThrown){
+		$(".spMontoSaldo").html("Hubo un error, intentelo nuevamente.");
+	}
+	});
+}
+function getSaldoCC(){ // add fn kb-144
+	var poststr = '_token = ' + el_token;
+	$(".spMontoSaldoCC").html("Cargando...");
+	window.jQuery.ajax({
+	type: "GET",
+	url: la_url + '/getsaldoCC',
+	data: poststr,
+	dataType: 'json',
+	success: function(result){
+		var mensaje = "";
+		if (result == undefined || result.saldo == undefined)
+			mensaje = "Hubo un error, intentelo nuevamente.";
+		else	{
+				if (result.error == "2"){
+					alert("Hubo un error, vuelva a intentarlo.");
+					logout();
+					return;
+				} 	else if (result.error == "1") {
+						mensaje = result.msg;
+				}	else	{
+							//mensaje = "&#36;&nbsp;" + result.saldo;
+							mensaje = result.saldo;
+							//$(".dvSaldoMontoCC").html(result.saldo);
+				}
+		}
+		$(".spMontoSaldoCC").html(mensaje);
+	},
+	error: function(XMLHttpRequest, textStatus, errorThrown){
+		$(".spMontoSaldoCC").html("Hubo un error, intentelo nuevamente.");
+	}
+	});
+}
+function alert2(mensaje,fxaceptar,hash){
+    var idcuerpo = ((hash!=undefined)&&(hash["idcuerpo"]!=undefined))?hash["idcuerpo"]:"mensajeModalBodyGen";
+	var idmodal = ((hash!=undefined)&&(hash["idmodal"]!=undefined))?hash["idmodal"]:"myModalGenerico";
+	var idbotones = ((hash!=undefined)&&(hash["idbotones"]!=undefined))?hash["idbotones"]:"mensajeModalFooterGen";
+	var idtitle = ((hash!=undefined)&&(hash["idtitle"]!=undefined))?hash["idtitle"]:"mensajeModalTitleGen";
+	var lblTitle = ((hash!=undefined)&&(hash["lblTitle"]!=undefined))?hash["lblTitle"]:"Mensaje";	
+	
+	if (hash != undefined && hash['botonX'] != undefined) {
+        //$(".btn-close").css("display", hash['botonX']);
+		$('#btnX').css(hash['botonX']);
+	}
+    if (hash && hash['extraClass']) {
+        $('#' + idmodal).find('.modal-dialog').addClass(hash['extraClass']);
+    } else {
+        $('#' + idmodal).find('.modal-dialog').removeClass('modal-fulfillment');
+    }
+	$("#"+idtitle).html(lblTitle);
+	// console.log(idtitle)
+	// console.log(lblTitle)
+
+	var lblAceptar = ((hash!=undefined)&&(hash["lblAceptar"]!=undefined))?hash["lblAceptar"]:"Aceptar";
+	var lblCancelar = ((hash!=undefined)&&(hash["lblCancelar"]!=undefined))?hash["lblCancelar"]:"Cancelar";
+	
+	var botones = '';
+	
+	if ((hash!=undefined)&&(hash["entendido"]!=undefined)){
+	botones +='<p class="alineacion d-flex justify-content-center col-12"><input class="mx-2" type="checkbox" id="entendido" name="entendido">No volver a mostrar <label for="entendido"></p></label>';
+	}
+
+    if ((hash!=undefined)&&(hash["fxCancelar"]!=undefined)){
+		var onclickevento = "";
+		if (hash["fxCancelar"] != " ")
+		onclickevento = ' onclick="' + hash["fxCancelar"] + '" ';
+		botones += '<button type="button" class="btn btn-correo-secondary" ' + onclickevento + ' data-bs-dismiss="modal">'+lblCancelar+'</button>';
+	}
+    
+	if (fxaceptar == undefined || fxaceptar == "")
+	botones += '<button type="button" class="btn btn-correo-primary" data-bs-dismiss="modal">'+lblAceptar+'</button>';
+	else
+	botones += '<button type="button" class="btn btn-correo-primary" onclick="'+ fxaceptar +'" data-bs-dismiss="modal">'+lblAceptar+'</button>';
+	
+
+	
+	$(document).on('keypress', function(r){    if (r.keyCode==27){ $('#'+idmodal).modal('toggle')};  $(document).off('keypress');  })
+	
+	
+	$("#"+idbotones).html(botones);
+	$("#"+idcuerpo).html(mensaje);
+	$("#"+idmodal).modal("show");
+	$(".modal-content").fadeIn(500);
+
+}
+
+function ValidacionLogin(evento)
+{
+    var email = $("#email");
+    var password = $("#password");
+    var btnPassword = $("#btnPassword");
+    var span= $("#mensajeError");
+
+    if(email.val() == "" || password.val() == "" ){
+        span.removeClass("d-none");
+        evento.preventDefault();
+        
+        if(email.val() == ""){
+            email.addClass("border border-danger")
+        }
+        if(password.val() == ""){
+            password.addClass("border border-danger")
+            btnPassword.addClass("border border-danger");
+        }
+    }
+}
+// event listeners login
+$( "#email" ).on( "change", function() {
+    $("#email").removeClass("border border-danger");
+    if(!$("#password").hasClass("border border-danger") && !$("#mensajeError").hasClass("d-none")){
+        $("#mensajeError").addClass("d-none");
+    }
+});
+$( "#password" ).on( "change", function() {
+     
+         $("#password").removeClass("border border-danger");
+        $("#btnPassword").removeClass("border border-danger");
+    
+        if(!$("#email").hasClass("border border-danger") && !$("#mensajeError").hasClass("d-none")){
+            $("#mensajeError").addClass("d-none");
+        }
+    
+});
+//  event listeners medidas frecuentes -- mi perfil
+$( "#aliasMedidas" ).on( "change", function() {
+// document.querySelector("aliasMedidas").addEventListener('change', function(event) {
+    $("#aliasMedidas").removeClass("border border-danger");
+
+    if(!$("#largo").hasClass("border border-danger") && !$("#ancho").hasClass("border border-danger")&& !$("#alto").hasClass("border border-danger")){
+        $("#mensajeError").addClass("d-none");
+    }
+});
+
+$( "#largo" ).on( "change", function() {
+    $("#largo").removeClass("border border-danger");
+
+    if(!$("#aliasMedidas").hasClass("border border-danger") && !$("#ancho").hasClass("border border-danger")&& !$("#alto").hasClass("border border-danger")){
+        $("#mensajeError").addClass("d-none");
+    }
+});
+
+$( "#ancho" ).on( "change", function() {
+    $("#ancho").removeClass("border border-danger");
+
+    if(!$("#aliasMedidas").hasClass("border border-danger") && !$("#largo").hasClass("border border-danger")&& !$("#alto").hasClass("border border-danger")){
+        $("#mensajeError").addClass("d-none");
+    }
+});
+$( "#alto" ).on( "change", function() {
+    $("#alto").removeClass("border border-danger");
+
+    if(!$("#aliasMedidas").hasClass("border border-danger") && !$("#largo").hasClass("border border-danger")&& !$("#ancho").hasClass("border border-danger")){
+        $("#mensajeError").addClass("d-none");
+    }
+});
+// event listeners cambiar contraseña -- mi perfil
+$( "#pan2_current-password" ).on( "change", function() {
+    $("#pan2_current-password").removeClass("border border-danger");
+
+    if(!$("#pan2_password").hasClass("border border-danger") && !$("#pan2_password_confirmation").hasClass("border border-danger")){
+        $("#mensajeErrorCamposPass").addClass("d-none");
+    }
+});
+$( "#pan2_password" ).on( "change", function() {
+    $("#pan2_password").removeClass("border border-danger");
+
+    if(!$("#pan2_current-password").hasClass("border border-danger") && !$("#pan2_password_confirmation").hasClass("border border-danger")){
+        $("#mensajeErrorCamposPass").addClass("d-none");
+    }
+});
+$( "#pan2_password_confirmation" ).on( "change", function() {
+    $("#pan2_password_confirmation").removeClass("border border-danger");
+
+    if(!$("#pan2_password").hasClass("border border-danger") && !$("#pan2_current-password").hasClass("border border-danger")){
+        $("#mensajeErrorCamposPass").addClass("d-none");
+    }
+});
+// event listeners datos facturacion -- mi perfil
+$( "#email" ).on( "change", function() {
+    $("#email").removeClass("border border-danger");
+
+    if(!$("#rubro").hasClass("border border-danger") && !$("#password_pan3").hasClass("border border-danger")&& !$("#calle").hasClass("border border-danger")&& !$("#provincia").hasClass("border border-danger")&& !$("#user-destino-cp").hasClass("border border-danger")&& !$("#localidad").hasClass("border border-danger")){
+        $("#mensajeErrorDatosFacturacion").addClass("d-none");
+    }
+});
+$( "#rubro" ).on( "change", function() {
+    $("#rubro").removeClass("border border-danger");
+
+    if(!$("#email").hasClass("border border-danger") && !$("#password_pan3").hasClass("border border-danger")&& !$("#calle").hasClass("border border-danger")&& !$("#provincia").hasClass("border border-danger")&& !$("#user-destino-cp").hasClass("border border-danger")&& !$("#localidad").hasClass("border border-danger")){
+        $("#mensajeErrorDatosFacturacion").addClass("d-none");
+    }
+});
+$( "#password_pan3" ).on( "change", function() {
+    $("#password_pan3").removeClass("border border-danger");
+
+    if(!$("#rubro").hasClass("border border-danger") && !$("#email").hasClass("border border-danger")&& !$("#calle").hasClass("border border-danger")&& !$("#provincia").hasClass("border border-danger")&& !$("#user-destino-cp").hasClass("border border-danger")&& !$("#localidad").hasClass("border border-danger")){
+        $("#mensajeErrorDatosFacturacion").addClass("d-none");
+    }
+});
+$( "#provincia" ).on( "change", function() {
+    $("#provincia").removeClass("border border-danger");
+
+    if(!$("#rubro").hasClass("border border-danger") && !$("#password_pan3").hasClass("border border-danger")&& !$("#calle").hasClass("border border-danger")&& !$("#email").hasClass("border border-danger")&& !$("#user-destino-cp").hasClass("border border-danger")&& !$("#localidad").hasClass("border border-danger")){
+        $("#mensajeErrorDatosFacturacion").addClass("d-none");
+    }
+});
+$( "#calle" ).on( "change", function() {
+    $("#calle").removeClass("border border-danger");
+
+    if(!$("#rubro").hasClass("border border-danger") && !$("#password_pan3").hasClass("border border-danger")&& !$("#provincia").hasClass("border border-danger")&& !$("#email").hasClass("border border-danger")&& !$("#user-destino-cp").hasClass("border border-danger")&& !$("#localidad").hasClass("border border-danger")) {
+        $("#mensajeErrorDatosFacturacion").addClass("d-none");
+    }
+});
+$( "#user-destino-cp" ).on( "change", function() {
+    $("#user-destino-cp").removeClass("border border-danger");
+
+    if(!$("#rubro").hasClass("border border-danger") && !$("#password_pan3").hasClass("border border-danger")&& !$("#calle").hasClass("border border-danger")&& !$("#provincia").hasClass("border border-danger")&& !$("email").hasClass("border border-danger")&& !$("#localidad").hasClass("border border-danger")){
+        $("#mensajeErrorDatosFacturacion").addClass("d-none");
+    }
+});
+
+$( "#localidad" ).on( "change", function() {
+    $("#localidad").removeClass("border border-danger");
+
+    if(!$("#rubro").hasClass("border border-danger") && !$("#password_pan3").hasClass("border border-danger")&& !$("#calle").hasClass("border border-danger")&& !$("#provincia").hasClass("border border-danger")&& !$("#user-destino-cp").hasClass("border border-danger")&& !$("#email").hasClass("border border-danger")){
+        $("#mensajeErrorDatosFacturacion").addClass("d-none");
+    }
+});
+// event listeners domicilio remitente -- mi perfil
+$( "#remitente-razon" ).on( "change", function() {
+    $("#remitente-razon").removeClass("border border-danger");
+
+    if(!$("#remitente-mail").hasClass("border border-danger") && !$("#remitente-localidad").hasClass("border border-danger")&& !$("#remitente-calle").hasClass("border border-danger")&& !$("#remitente-cp").hasClass("border border-danger")&& !$("#remitente-celular").hasClass("border border-danger")&& !$("#remitente-provincia").hasClass("border border-danger")
+    ){
+        $("#mensajeErrorDomicilioRemitente").addClass("d-none");
+    }
+});
+$( "#remitente-mail" ).on( "change", function() {
+    $("#remitente-mail").removeClass("border border-danger");
+
+    if(!$("#remitente-razon").hasClass("border border-danger") && !$("#remitente-localidad").hasClass("border border-danger")&& !$("#remitente-calle").hasClass("border border-danger")&& !$("#remitente-cp").hasClass("border border-danger")&& !$("#remitente-celular").hasClass("border border-danger")&& !$("#remitente-provincia").hasClass("border border-danger")
+    ){
+        $("#mensajeErrorDomicilioRemitente").addClass("d-none");
+    }
+});
+$( "#remitente-localidad" ).on( "change", function() {
+    $("#remitente-localidad").removeClass("border border-danger");
+
+    if(!$("#remitente-mail").hasClass("border border-danger") && !$("#remitente-razon").hasClass("border border-danger")&& !$("#remitente-calle").hasClass("border border-danger")&& !$("#remitente-cp").hasClass("border border-danger")&& !$("#remitente-celular").hasClass("border border-danger")&& !$("#remitente-provincia").hasClass("border border-danger")
+    ){
+        $("#mensajeErrorDomicilioRemitente").addClass("d-none");
+    }
+});
+$( "#remitente-calle" ).on( "change", function() {
+    $("#remitente-calle").removeClass("border border-danger");
+
+    if(!$("#remitente-mail").hasClass("border border-danger") && !$("#remitente-localidad").hasClass("border border-danger")&& !$("#remitente-razon").hasClass("border border-danger")&& !$("#remitente-cp").hasClass("border border-danger")&& !$("#remitente-celular").hasClass("border border-danger")&& !$("#remitente-provincia").hasClass("border border-danger")
+    ){
+        $("#mensajeErrorDomicilioRemitente").addClass("d-none");
+    }
+});
+$( "#remitente-cp" ).on( "change", function() {
+    $("#remitente-cp").removeClass("border border-danger");
+
+    if(!$("#remitente-mail").hasClass("border border-danger") && !$("#remitente-localidad").hasClass("border border-danger")&& !$("#remitente-calle").hasClass("border border-danger")&& !$("#remitente-razon").hasClass("border border-danger")&& !$("#remitente-celular").hasClass("border border-danger")&& !$("#remitente-provincia").hasClass("border border-danger")
+    ){
+        $("#mensajeErrorDomicilioRemitente").addClass("d-none");
+    }
+});
+$( "#remitente-celular" ).on( "change", function() {
+    $("#remitente-celular").removeClass("border border-danger");
+
+    if(!$("#remitente-mail").hasClass("border border-danger") && !$("#remitente-localidad").hasClass("border border-danger")&& !$("#remitente-calle").hasClass("border border-danger")&& !$("#remitente-cp").hasClass("border border-danger")&& !$("#remitente-razon").hasClass("border border-danger")&& !$("#remitente-provincia").hasClass("border border-danger")
+    ){
+        $("#mensajeErrorDomicilioRemitente").addClass("d-none");
+    }
+});
+$( "#remitente-provincia" ).on( "change", function() {
+    $("#remitente-provincia").removeClass("border border-danger");
+
+    if(!$("#remitente-mail").hasClass("border border-danger") && !$("#remitente-localidad").hasClass("border border-danger")&& !$("#remitente-calle").hasClass("border border-danger")&& !$("#remitente-cp").hasClass("border border-danger")&& !$("#remitente-celular").hasClass("border border-danger")&& !$("#remitente-razon").hasClass("border border-danger")
+    ){
+        $("#mensajeErrorDomicilioRemitente").addClass("d-none");
+    }
+});
+// event listeners domicilio pickup -- mi perfil
+$( "#pickup-dias" ).on( "change", function() {
+    $("#pickup-dias").removeClass("border border-danger");
+
+    if(!$("#pickup-horario").hasClass("border border-danger") && !$("#pickup-razon").hasClass("border border-danger") && !$("#pickup-mail").hasClass("border border-danger") && !$("#pickup-localidad").hasClass("border border-danger")&& !$("#pickup-calle").hasClass("border border-danger")&& !$("#pickup-cp").hasClass("border border-danger")&& !$("#pickup-celular").hasClass("border border-danger")&& !$("#pickup-provincia").hasClass("border border-danger")
+    ){
+        $("#mensajeErrorDomicilioPickup").addClass("d-none");
+    }
+});
+$( "#pickup-horario" ).on( "change", function() {
+    $("#pickup-horario").removeClass("border border-danger");
+
+    if(!$("#pickup-dias").hasClass("border border-danger") && !$("#pickup-razon").hasClass("border border-danger") && !$("#pickup-mail").hasClass("border border-danger") && !$("#pickup-localidad").hasClass("border border-danger")&& !$("#pickup-calle").hasClass("border border-danger")&& !$("#pickup-cp").hasClass("border border-danger")&& !$("#pickup-celular").hasClass("border border-danger")&& !$("#pickup-provincia").hasClass("border border-danger")
+    ){
+        $("#mensajeErrorDomicilioPickup").addClass("d-none");
+    }
+});
+$( "#pickup-razon" ).on( "change", function() {
+    $("#pickup-razon").removeClass("border border-danger");
+
+    if(!$("#pickup-horario").hasClass("border border-danger") && !$("#pickup-dias").hasClass("border border-danger") && !$("#pickup-mail").hasClass("border border-danger") && !$("#pickup-localidad").hasClass("border border-danger")&& !$("#pickup-calle").hasClass("border border-danger")&& !$("#pickup-cp").hasClass("border border-danger")&& !$("#pickup-celular").hasClass("border border-danger")&& !$("#pickup-provincia").hasClass("border border-danger")
+    ){
+        $("#mensajeErrorDomicilioPickup").addClass("d-none");
+    }
+});
+$( "#pickup-mail" ).on( "change", function() {
+    $("#pickup-mail").removeClass("border border-danger");
+
+    if(!$("#pickup-horario").hasClass("border border-danger") && !$("#pickup-dias").hasClass("border border-danger") && !$("#pickup-razon").hasClass("border border-danger") && !$("#pickup-localidad").hasClass("border border-danger")&& !$("#pickup-calle").hasClass("border border-danger")&& !$("#pickup-cp").hasClass("border border-danger")&& !$("#pickup-celular").hasClass("border border-danger")&& !$("#pickup-provincia").hasClass("border border-danger")
+    ){
+        $("#mensajeErrorDomicilioPickup").addClass("d-none");
+    }
+});
+$( "#pickup-localidad" ).on( "change", function() {
+    $("#pickup-localidad").removeClass("border border-danger");
+
+    if(!$("#pickup-horario").hasClass("border border-danger") && !$("#pickup-dias").hasClass("border border-danger") && !$("#pickup-mail").hasClass("border border-danger") && !$("#pickup-razon").hasClass("border border-danger")&& !$("#pickup-calle").hasClass("border border-danger")&& !$("#pickup-cp").hasClass("border border-danger")&& !$("#pickup-celular").hasClass("border border-danger")&& !$("#pickup-provincia").hasClass("border border-danger")
+    ){
+        $("#mensajeErrorDomicilioPickup").addClass("d-none");
+    }
+});
+$( "#pickup-calle" ).on( "change", function() {
+    $("#pickup-calle").removeClass("border border-danger");
+
+    if(!$("#pickup-horario").hasClass("border border-danger") && !$("#pickup-dias").hasClass("border border-danger") && !$("#pickup-mail").hasClass("border border-danger") && !$("#pickup-localidad").hasClass("border border-danger")&& !$("#pickup-razon").hasClass("border border-danger")&& !$("#pickup-cp").hasClass("border border-danger")&& !$("#pickup-celular").hasClass("border border-danger")&& !$("#pickup-provincia").hasClass("border border-danger")
+    ){
+        $("#mensajeErrorDomicilioPickup").addClass("d-none");
+    }
+});
+$( "#pickup-cp" ).on( "change", function() {
+    $("#pickup-cp").removeClass("border border-danger");
+
+    if(!$("#pickup-horario").hasClass("border border-danger") && !$("#pickup-dias").hasClass("border border-danger") && !$("#pickup-mail").hasClass("border border-danger") && !$("#pickup-localidad").hasClass("border border-danger")&& !$("#pickup-calle").hasClass("border border-danger")&& !$("#pickup-razon").hasClass("border border-danger")&& !$("#pickup-celular").hasClass("border border-danger")&& !$("#pickup-provincia").hasClass("border border-danger")
+    ){
+        $("#mensajeErrorDomicilioPickup").addClass("d-none");
+    }
+});
+$( "#pickup-celular" ).on( "change", function() {
+    $("#pickup-celular").removeClass("border border-danger");
+
+    if(!$("#pickup-horario").hasClass("border border-danger") && !$("#pickup-dias").hasClass("border border-danger") && !$("#pickup-mail").hasClass("border border-danger") && !$("#pickup-localidad").hasClass("border border-danger")&& !$("#pickup-calle").hasClass("border border-danger")&& !$("#pickup-cp").hasClass("border border-danger")&& !$("#pickup-razon").hasClass("border border-danger")&& !$("#pickup-provincia").hasClass("border border-danger")
+    ){
+        $("#mensajeErrorDomicilioPickup").addClass("d-none");
+    }
+});
+$( "#pickup-provincia" ).on( "change", function() {
+    $("#pickup-provincia").removeClass("border border-danger");
+
+    if(!$("#pickup-horario").hasClass("border border-danger") && !$("#pickup-dias").hasClass("border border-danger") && !$("#pickup-mail").hasClass("border border-danger") && !$("#pickup-localidad").hasClass("border border-danger")&& !$("#pickup-calle").hasClass("border border-danger")&& !$("#pickup-cp").hasClass("border border-danger")&& !$("#pickup-celular").hasClass("border border-danger")&& !$("#pickup-razon").hasClass("border border-danger")
+    ){
+        $("#mensajeErrorDomicilioPickup").addClass("d-none");
+    }
+});
+// event listener cambiar nombre usu
+$( ".pan1_name" ).on( "change", function() {
+    $(".pan1_name").removeClass("border border-danger");
+
+    if(!$(".pan1_password").hasClass("border border-danger") && !$("pan1_lastname").hasClass("border border-danger")){
+        $("#mensajeErrorNomApe").addClass("d-none");
+    }
+});
+$( ".pan1_lastname" ).on( "change", function() {
+    $(".pan1_lastname").removeClass("border border-danger");
+
+    if(!$(".pan1_password").hasClass("border border-danger") && !$("pan1_name").hasClass("border border-danger")){
+        $("#mensajeErrorNomApe").addClass("d-none");
+    }
+});
+$( ".pan1_password" ).on( "change", function() {
+    $(".pan1_password").removeClass("border border-danger");
+
+    if(!$(".pan1_lastname").hasClass("border border-danger") && !$("pan1_name").hasClass("border border-danger")){
+        $("#mensajeErrorNomApe").addClass("d-none");
+    }
+});
+
+const checkFieldsComplete = (_elem) => {
+    //hide errors span
+    $('#' + _elem + '-errors').addClass('d-none');
+    $('#' + _elem + ' input').removeClass('border border-danger');
+    $('#' + _elem + ' select').removeClass('border border-danger');
+
+    let fail = false;
+
+    fail = checkFields(_elem);
+
+    //show errors span
+    if (fail)
+        $('#' + _elem + '-errors').removeClass('d-none');
+
+    return fail;
+}
+
+const registerPaqAr = (route) => {
+
+    let token = $("input[name=_token]").val();
+    let $btn = $('#btn-register-paqar');
+
+    if(checkFieldsComplete("form-paqar"))
+        return false;
+
+    // disabled current btn
+    $btn.attr("disabled", "disabled");
+    $btn.find(".text").html("Validando");
+
+    $.ajax({
+        url: route + '/enviarMailPuntoPaqar',
+        type: "POST",
+        dataType: 'html',
+        data: $('#form-paqar').serialize(),
+        headers: {
+            'x-csrf-token': token
+        },
+        // complete: function( data ) {
+            success: function( data ) {
+
+                console.log(data);
+            $btn.find(".text").html("Registrate");
+
+            // open the modal
+            $("#registerpaqar-modal-complete").modal('show');
+        },
+        error: function (xhr, status, error) {
+            // enabled current btn
+            $btn.removeAttr("disabled");
+            $btn.find(".text").html("Registrate");
+
+            var err = eval("(" + xhr.responseText + ")");
+
+            if(err['g-recaptcha-response']) {
+                var item = err['g-recaptcha-response'][0];
+
+                $("#form-paqar-errors").empty()
+                $("#form-paqar-errors").append("<small class='text-danger fw-semibold'>* " + item + "</small>")
+                $("#form-paqar-errors").removeClass("d-none");
+            } else {
+                $("#form-paqar-errors").addClass("d-none");
+            }
+            
+        }
+    });
+}
+
+const initRegisterPaqAr = (selfUrl) => {
+    applyMaskFields('form-paqar');
+
+    $('#btn-register-paqar').click(function(e) {
+        e.preventDefault();
+        registerPaqAr(selfUrl);
+    });
+
+    // redirect home
+    $("#registerpaqar-modal-complete").on('hide.bs.modal', function(){
+        location.href = selfUrl;
+    });
+}
+$( "#fdesde" ).on( "change", function() {
+	// document.querySelector("aliasMedidas").addEventListener('change', function(event) {
+		$("#fdesde").removeClass("border border-danger");
+	
+		if(!$("#fhasta").hasClass("border border-danger")){
+			$("#msgError1").addClass("d-none");
+		}
+	});
+
+	$( "#fhasta" ).on( "change", function() {
+		// document.querySelector("aliasMedidas").addEventListener('change', function(event) {
+			$("#fhasta").removeClass("border border-danger");
+		
+			if(!$("#fdesde").hasClass("border border-danger")){
+				$("#msgError1").addClass("d-none");
+			}
+		});
+
+function abrirChatbot(){
+    _wcchat.showApp();
+}

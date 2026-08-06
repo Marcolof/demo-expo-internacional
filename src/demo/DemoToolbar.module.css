@@ -1,0 +1,175 @@
+/* Barra de demostración. Fija abajo, colapsable.
+ * No forma parte del producto: es el panel de control de la maqueta. */
+
+.toolbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-demo-toolbar);
+  background-color: var(--correo-near-black);
+  color: var(--text-inverse);
+  font-size: var(--font-size-xs);
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  min-height: 2.5rem;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-brand);
+  color: var(--color-brand-contrast);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-3xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+  min-width: 0;
+  color: var(--grey-200);
+}
+
+.summaryItem {
+  white-space: nowrap;
+}
+
+.summaryValue {
+  color: var(--color-brand);
+  font-weight: var(--font-weight-semibold);
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.action {
+  flex-shrink: 0;
+  padding: var(--space-1) var(--space-3);
+  border: var(--border-width-thin) solid var(--grey-700);
+  border-radius: var(--radius-pill);
+  background-color: transparent;
+  color: var(--text-inverse);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.action:hover {
+  background-color: var(--grey-700);
+}
+
+/* --- Panel expandido ---------------------------------------------------- */
+
+.panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: var(--space-4);
+  align-items: start;
+  padding: var(--space-4);
+  border-top: var(--border-width-thin) solid var(--grey-700);
+  max-height: 45vh;
+  overflow-y: auto;
+}
+
+.section {
+  min-width: 0;
+}
+
+.sectionTitle {
+  margin-bottom: var(--space-2);
+  color: var(--color-brand);
+  font-size: var(--font-size-3xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* --- Controles compartidos por los switchers ---------------------------- */
+
+.field {
+  display: block;
+  margin-bottom: var(--space-3);
+}
+
+.fieldLabel {
+  display: block;
+  margin-bottom: var(--space-1);
+  color: var(--grey-200);
+}
+
+.select {
+  width: 100%;
+  padding: var(--space-1) var(--space-2);
+  border: var(--border-width-thin) solid var(--grey-700);
+  border-radius: var(--radius-xs);
+  background-color: var(--grey-900);
+  color: var(--text-inverse);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-xs);
+}
+
+.hint {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--grey-600);
+  font-size: var(--font-size-3xs);
+  line-height: var(--line-height-snug);
+}
+
+.toggleList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  color: var(--grey-200);
+  line-height: var(--line-height-snug);
+}
+
+.toggle input {
+  flex-shrink: 0;
+  margin: 0;
+  accent-color: var(--color-brand);
+}
+
+.toggleOverridden {
+  color: var(--color-brand);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* --- Inspector ---------------------------------------------------------- */
+
+.code {
+  margin: 0;
+  padding: var(--space-2);
+  border-radius: var(--radius-xs);
+  background-color: var(--grey-900);
+  color: var(--grey-200);
+  font-family: ui-monospace, 'Cascadia Code', 'Consolas', monospace;
+  font-size: var(--font-size-3xs);
+  line-height: var(--line-height-snug);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 30vh;
+  overflow: auto;
+}

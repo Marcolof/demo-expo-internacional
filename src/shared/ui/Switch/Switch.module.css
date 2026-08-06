@@ -1,0 +1,84 @@
+/* Toggle. El riel y el pulgar se dimensionan con la escala de espaciado para
+ * no introducir medidas sueltas: riel 48x24, pulgar 16 con 4 de aire. */
+
+.wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  max-width: 100%;
+}
+
+/* `row-reverse` mueve el texto a la izquierda sin cambiar el orden del DOM
+ * (el botón tiene que seguir primero para el recorrido con teclado). */
+.wrapperLabelLeft {
+  flex-direction: row-reverse;
+}
+
+/* --- Riel --------------------------------------------------------------- */
+
+.track {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: calc(var(--space-6) * 2);
+  height: var(--space-6);
+  padding: var(--space-1);
+  border: none;
+  border-radius: var(--radius-pill);
+  /* Apagado: `--surface-disabled` es la capa semántica de `--grey-300`. */
+  background-color: var(--surface-disabled);
+  cursor: pointer;
+  transition: background-color var(--transition-base);
+}
+
+.trackOn {
+  background-color: var(--switch-color-on);
+}
+
+.track:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.thumb {
+  display: block;
+  width: var(--space-4);
+  height: var(--space-4);
+  border-radius: var(--radius-full);
+  background-color: var(--surface-raised);
+  box-shadow: var(--shadow-row);
+  transition: transform var(--transition-base);
+}
+
+/* 48 (riel) - 16 (pulgar) - 8 (padding) = 24 = --space-6 */
+.trackOn .thumb {
+  transform: translateX(var(--space-6));
+}
+
+/* --- Textos ------------------------------------------------------------- */
+
+.texts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 1 1 auto; /* llena la fila y empuja el riel al borde cuando el wrapper es ancho */
+  min-width: 0;
+}
+
+.label {
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-snug);
+}
+
+.labelDisabled {
+  color: var(--text-disabled);
+}
+
+.description {
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-snug);
+}

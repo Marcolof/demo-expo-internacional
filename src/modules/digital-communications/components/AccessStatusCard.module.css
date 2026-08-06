@@ -1,0 +1,61 @@
+/* Ficha de estado del alta en Comunicaciones Digitales. */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  background-color: var(--surface-raised);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-row);
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.title {
+  margin: var(--space-0);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-link);
+}
+
+.dates {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-4);
+  margin: var(--space-0);
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.label {
+  font-size: var(--summary-label-size);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-muted);
+}
+
+.value {
+  margin: var(--space-0);
+  font-size: var(--summary-value-size);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.reason {
+  margin: var(--space-0);
+  padding: var(--space-3);
+  background-color: var(--feedback-info-bg);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}

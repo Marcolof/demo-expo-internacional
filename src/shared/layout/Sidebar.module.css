@@ -1,0 +1,198 @@
+/* Navegación lateral.
+ *
+ * Dos presentaciones del mismo árbol de `navigation.config.ts`:
+ *   - riel de 61px con sólo iconos, fijo a la izquierda (>= 768px)
+ *   - cajón deslizante de 340px con textos y submenús (< 768px)
+ * Es exactamente lo que hace el original con `.d-none.d-md-flex` y el
+ * `.offcanvas`. */
+
+/* --- Riel (desktop) ----------------------------------------------------- */
+
+.rail {
+  display: none;
+  position: fixed;
+  top: var(--header-height);
+  left: 0;
+  bottom: 0;
+  z-index: var(--z-sidebar-rail);
+  width: var(--sidebar-rail-width);
+  flex-direction: column;
+  flex-shrink: 0;
+  background-color: var(--surface-rail);
+  overflow-y: auto;
+}
+
+@media (min-width: 768px) {
+  .rail {
+    display: flex;
+  }
+}
+
+.railList {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+.railItem {
+  width: var(--sidebar-rail-width);
+}
+
+/* En el original: `d-lg-none` dentro del riel. */
+.railItemMobileOnly {
+  display: none;
+}
+
+.railLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* .nav-link.py-3 de la referencia → 1rem arriba/abajo (no 0.75rem). */
+  padding: var(--space-4) 0;
+  color: var(--text-link);
+  cursor: default;
+}
+
+.railIcon {
+  width: var(--sidebar-icon-size);
+  height: var(--sidebar-icon-size);
+  object-fit: contain;
+}
+
+/* --- Cajón (mobile) ----------------------------------------------------- */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-offcanvas);
+  background-color: var(--modal-backdrop);
+}
+
+@media (min-width: 768px) {
+  .backdrop {
+    display: none;
+  }
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: calc(var(--z-offcanvas) + 1);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--sidebar-drawer-width);
+  background-color: var(--surface-sunken);
+  overflow-y: auto;
+}
+
+.drawerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: var(--header-height);
+  padding: 0 var(--space-3);
+  background-color: var(--surface-brand);
+}
+
+.drawerLogo {
+  height: 2rem;
+  width: auto;
+  object-fit: contain;
+}
+
+.drawerClose {
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  color: var(--text-on-brand);
+  font-size: var(--font-size-lg);
+  line-height: 1;
+}
+
+.drawerClose:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.drawerBody {
+  padding: var(--space-2) 0;
+}
+
+/* --- Ítems del cajón ---------------------------------------------------- */
+
+.item {
+  margin: var(--space-2) var(--space-3);
+}
+
+.itemMobileOnly {
+  display: block;
+}
+
+.itemLink,
+.itemToggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2);
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  text-align: left;
+  border-radius: var(--radius-xs);
+  cursor: default;
+}
+
+.itemToggle {
+  cursor: pointer;
+}
+
+.itemToggle:hover {
+  background-color: var(--surface-rail);
+}
+
+.itemIcon {
+  width: var(--sidebar-icon-size);
+  height: var(--sidebar-icon-size);
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.itemLabel {
+  flex: 1 1 auto;
+}
+
+.itemChevron {
+  flex-shrink: 0;
+  transition: transform var(--transition-base);
+}
+
+.itemChevronOpen {
+  transform: rotate(-180deg);
+}
+
+/* --- Submenú ------------------------------------------------------------ */
+
+.subList {
+  margin: var(--space-1) 0 0 var(--space-8);
+}
+
+.subLink {
+  display: block;
+  padding: var(--space-1) var(--space-4);
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: default;
+}
+
+.divider {
+  margin: var(--space-3) var(--space-4);
+  border-top: var(--border-width-thin) solid var(--border-subtle);
+}
