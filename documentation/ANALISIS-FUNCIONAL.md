@@ -178,12 +178,53 @@ Hallazgos del análisis del HTML. **No se replicaron** los errores, se corrigier
   ante Aduana destaque **Mantener representación** como acción recomendada.
 - Feature flags `INTERNATIONAL_SHIPMENTS`, `CUSTOMS_REPRESENTATION`,
   `HARMONIZED_CODE_REQUIRED`, `PICKUP_ORIGIN`.
+- **Paso Declaración** completo: país, finalidad (fines comerciales), categoría (Regalo /
+  Documento / Muestra comercial / Ayuda familiar / Envío de mercadería), alta de artículos
+  con código armonizado obligatorio (`AddArticleModal`), declaración jurada con checkbox, y
+  validación para avanzar (§5.5, §5.6).
+- **Paso Paquete** completo: medidas frecuentes, largo/ancho/alto, peso del contenido
+  (heredado de Declaración) vs. peso del paquete, y sus tres validaciones para avanzar
+  (`validatePackageStep` en `InternationalShipmentPage.tsx`):
+  - Medidas obligatorias y regla de §6.2 (ver interpretación en §3.1.6).
+  - Peso del paquete ≥ peso del contenido declarado (§6.3), con el texto de error exacto
+    del requerimiento.
+  - Peso máximo 20 kg (§6.4), con el texto de error exacto del requerimiento.
+- **Paso Origen** completo: remitente (`SAVED_ORIGIN_ADDRESSES`), provincia y sucursal de
+  imposición, filtrada por `hasCustomsOffice` cuando el peso declarado supera 2 kg (§7.2).
+  Mapa de la sucursal: placeholder gris (sin mapa real todavía).
+- **Paso Destino** — foco de esta etapa, dividido en 3 componentes reutilizables:
+  - `DestinatarioFields`: nombre, razón social, código de país + teléfono, correo,
+    identificación tributaria. Orden de campos: ver discrepancia en §3.1.7.
+  - `DestinoFields`: título + N° de orden (opcional, sin label) en la misma fila; país
+    precargado desde Declaración (no editable, §8.4); provincia/estado, ciudad, código
+    postal; hasta 3 líneas de dirección con agregar/eliminar (§8.5).
+  - `PostalServiceCard`: card de servicio postal con radio, reutilizable — hoy sin reglas
+    de disponibilidad (§9.3) ni cotización, sólo selección. Pensada para llevar esas
+    validaciones más adelante (`disabled`/`disabledReason`/`trailing` ya contemplados en
+    la interfaz).
+  - Sin validación para avanzar todavía (a diferencia de Declaración/Paquete): "Siguiente"
+    en Destino no valida ni navega (no hay paso siguiente construido).
+  - Representación ante Aduana (§8.1 punto 4) **no implementada** — el modelo ya tiene
+    `customsRepresentationAccepted` (ver arriba) pero la pantalla/modal no se construyó.
+- **Variante "Documento" de la categoría** (§5.5, Figma 7944:15282): al elegir la categoría
+  "Documento" en Declaración, toda la sección de contenido cambia su vocabulario de
+  "artículo" a "documento" (botón, empty state, modal de alta, acordeón) y el ícono pasa de
+  `boxes.svg` a `file-text.svg`. Implementado con un tipo `ArticleKind` (`ARTICLE` |
+  `DOCUMENT`) y un diccionario de textos (`ARTICLE_KIND_TEXT` en `article.types.ts`),
+  consumido por `AddArticleModal` y `ArticleAccordionItem`. **Los campos del formulario se
+  mantuvieron idénticos** (descripción, código armonizado, cantidad, valor unitario, peso
+  unitario) porque el requerimiento (§5.6) no describe una estructura distinta para
+  "documento" — sólo dice que el código armonizado es obligatorio para ambos tipos, sin
+  excepción. No se pudo verificar contra el diseño real de Figma en esta sesión (sin acceso
+  al Dev Mode MCP); confirmar que la card de documento en 7944:15282 no oculta o agrega
+  campos respecto de la de artículo.
 
 ### 2.2 Lo que falta construir
 
-Declaración (país, finalidad, categoría, artículos con código armonizado, Factura E,
-declaración jurada), el checkout con recotización, la carga masiva, y la documentación
-UPU.
+El checkout con recotización, la carga masiva, la documentación UPU, la pantalla de
+Representación ante Aduana para comerciales, y la cotización/disponibilidad real del
+servicio postal (§9.3). Los 4 pasos del wizard (Declaración/Paquete/Origen/Destino) ya
+existen; después de Destino no hay pasos siguientes (Pendientes/Checkout/Pagados).
 
 ---
 
@@ -203,6 +244,7 @@ Se arrastran del requerimiento (sección 19). **La maqueta no las resuelve por s
 | 8 | Declaración jurada | Confirmar si es checkbox, leyenda o confirmación final, y qué trazabilidad requiere. |
 | 9 | Sucursales comerciales | La regla de 2 kg ahora aplica a ambos tipos y reemplaza «comercial siempre con asiento aduanero». Alinear backend, pantallas e instructivos. |
 | 10 | Pago y facturación | Facturación, cancelación, devolución de saldo, comprobantes y conciliación. |
+| 11 | Peso máximo de la categoría "Documento" | **Revisado el requerimiento completo: no existe ningún límite de peso específico para la categoría "Documento".** Los únicos límites de 2 kg documentados son (a) la regla de sucursales en Origen (§7.2/§9.9: hasta 2 kg sucursales propias, más de 2 kg sólo asiento aduanero) y (b) que el servicio "Pequeño Paquete" no está disponible por encima de 2 kg (§9.3). Ninguno de los dos es un tope propio de la categoría Documento. No implementar una validación de 2 kg para Documento sin que el área funcional lo confirme por escrito. |
 
 ### 3.1 Decisiones que la maqueta tomó y hay que validar
 
@@ -216,3 +258,59 @@ para revisión:
 4. **Cotización simulada.** Fórmula inventada (`mocks/quote.mocks.ts`), no tarifario real.
 5. **Favorito no eliminable.** Regla de producto agregada para poder demostrar un bloqueo
    por **negocio** y no por permiso. Confirmar si va.
+6. **Regla de medidas del paso Paquete (§6.2).** El requerimiento dice *"dos de los lados
+   no pueden superar 90 cm × 90 cm"*, una frase ambigua (¿es una condición sobre dos lados
+   específicos? ¿sobre cualquier par?). La maqueta la implementó como: **a lo sumo un lado**
+   de los tres (largo/ancho/alto) puede superar los 90 cm; si dos o más lo superan, no
+   cumple. El requerimiento tampoco da el texto exacto del error (sólo dice "mostrar error;
+   bloquear avance"), así que el mensaje mostrado (*"Al menos dos lados del paquete superan
+   los 90 cm. Revisá las medidas para continuar."*) es redactado por la maqueta, no
+   transcripto del documento — a diferencia de los errores de §6.3 y §6.4, que sí citan el
+   texto recomendado literal. Confirmar ambas cosas con el área funcional.
+7. **Orden de campos del Destinatario (§8.2 vs. Figma).** El requerimiento lista el orden
+   textual como Nombre → Razón social → **Correo electrónico** → **Código telefónico** →
+   Teléfono. El diseño (Figma 5589:10467) muestra Nombre/Razón social → **Código de país /
+   Teléfono** → **Correo electrónico** → Identificación tributaria — el correo y el bloque
+   de teléfono están invertidos respecto del texto. La maqueta siguió el diseño (fuente de
+   verdad visual, por instrucción explícita), no el orden textual del §8.2. Confirmar cuál
+   de los dos es el vigente.
+
+---
+
+## 4. Paso de Declaración: Categorías de envío internacional (§5.5)
+
+El primer paso del flujo internacional requiere declarar la **finalidad** del envío, que determina
+las reglas aduanales y fiscales aplicables.
+
+### 4.1 Finalidad y categorías
+
+**Envíos con fines comerciales:**
+- `MERCADERIA` — Envío de mercadería (comercial)
+
+**Envíos sin fines comerciales (no comerciales):**
+| Categoría | Descripción | Identificador |
+|---|---|---|
+| Regalo | Obsequios personales, bienes de valor personal. | `REGALO` |
+| Documento | Correspondencia oficial, libros, documentos sin valor comercial. | `DOCUMENTO` |
+| Muestra comercial | Muestras gratuitas de productos, sin venta ni valor comercial declarado. | `MUESTRA` |
+| Ayuda familiar | Remesas de asistencia económica hacia familiares en el exterior. | `AYUDA_FAMILIAR` |
+
+### 4.2 Impacto por categoría
+
+- **Comercial (`MERCADERIA`):** Requiere Factura E, declaración ante ARCA, representación ante Aduana (si aplica).
+- **No comercial:** No requiere Factura E ni ARCA; el tratamiento aduanal es simplificado.
+- **Cambios de categoría:** Invalidan la cotización, igual que modificar artículos o destino.
+
+### 4.3 Implementación
+
+Categorías en `InternationalShipmentPage.tsx`:
+```ts
+const NON_COMMERCIAL_CATEGORIES: readonly SelectOption[] = [
+  { value: 'REGALO', label: 'Regalo' },
+  { value: 'DOCUMENTO', label: 'Documento' },
+  { value: 'MUESTRA', label: 'Muestra comercial' },
+  { value: 'AYUDA_FAMILIAR', label: 'Ayuda familiar' },
+]
+```
+
+La selección es **obligatoria** para habilitar "Agregar artículo" en el paso de Declaración.

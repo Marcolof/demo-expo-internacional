@@ -1,0 +1,142 @@
+/* Domicilio de destino (Figma 5589:10467). */
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+/* Título "Destino" + N° de orden (opcional), misma fila. */
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.title {
+  flex-shrink: 0;
+  color: var(--text-primary);
+  font-size: 1.125rem; /* 18px, igual que el resto de los títulos de sección */
+  font-weight: var(--font-weight-semibold);
+}
+
+/* País de destino, precargado desde Declaración y no editable acá
+ * (doc funcional §8.4). */
+.countryRow {
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.countryValue {
+  color: var(--text-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.row {
+  container-type: inline-size;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+@container (max-width: 480px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- Dirección (1 a 3 líneas, doc funcional §8.5, Figma 9807:43674) -------- */
+
+.addressLines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.addressTitle {
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+}
+
+.addressDescription {
+  margin-top: calc(var(--space-2) * -1); /* pegado al título, no al gap parejo del bloque */
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+
+/* Input + contador de caracteres de una línea de dirección. */
+.addressLineGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  width: 100%;
+}
+
+.addressLineRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.addressLineInput {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.charCounter {
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+}
+
+/* Botones circulares agregar/quitar línea (`circle-plus.svg` / `circle-minus.svg`). */
+.lineButton {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.lineIcon {
+  width: 24px;
+  height: 24px;
+}
+
+.addLine {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-link);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+}
+
+/* Más chico que `.lineIcon` (24px) y centrado con `align-items: center` del
+ * propio `.addLine` respecto a la altura del texto, no del ícono. */
+.addLineIcon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.addLine:hover {
+  text-decoration: underline;
+}

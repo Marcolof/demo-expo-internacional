@@ -213,5 +213,6 @@
   flex: 1 1 auto;
   display: flex;
   justify-content: flex-end;
+  gap: var(--space-3); /* Atrás + Siguiente en el flujo internacional */
 }
 

@@ -1,0 +1,104 @@
+/*
+ * Selector de código de país con bandera. `.trigger` reutiliza
+ * `fieldControlClasses.control` (mismo alto/borde/radio que Input/Select);
+ * `.listbox` reutiliza los tokens `--dropdown-*` ya definidos en el sistema
+ * para overlays de este tipo.
+ */
+
+.root {
+  position: relative;
+  width: 100%;
+}
+
+.trigger {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding-right: var(--space-8); /* deja lugar al chevron, igual que Select */
+  text-align: left;
+  cursor: pointer;
+}
+
+.triggerValue {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--field-text);
+}
+
+/* Mismo chevron que `Select` (misma flecha, mismo azul de marca), pero como
+ * ícono propio (no `background-image`) para poder rotarlo al abrir. */
+.chevron {
+  position: absolute;
+  top: 50%;
+  right: var(--space-3);
+  width: 14px;
+  height: 14px;
+  color: var(--correo-blue);
+  transform: translateY(-50%);
+  transition: transform var(--transition-fast);
+  pointer-events: none;
+}
+
+.chevronOpen {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.placeholder {
+  color: var(--field-text);
+}
+
+.flag {
+  flex-shrink: 0;
+  width: 20px;
+  height: 14px;
+  border-radius: 2px;
+  object-fit: cover;
+}
+
+.listbox {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  left: 0;
+  z-index: var(--z-header);
+  width: 100%;
+  min-width: var(--dropdown-min-width);
+  max-height: 280px;
+  margin: 0;
+  padding: var(--dropdown-padding-y) 0;
+  overflow-y: auto;
+  list-style: none;
+  border-radius: var(--field-radius);
+  background-color: var(--surface-raised);
+  box-shadow: var(--dropdown-shadow);
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--dropdown-item-padding);
+  border: none;
+  background: none;
+  color: var(--text-primary);
+  font-size: var(--dropdown-item-font-size);
+  text-align: left;
+  cursor: pointer;
+}
+
+.option:hover {
+  background-color: var(--surface-sunken);
+}
+
+.optionSelected {
+  background-color: var(--surface-sunken);
+  font-weight: var(--font-weight-medium);
+}
+
+.optionText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

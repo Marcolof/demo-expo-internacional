@@ -15,24 +15,40 @@ export interface InternationalStepperProps {
 
 /**
  * Stepper del flujo internacional (Figma 5611:10671): cuatro pasos con label
- * debajo del punto. El paso en curso va con disco amarillo; el resto, círculo
- * gris. Puramente visual (la maqueta no navega entre pasos todavía).
+ * debajo del punto. El paso en curso va con disco amarillo; los pasos ya
+ * completados (anteriores al actual) van con disco azul (mismo azul de marca
+ * que el resto del sitio); los que faltan, círculo gris.
  */
 export function InternationalStepper({ current, className }: InternationalStepperProps) {
+  const currentIndex = INTERNATIONAL_STEPS.indexOf(current)
+
   return (
     <div className={cn(styles.stepper, className)} role="list" aria-label="Progreso del envío">
-      {INTERNATIONAL_STEPS.map((step, index) => (
-        <Fragment key={step}>
-          {index > 0 && <span className={styles.connector} aria-hidden="true" />}
-          <div className={styles.step} role="listitem" aria-current={step === current ? 'step' : undefined}>
-            <span
-              className={cn(styles.dot, step === current ? styles.dotCurrent : styles.dotPending)}
-              aria-hidden="true"
-            />
-            <span className={styles.label}>{step}</span>
-          </div>
-        </Fragment>
-      ))}
+      {INTERNATIONAL_STEPS.map((step, index) => {
+        const isCurrent = step === current
+        const isVisited = index < currentIndex
+
+        return (
+          <Fragment key={step}>
+            {index > 0 && (
+              <span
+                className={cn(styles.connector, index <= currentIndex && styles.connectorVisited)}
+                aria-hidden="true"
+              />
+            )}
+            <div className={styles.step} role="listitem" aria-current={isCurrent ? 'step' : undefined}>
+              <span
+                className={cn(
+                  styles.dot,
+                  isCurrent ? styles.dotCurrent : isVisited ? styles.dotVisited : styles.dotPending,
+                )}
+                aria-hidden="true"
+              />
+              <span className={styles.label}>{step}</span>
+            </div>
+          </Fragment>
+        )
+      })}
     </div>
   )
 }

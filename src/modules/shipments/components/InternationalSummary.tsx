@@ -70,6 +70,8 @@ function Section({ title, open, onToggle, rows }: SectionProps) {
 export interface InternationalSummaryProps {
   /** Paso en curso, para el stepper. */
   readonly currentStep?: InternationalStep
+  /** Sin handler, "Pagar" queda deshabilitado (todavía no se puede pagar). */
+  readonly onPay?: () => void
   readonly className?: string
 }
 
@@ -78,7 +80,11 @@ export interface InternationalSummaryProps {
  * colapsables (Declaración / Paquete / Origen / Destino) + botón Pagar.
  * Estado inicial de la maqueta: sólo Declaración abierta, valores en "-".
  */
-export function InternationalSummary({ currentStep = 'Declaración', className }: InternationalSummaryProps) {
+export function InternationalSummary({
+  currentStep = 'Declaración',
+  onPay,
+  className,
+}: InternationalSummaryProps) {
   const [open, setOpen] = useState<ReadonlySet<string>>(new Set(['Declaración']))
 
   const toggle = (id: string) => {
@@ -108,7 +114,13 @@ export function InternationalSummary({ currentStep = 'Declaración', className }
         <Section title="Destino" open={open.has('Destino')} onToggle={() => toggle('Destino')} />
       </div>
 
-      <Button variant="primary" shape="square" fullWidth disabled>
+      <Button
+        variant="primary"
+        shape="square"
+        fullWidth
+        disabled={onPay === undefined}
+        onClick={onPay}
+      >
         Pagar
       </Button>
     </div>

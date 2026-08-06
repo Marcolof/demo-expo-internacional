@@ -3,8 +3,10 @@ import { formatUsd, formatWeightKg } from '@/shared/lib/formatCurrency'
 import { Alert } from '@/shared/ui/Alert'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
+import { NumberInput } from '@/shared/ui/NumberInput'
 import { Modal } from '@/shared/ui/Modal'
-import type { DeclaredArticleInput } from '../types/article.types'
+import { ARTICLE_KIND_TEXT } from '../types/article.types'
+import type { ArticleKind, DeclaredArticleInput } from '../types/article.types'
 import styles from './AddArticleModal.module.css'
 
 export interface AddArticleModalProps {
@@ -12,6 +14,8 @@ export interface AddArticleModalProps {
   readonly onClose: () => void
   /** Sólo se llama con datos válidos: el modal no cierra mientras haya errores. */
   readonly onSubmit: (article: DeclaredArticleInput) => void
+  /** "Documento" (doc funcional §5.5) cambia título/label/empty state — ver `article.types.ts`. */
+  readonly kind?: ArticleKind
 }
 
 interface FormState {
@@ -94,10 +98,11 @@ function DisclosureIcon({ open }: { readonly open: boolean }) {
  * el modal no cierra: marca los campos inválidos y muestra un aviso arriba
  * de los botones (Figma node de referencia del banner de error).
  */
-export function AddArticleModal({ isOpen, onClose, onSubmit }: AddArticleModalProps) {
+export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE' }: AddArticleModalProps) {
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [submitted, setSubmitted] = useState(false)
-  const [helpOpen, setHelpOpen] = useState(true)
+  const [helpOpen, setHelpOpen] = useState(false)
+  const text = ARTICLE_KIND_TEXT[kind]
 
   // Formulario limpio cada vez que se abre (evita arrastrar datos del artículo anterior).
   useEffect(() => {
@@ -157,7 +162,7 @@ export function AddArticleModal({ isOpen, onClose, onSubmit }: AddArticleModalPr
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Agregar artículo"
+      title={text.modalTitle}
       size="xl"
       labelledById="add-article-title"
       footer={footer}
@@ -165,8 +170,8 @@ export function AddArticleModal({ isOpen, onClose, onSubmit }: AddArticleModalPr
       <div className={styles.form}>
         <Input
           id="article-description"
-          label="Descripción del artículo"
-          hint="Ej.: Remera de algodón."
+          label={text.descriptionLabel}
+          hint={text.descriptionHint}
           value={form.description}
           onChange={(event) => setField('description')(event.currentTarget.value)}
           invalid={showInvalidBorders && errors.description !== undefined}
@@ -211,10 +216,9 @@ export function AddArticleModal({ isOpen, onClose, onSubmit }: AddArticleModalPr
           )}
         </div>
 
-        <Input
+        <NumberInput
           id="article-quantity"
           label="Cantidad"
-          type="number"
           min={1}
           step={1}
           value={form.quantity}

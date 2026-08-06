@@ -4,14 +4,22 @@
 
 .alert {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--space-3);
+  box-sizing: border-box;
   width: 100%;
+  min-height: var(--alert-min-height);
   padding: var(--space-3) var(--space-4);
   border: var(--border-width-thin) solid transparent;
   border-radius: var(--radius-sm);
   font-size: var(--font-size-sm);
   line-height: var(--line-height-normal);
+}
+
+/* Con título (dos líneas: título + cuerpo) el aviso no debe centrarse
+ * verticalmente contra el mínimo de una sola línea. */
+.alert:has(.title) {
+  align-items: flex-start;
 }
 
 .content {

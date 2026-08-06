@@ -1,0 +1,183 @@
+/*
+ * Grilla de ítems cotizados del checkout.
+ *
+ * El encabezado y cada fila comparten la MISMA plantilla de columnas
+ * (`--checkout-grid`), así las celdas quedan alineadas sin ser una `<table>`
+ * real. Se necesita esto porque cada fila es una tarjeta que, al abrirse,
+ * contiene también su panel "Detalle": con una tabla el `border-spacing`
+ * dejaría un corte visible entre la fila y su detalle.
+ */
+
+.scroller {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table {
+  /* 10 columnas: ícono de producto, 8 de datos y el chevron. */
+  --checkout-grid: 64px minmax(88px, 0.85fr) minmax(104px, 1fr) minmax(132px, 1.35fr)
+    minmax(128px, 1.3fr) minmax(80px, 0.85fr) minmax(92px, 0.95fr) minmax(128px, 1.35fr)
+    minmax(120px, 1.25fr) 44px;
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--table-row-gap);
+  /* Por debajo de esto la grilla se comprime: mejor scroll horizontal. */
+  min-width: 1080px;
+}
+
+/* --- Encabezado ----------------------------------------------------------- */
+
+.headerRow {
+  display: grid;
+  grid-template-columns: var(--checkout-grid);
+  align-items: end;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+}
+
+.headerCell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--table-header-font-weight);
+  line-height: var(--line-height-snug);
+  text-align: center;
+}
+
+/* Segunda línea aclaratoria: "(Informado)", "(IVA incluido)"… */
+.headerHint {
+  color: var(--text-primary);
+  font-size: var(--table-header-small-size);
+  font-weight: var(--font-weight-regular);
+}
+
+/* --- Fila (tarjeta) ------------------------------------------------------- */
+
+.card {
+  width: 100%;
+  border-radius: var(--table-radius);
+  background-color: var(--surface-raised);
+  box-shadow: var(--table-row-shadow);
+  transition: background-color var(--transition-fast);
+}
+
+/* Abierta: la tarjeta entera pasa a la superficie gris y suelta la sombra,
+ * para que la fila y su detalle se lean como un solo bloque. */
+.cardOpen {
+  background-color: var(--surface-sunken);
+  box-shadow: none;
+}
+
+.rowMain {
+  display: grid;
+  grid-template-columns: var(--checkout-grid);
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: none;
+  border-radius: inherit;
+  background: none;
+  font-family: var(--font-family-base);
+  text-align: left;
+  cursor: pointer;
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-snug);
+  text-align: center;
+}
+
+/* Origen y destino son los únicos textos que pueden desbordar. */
+.cellTruncate {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.priceCell {
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+
+/* Ícono de alcance (globo internacional / sobre nacional). Los dos van del
+ * mismo gris: son una marca de tipo, no un elemento a destacar. Ambos se
+ * dibujan inline con `currentColor`, así el color lo define esta única regla. */
+.productIcon {
+  flex-shrink: 0;
+  color: var(--text-disabled);
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--text-primary);
+  transition: transform var(--transition-base);
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+/* --- Panel "Detalle" ------------------------------------------------------ */
+
+/* Repite la plantilla de columnas para que el bloque caiga exactamente debajo
+ * de "Medidas" y "Precio C/DTO", como en la referencia. */
+.detail {
+  display: grid;
+  grid-template-columns: var(--checkout-grid);
+  gap: var(--space-3);
+  padding: 0 var(--space-4) var(--space-5);
+}
+
+.detailInner {
+  grid-column: 8 / 10;
+  min-width: 0;
+}
+
+.detailTitle {
+  margin-bottom: var(--space-3);
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+}
+
+.detailRows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.detailRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+}
+
+.detailLabel {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+}
+
+.detailValue {
+  flex-shrink: 0;
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  text-align: right;
+  white-space: nowrap;
+}

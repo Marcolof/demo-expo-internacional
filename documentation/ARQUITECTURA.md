@@ -176,7 +176,18 @@ timeouts falsos**, que es justamente lo que hay que poder demostrar.
 
 ---
 
-## 10. Lo que deliberadamente NO se hizo
+## 10. Categorías de envío internacional
+
+El paso de **Declaración** distingue entre envíos con y sin fines comerciales:
+
+- **Comercial:** `MERCADERIA`
+- **No comercial:** `REGALO`, `DOCUMENTO`, `MUESTRA`, `AYUDA_FAMILIAR`
+
+Cada categoría define requisitos fiscales y aduanales diferentes. Ver análisis funcional §4.
+
+---
+
+## 11. Lo que deliberadamente NO se hizo
 
 | Decisión | Motivo |
 |---|---|

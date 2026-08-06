@@ -63,9 +63,21 @@ export const BRANCHES: readonly Branch[] = [
   { code: 'K3332', name: 'CATAMARCA CENTRO', provinceCode: 'K', postalCode: '4700', hasCustomsOffice: false },
 ]
 
-/** Sucursales de una provincia, para poblar el select dependiente. */
-export function branchesByProvince(provinceCode: string): readonly SelectOption[] {
-  return BRANCHES.filter((branch) => branch.provinceCode === provinceCode).map((branch) => ({
+/**
+ * Sucursales de una provincia, para poblar el select dependiente.
+ *
+ * `requireCustomsOffice`: regla de Origen internacional (doc funcional §7.2)
+ * — con más de 2 kg declarados sólo se muestran sucursales con asiento
+ * aduanero. El flujo nacional no pasa este parámetro (queda en `false`).
+ */
+export function branchesByProvince(
+  provinceCode: string,
+  requireCustomsOffice = false,
+): readonly SelectOption[] {
+  return BRANCHES.filter(
+    (branch) =>
+      branch.provinceCode === provinceCode && (!requireCustomsOffice || branch.hasCustomsOffice),
+  ).map((branch) => ({
     value: branch.code,
     label: `${branch.name} (${branch.postalCode})`,
   }))
@@ -97,18 +109,6 @@ export const FREQUENT_MEASURES: readonly FrequentMeasure[] = [
 export const FREQUENT_MEASURE_OPTIONS: readonly SelectOption[] = FREQUENT_MEASURES.map(
   (measure) => ({ value: measure.id, label: measure.alias }),
 )
-
-/** Países habilitados para envíos internacionales salientes. */
-export const DESTINATION_COUNTRIES: readonly SelectOption[] = [
-  { value: 'BR', label: 'Brasil' },
-  { value: 'CL', label: 'Chile' },
-  { value: 'UY', label: 'Uruguay' },
-  { value: 'PY', label: 'Paraguay' },
-  { value: 'US', label: 'Estados Unidos' },
-  { value: 'ES', label: 'España' },
-  { value: 'IT', label: 'Italia' },
-  { value: 'CN', label: 'China' },
-]
 
 // --- Envíos ----------------------------------------------------------------
 
@@ -290,3 +290,38 @@ export const ALL_SHIPMENTS: readonly Shipment[] = [
 export function findShipment(id: string): Shipment | undefined {
   return ALL_SHIPMENTS.find((shipment) => shipment.id === id)
 }
+
+/**
+ * Código telefónico de país para el destinatario internacional (doc funcional
+ * §8.3 "Código telefónico de país"). Subconjunto para la maqueta, no el
+ * universo completo de indicativos.
+ *
+ * `isoCode` (ISO 3166-1 alpha-2) selecciona la bandera de `country-flag-icons`
+ * en `PhoneCountryCodeSelect`. Se dejó de usar el emoji de bandera: en
+ * Windows no existen esos glifos y el navegador cae al fallback de texto
+ * ("AR" en vez de la bandera) — es una limitación del sistema operativo, no
+ * del sitio, así que se resolvió con íconos SVG reales de una librería.
+ */
+export interface PhoneCountryCodeOption {
+  readonly isoCode: string
+  readonly dialCode: string
+  readonly countryName: string
+}
+
+export const PHONE_COUNTRY_CODES: readonly PhoneCountryCodeOption[] = [
+  { isoCode: 'AR', dialCode: '+54', countryName: 'Argentina' },
+  { isoCode: 'BR', dialCode: '+55', countryName: 'Brasil' },
+  { isoCode: 'CL', dialCode: '+56', countryName: 'Chile' },
+  { isoCode: 'UY', dialCode: '+598', countryName: 'Uruguay' },
+  { isoCode: 'PY', dialCode: '+595', countryName: 'Paraguay' },
+  { isoCode: 'BO', dialCode: '+591', countryName: 'Bolivia' },
+  { isoCode: 'PE', dialCode: '+51', countryName: 'Perú' },
+  { isoCode: 'CO', dialCode: '+57', countryName: 'Colombia' },
+  { isoCode: 'MX', dialCode: '+52', countryName: 'México' },
+  { isoCode: 'US', dialCode: '+1', countryName: 'Estados Unidos / Canadá' },
+  { isoCode: 'ES', dialCode: '+34', countryName: 'España' },
+  { isoCode: 'FR', dialCode: '+33', countryName: 'Francia' },
+  { isoCode: 'IT', dialCode: '+39', countryName: 'Italia' },
+  { isoCode: 'DE', dialCode: '+49', countryName: 'Alemania' },
+  { isoCode: 'GB', dialCode: '+44', countryName: 'Reino Unido' },
+]

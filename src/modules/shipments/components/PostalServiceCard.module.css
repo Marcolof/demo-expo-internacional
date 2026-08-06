@@ -1,0 +1,73 @@
+/*
+ * Card de servicio postal con radio (Figma 5589:10467). El indicador visual
+ * del radio es `RadioDot` (shared/ui) — el input real va oculto con
+ * `.visually-hidden`, sólo por accesibilidad/teclado.
+ */
+
+.card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-4);
+  border: var(--border-width-thin) solid var(--border-default);
+  border-radius: var(--radius-md);
+  background-color: var(--surface-raised);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.card:hover {
+  border-color: var(--correo-blue);
+}
+
+.cardSelected {
+  border-color: var(--correo-blue);
+}
+
+.cardDisabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.cardDisabled:hover {
+  border-color: var(--border-default);
+}
+
+/* Alinea el `RadioDot` con la primera línea del label (la card usa
+ * `align-items: flex-start` porque el texto puede ocupar varias líneas). */
+.radioDot {
+  margin-top: 1px;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.label {
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-snug);
+}
+
+.description {
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-normal);
+}
+
+.descriptionDisabled {
+  color: var(--feedback-danger-strong);
+}
+
+.trailing {
+  flex-shrink: 0;
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}

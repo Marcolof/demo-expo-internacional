@@ -5,11 +5,51 @@
  * acá viven sólo las secciones propias del formulario.
  */
 
+/*
+ * Switch Nacional/Internacional, versión responsive: en escritorio vive en el
+ * panel de Resumen (`layout.scopeSwitch`, alineado con los tabs); en
+ * responsive se duplica acá arriba, entre el título y los tabs
+ * Individual/Masivo, y esa otra instancia se oculta. Mismo breakpoint que el
+ * resto del layout (768px, ver NewShipmentPage.module.css).
+ */
+.scopeSwitchMobileOnly {
+  margin-bottom: var(--space-5);
+}
+
+@media (min-width: 768px) {
+  .scopeSwitchMobileOnly {
+    display: none;
+  }
+}
+
+.scopeSwitchDesktopOnly {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .scopeSwitchDesktopOnly {
+    display: flex;
+  }
+}
+
+/*
+ * Piso de ancho del panel de Resumen (switch + stepper + acordeón + Pagar),
+ * sólo en escritorio (>=768px, cuando `.prin` pasa a dos columnas): por
+ * debajo de 360px el stepper y el switch se aprietan y se solapan. No se
+ * toca `layout.infoRe` (compartido con el flujo nacional) — esta clase es
+ * propia de la página internacional y se agrega junto a ella con `cn()`.
+ */
+@media (min-width: 768px) {
+  .resumenMinWidth {
+    min-width: 360px;
+  }
+}
+
 .form {
   display: flex;
   flex-direction: column;
   gap: var(--space-8); /* Figma: Form-Sections gap 32 */
-  max-width: 600px;
+  width: 100%;
 }
 
 .section {
@@ -19,11 +59,106 @@
   width: 100%;
 }
 
+/* Declaración y Paquete son de una columna angosta (Figma: 600px). Origen no
+ * lleva esta clase: necesita todo el ancho de `.carga` para el mapa. */
+.narrowSection {
+  max-width: 600px;
+}
+
+/* Separación con la barra Cancelar/Siguiente, que no trae padding vertical
+ * propio (ver NewShipmentPage.module.css → .navActions). Va en la sección,
+ * no en su último campo, para que el espacio no cambie según el paso visible
+ * ni según el estado de validación (p. ej. el banner de error). */
+.form > .section:last-child {
+  margin-bottom: var(--space-6);
+}
+
 /* Título de sección: "Seleccioná el país…" / "Declaración jurada…" (18px). */
 .sectionTitle {
   color: var(--text-primary);
   font-size: 1.125rem; /* 18px */
   font-weight: var(--font-weight-semibold);
+}
+
+/* "Guardar medida" va debajo de Largo/Ancho/Alto, alineado a la derecha
+ * (Figma: mismo ancho que la fila de medidas, texto a la derecha). El
+ * espacio contra esa fila es chico (8px, Figma 7169:15448) — mucho menor que
+ * el gap de `--space-8` que `.fields` aplica parejo entre TODOS sus hijos.
+ * Se corrige sólo acá con un margen negativo, sin tocar ese gap general. */
+.saveMeasureRight {
+  align-self: flex-end;
+  margin-top: calc(var(--space-2) - var(--space-8));
+}
+
+/*
+ * Paso Origen (Figma 5470:15275): campos a la izquierda, mapa de la sucursal
+ * a la derecha, misma fila. `align-items: stretch` (por defecto en grid) hace
+ * que el mapa iguale la altura de la columna de campos.
+ *
+ * `.originContainer` establece un contenedor de *ancho real disponible*
+ * (`container-type: inline-size`), no del viewport: `.carga` es sólo la
+ * mitad de la página (al lado va el panel Resumen), así que una media query
+ * por viewport se equivocaba — a una ventana de 810px, `.carga` medía apenas
+ * ~420px y el layout de 2 columnas igual se apretaba. La container query
+ * mide el ancho real de este bloque.
+ */
+.originContainer {
+  container-type: inline-size;
+  width: 100%;
+}
+
+/* `--origin-field-min-width` es el piso de ancho de cada Select/Input de esta
+ * sección (300px en escritorio, 260px en responsive). Se define acá arriba y
+ * la usa `.originField`, así el breakpoint vive en un solo lugar. */
+.originLayout {
+  --origin-field-min-width: 300px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-8);
+  width: 100%;
+}
+
+/* Debajo de este ancho de contenedor, el mapa pasa a ir abajo de los campos,
+ * no al lado (columna única, como en la referencia mobile). 700px ≈ dos
+ * campos de 300px + el gap + un mapa mínimamente usable. */
+@container (max-width: 700px) {
+  .originLayout {
+    --origin-field-min-width: 260px;
+    grid-template-columns: 1fr;
+  }
+}
+
+.originSubsection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.originSubsectionTitle {
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Piso de ancho de cada campo de Origen (ver `--origin-field-min-width`
+ * arriba). Si el contenedor es más angosto que esto, el campo fuerza scroll
+ * horizontal antes que ilegible — mismo criterio que los tabs Individual/Masivo. */
+.originField {
+  min-width: var(--origin-field-min-width);
+}
+
+/* Placeholder del mapa: sin el mapa real todavía, sólo el bloque gris. Alto
+ * derivado del ancho con `aspect-ratio` (4:3, ~360×270 en el ejemplo de
+ * referencia) en vez de una altura fija, para que escale con el contenedor.
+ * `min-width` para que no se achique a un tamaño inusable en anchos
+ * intermedios (columnas lado a lado pero contenedor todavía angosto). */
+.mapPlaceholder {
+  width: 100%;
+  min-width: 200px;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-md);
+  background-color: var(--surface-sunken);
 }
 
 /* Grupo de inputs dentro de "Declaración jurada", separación 32. */
@@ -83,6 +218,15 @@
 /* --- Artículos agregados --------------------------------------------------- */
 
 .articleList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+/* --- Servicio postal (paso Destino) ---------------------------------------- */
+
+.postalServiceList {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);

@@ -100,6 +100,7 @@
   --space-12: 3rem; /* 48px */
 
   /* --- Radios ----------------------------------------------------------- */
+  --radius-hairline: 1px; /* dropzone de carga masiva */
   --radius-xs: 5px; /* inputs, tab superior */
   --radius-sm: 6px; /* error-msg */
   --radius-md: 10px; /* filas de tabla */
@@ -162,6 +163,15 @@
   --text-link: var(--correo-blue);
   --text-on-brand: var(--correo-blue);
   --text-inverse: var(--white);
+
+  /* --- Iconos ------------------------------------------------------------
+   * Color de íconos utilitarios (cerrar, eliminar, chevrons) en su estado
+   * habilitado por defecto — no confundir con los íconos de marca, que van
+   * en `--correo-yellow` / `--correo-blue` (boxes.svg, file-text.svg,
+   * circle-plus/circle-minus). Antes no existía un token para esto: el X del
+   * modal, por ejemplo, usaba el negro fijo del propio SVG (`fill="black"`),
+   * sin pasar por ningún token. */
+  --icon-enabled: var(--text-muted);
 
   /* --- Bordes ----------------------------------------------------------- */
   --border-default: var(--grey-400);
@@ -253,7 +263,10 @@
   --field-padding: 10px;
   --field-font-size: var(--font-size-sm);
   --field-radius: var(--radius-xs);
-  --field-bg: var(--white);
+  /* Antes apuntaba directo a `--white`: ahora comparte `--surface-raised`
+   * (la misma superficie "elevada" que usan las tarjetas/panel de resumen),
+   * en vez de duplicar el mismo blanco con otro nombre. */
+  --field-bg: var(--surface-raised);
   --field-border: var(--border-width-thin) solid var(--border-default);
   --field-border-focus: var(--border-width-thin) solid var(--border-focus);
   --field-text: var(--grey-900);
@@ -314,6 +327,10 @@
   --modal-width-lg: 800px;
   --modal-width-xl: 600px;
   --modal-max-height-xl: 750px;
+  /* Ancho máximo del contenedor de acciones (Cancelar/Agregar), no del modal
+   * entero — así los botones no se estiran a los 600px de `--modal-width-xl`
+   * (Figma 10116:13975). */
+  --modal-footer-actions-max-width: 480px;
 
   /* --- Dropdown --------------------------------------------------------- */
   --dropdown-min-width: 10rem;
@@ -327,6 +344,12 @@
   --badge-radius: var(--radius-pill);
   --badge-font-size: var(--font-size-xs);
   --badge-font-weight: var(--font-weight-semibold);
+
+  /* --- Alert (banner de feedback) ---------------------------------------- */
+  /* Alto mínimo del banner de una sola línea (texto + padding), Figma
+   * 5658:33719 — el resto de los avisos con más contenido crecen por
+   * encima de este piso. */
+  --alert-min-height: var(--space-12);
 
   /* --- Panel de resumen ------------------------------------------------- */
   --summary-label-size: var(--font-size-xs);

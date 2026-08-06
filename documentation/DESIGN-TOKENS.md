@@ -48,6 +48,17 @@ El original los declaraba en `:root` de `estilos.css`:
 | `.bg-correo-very-light-grey` | `#fafafa` | `--surface-page` |
 | riel del sidebar (inline) | `#eeeeee` | `--surface-rail` |
 
+**`--surface-raised` es la superficie "elevada" única** (tarjetas, panel de Resumen,
+cards de servicio postal, y también el fondo de los campos de formulario). El token
+`component` `--field-bg` (usado por `Input`/`Select` vía `Field.module.css`) ya no
+apunta a `--white` por separado: apunta a `--surface-raised`, para no duplicar el mismo
+blanco con dos nombres distintos.
+
+```txt
+--white → --surface-raised → --field-bg   (Input, Select — fondo del control)
+                            → InternationalSummary.card, PostalServiceCard.card
+```
+
 ## Texto
 
 | Origen | Valor | Token |
@@ -59,6 +70,28 @@ El original los declaraba en `:root` de `estilos.css`:
 | deshabilitado | `#8a8a8a` | `--text-disabled` |
 | label flotante | `#49454F` | `--field-label-color` |
 | label enfocado | `#2196F3` | `--field-label-color-active` |
+
+## Íconos
+
+| Origen | Valor | Token |
+|---|---|---|
+| X de cerrar (`Modal`), y demás íconos utilitarios en su estado habilitado | `#49454f` (= `--text-muted`) | `--icon-enabled` |
+
+No existía un token de color para íconos hasta ahora: cada SVG traía su propio color fijo
+(por ejemplo, `close.svg` tenía `fill="black"` sin pasar por ningún token). `--icon-enabled`
+es el color por defecto de un ícono interactivo (cerrar, eliminar, chevrons) — **no** de los
+íconos de marca, que siguen con su propio color semántico:
+
+| Ícono | Token de color | No usa `--icon-enabled` porque… |
+|---|---|---|
+| `boxes.svg`, `file-text.svg` (artículo/documento) | `--correo-yellow` | son íconos de marca, no utilitarios |
+| `circle-plus.svg`, `circle-minus.svg` (líneas de dirección) | `--correo-blue` (hardcodeado en el asset) | pendiente de pasar a token — ver nota abajo |
+
+Para pintar un ícono con `--icon-enabled` el SVG tiene que traerse **inline** (no `<img>`)
+con `fill="currentColor"`, y el color se define en CSS (`color: var(--icon-enabled)`) sobre
+el elemento `<svg>` o un ancestro — igual que se hizo con los íconos de marca. Un `<img
+src="...svg">` no puede tomar un token de color: el navegador lo trata como una imagen
+opaca, no como markup que herede `currentColor`.
 
 ## Estado
 

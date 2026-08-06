@@ -17,21 +17,54 @@
 .step {
   position: relative;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: var(--stepper-intl-dot-size);
   height: var(--stepper-intl-dot-size);
 }
 
 .dot {
   display: block; /* es un <span>: sin esto width/height 100% se ignoran (colapsa a 0) */
+  flex-shrink: 0; /* .step es flex: sin esto el navegador achica el disco activo (30px) al ancho fijo del paso (24px) */
   box-sizing: border-box;
   width: 100%;
   height: 100%;
   border-radius: 50%;
 }
 
-/* Paso en curso: disco amarillo lleno. */
+/* Paso en curso: réplica de `.tabenvios li.active i` del HTML de referencia —
+ * contenedor 30×30 con stroke amarillo y, centrado adentro, un disco amarillo
+ * lleno de 24px (mismo diámetro que los puntos pendientes/visitados).
+ *
+ * El centrado se hace con `inset` en píxeles fijos, no con `top/left: 50%`:
+ * ese porcentaje se resuelve contra el padding-box del contenedor (30 − 2×1px
+ * de borde = 28px), no contra la caja completa, y con bordes fraccionados
+ * por el zoom del navegador el disco queda visualmente descentrado. Con
+ * `inset` en píxeles fijos (derivado de los mismos tokens) reparte la
+ * diferencia en 2 lados y el resultado es exacto, sin depender de `transform`
+ * ni de ese cálculo relativo al borde. */
 .dotCurrent {
-  background-color: var(--correo-yellow);
+  position: relative;
+  width: var(--stepper-dot-size-active);
+  height: var(--stepper-dot-size-active);
+  border: 1px solid var(--stepper-color-active);
+  background-color: var(--stepper-dot-bg);
+}
+
+.dotCurrent::before {
+  content: '';
+  position: absolute;
+  /* (30px de contenedor − 24px de disco) / 2 − 1px de borde ya contado en
+   * el contenedor = 2px de cada lado. */
+  inset: calc((var(--stepper-dot-size-active) - var(--stepper-intl-dot-size)) / 2 - 1px);
+  border-radius: 50%;
+  background-color: var(--stepper-color-active);
+}
+
+/* Paso ya completado: disco azul lleno (mismo azul de marca del resto del sitio). */
+.dotVisited {
+  background-color: var(--stepper-color-visited);
 }
 
 /* Pasos incompletos: círculo con borde gris. */
@@ -58,4 +91,9 @@
   flex: 1 1 0;
   height: 2px;
   background-color: var(--stepper-color-pending);
+}
+
+/* Tramo que sale de un paso ya completado: mismo azul que su disco. */
+.connectorVisited {
+  background-color: var(--stepper-color-visited);
 }
