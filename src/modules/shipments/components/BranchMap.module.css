@@ -17,44 +17,14 @@
   flex-shrink: 0;
 }
 
-/* ── Fondo: grilla de calles ──────────────────────────────────────────── */
+/* ── Imagen de fondo ─────────────────────────────────────────────────── */
 
-.mapBg {
+.mapImg {
   position: absolute;
   inset: 0;
-  background-color: #f2ede4;
-  /* Calles principales + secundarias */
-  background-image:
-    linear-gradient(to right,  rgba(255 255 255 / 0.95) 3px, transparent 3px),
-    linear-gradient(to bottom, rgba(255 255 255 / 0.95) 3px, transparent 3px),
-    linear-gradient(to right,  rgba(255 255 255 / 0.55) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255 255 255 / 0.55) 1px, transparent 1px);
-  background-size:
-    96px 64px,  96px 64px,
-    32px 32px,  32px 32px;
-}
-
-/* Parque — bloque verde fijo para dar variedad visual */
-.park {
-  position: absolute;
-  top: 40%;
-  left: 14%;
-  width: 13%;
-  height: 20%;
-  background-color: #c8e6b0;
-  border: 1px solid #a8d08a;
-  border-radius: 2px;
-}
-
-/* Segunda mancha verde (plaza) */
-.plaza {
-  position: absolute;
-  top: 15%;
-  left: 56%;
-  width: 8%;
-  height: 12%;
-  background-color: #d0e8b8;
-  border-radius: 50%;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* ── Controles de zoom ────────────────────────────────────────────────── */
