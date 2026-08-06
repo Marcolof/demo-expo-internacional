@@ -114,7 +114,7 @@ export function InternationalShipmentPage() {
   const [packageWeightKg, setPackageWeightKg] = useState('')
 
   /* ── Paso 3: Origen ──────────────────────────────────────────────── */
-  const [remitenteCuit, setRemitenteCuit] = useState(REMITENTES_SEED[0].cuit)
+  const [remitenteCuit, setRemitenteCuit] = useState(REMITENTES_SEED[0]?.cuit ?? '')
   const [province, setProvince] = useState('BA')
   const [branchId, setBranchId] = useState('BA-001')
 
@@ -182,7 +182,8 @@ export function InternationalShipmentPage() {
       : formatWeightKg(Number(packageWeightKg.replace(',', '.')) || 0)
 
   /* Paso 3 */
-  const selectedRemitente = REMITENTES_SEED.find((r) => r.cuit === remitenteCuit) ?? REMITENTES_SEED[0]
+  const selectedRemitente =
+    REMITENTES_SEED.find((r) => r.cuit === remitenteCuit) ?? REMITENTES_SEED[0]
   const branchOptions     = getBranchOptions(province)
   const provinceBranches  = BRANCHES_BY_PROVINCE[province] ?? []
   const selectedBranch    = findBranch(branchId)
