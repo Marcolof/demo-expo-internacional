@@ -175,7 +175,16 @@ export function AddArticleModal({ isOpen, onClose, onSubmit }: AddArticleModalPr
         <div className={styles.codeSection}>
           <h5 className={styles.codeTitle}>Código armonizado</h5>
           <p className={styles.codeHint}>
-            Consultalo en <span className={styles.codeLink}>VUCE</span> y copiá el código correspondiente al
+            Consultalo en{' '}
+            <a
+              href="https://www.afip.gob.ar/vuce/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.codeLink}
+            >
+              VUCE
+            </a>{' '}
+            y copiá el código correspondiente al
             producto que declarás.
           </p>
 
@@ -201,7 +210,12 @@ export function AddArticleModal({ isOpen, onClose, onSubmit }: AddArticleModalPr
             <div className={styles.disclosurePanel}>
               <p>Para buscar el código:</p>
               <ol>
-                <li>Ingresá a VUCE.</li>
+                <li>
+                  Ingresá a{' '}
+                  <a href="https://www.afip.gob.ar/vuce/" target="_blank" rel="noopener noreferrer" className={styles.codeLink}>
+                    VUCE
+                  </a>.
+                </li>
                 <li>Buscá el producto por descripción.</li>
                 <li>Copiá el código correspondiente.</li>
                 <li>Pegalo en este campo.</li>

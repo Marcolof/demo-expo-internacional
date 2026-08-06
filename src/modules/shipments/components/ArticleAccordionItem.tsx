@@ -11,6 +11,8 @@ export interface ArticleAccordionItemProps {
   readonly onRemove: (article: DeclaredArticle) => void
   /** Abierto al montar (por defecto, el último agregado). */
   readonly defaultOpen?: boolean
+  /** Artículo restringido para el país de destino seleccionado. */
+  readonly invalid?: boolean
 }
 
 /**
@@ -60,11 +62,11 @@ function TrashIcon() {
  * descripción + cantidad + chevron; al expandir muestra el detalle y las
  * acciones Eliminar / Editar.
  */
-export function ArticleAccordionItem({ article, onEdit, onRemove, defaultOpen = false }: ArticleAccordionItemProps) {
+export function ArticleAccordionItem({ article, onEdit, onRemove, defaultOpen = false, invalid = false }: ArticleAccordionItemProps) {
   const [open, setOpen] = useState(defaultOpen)
 
   return (
-    <div className={styles.card}>
+    <div className={cn(styles.card, invalid && styles.cardInvalid)}>
       <button type="button" className={styles.header} onClick={() => setOpen((value) => !value)} aria-expanded={open}>
         <BoxesIcon />
         <span className={styles.description}>{article.description}</span>

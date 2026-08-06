@@ -92,8 +92,8 @@ export function ShipmentForm({
                 value={values.originKind}
                 onChange={(next) => onChange('originKind', next)}
                 options={[
-                  { value: 'PICKUP', label: 'Pick Up' },
-                  { value: 'SUCURSAL', label: 'Sucursal' },
+                  { value: 'PICKUP', label: 'PickUp' },
+                  { value: 'SUCURSAL', label: 'Sucursal', disabled: true },
                 ]}
               />
             </div>

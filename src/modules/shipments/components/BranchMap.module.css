@@ -1,0 +1,195 @@
+/*
+ * Mapa estático de sucursales — Figma node 8040-120500.
+ * Replica visual del mapa Leaflet: grilla de calles CSS + pins SVG + popup.
+ * Componente reutilizable: no conoce el flujo internacional, sólo recibe
+ * la lista de sucursales y cuál está seleccionada.
+ */
+
+.root {
+  position: relative;
+  width: 100%;
+  border-radius: var(--radius-md, 8px);
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0 0 0 / 0.18);
+  /* Ratio derivado del SVG de diseño: rect width=359 height=263 */
+  aspect-ratio: 359 / 263;
+  background-color: #e8e0d4;
+  flex-shrink: 0;
+}
+
+/* ── Fondo: grilla de calles ──────────────────────────────────────────── */
+
+.mapBg {
+  position: absolute;
+  inset: 0;
+  background-color: #f2ede4;
+  /* Calles principales + secundarias */
+  background-image:
+    linear-gradient(to right,  rgba(255 255 255 / 0.95) 3px, transparent 3px),
+    linear-gradient(to bottom, rgba(255 255 255 / 0.95) 3px, transparent 3px),
+    linear-gradient(to right,  rgba(255 255 255 / 0.55) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255 255 255 / 0.55) 1px, transparent 1px);
+  background-size:
+    96px 64px,  96px 64px,
+    32px 32px,  32px 32px;
+}
+
+/* Parque — bloque verde fijo para dar variedad visual */
+.park {
+  position: absolute;
+  top: 40%;
+  left: 14%;
+  width: 13%;
+  height: 20%;
+  background-color: #c8e6b0;
+  border: 1px solid #a8d08a;
+  border-radius: 2px;
+}
+
+/* Segunda mancha verde (plaza) */
+.plaza {
+  position: absolute;
+  top: 15%;
+  left: 56%;
+  width: 8%;
+  height: 12%;
+  background-color: #d0e8b8;
+  border-radius: 50%;
+}
+
+/* ── Controles de zoom ────────────────────────────────────────────────── */
+
+.zoomControls {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0 0 0 / 0.2);
+}
+
+.zoomBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  background: white;
+  border: none;
+  font-size: 18px;
+  line-height: 1;
+  color: #444;
+  cursor: pointer;
+  user-select: none;
+}
+
+.zoomBtn:first-child {
+  border-bottom: 1px solid #ccc;
+}
+
+.zoomBtn:hover {
+  background: #f4f4f4;
+}
+
+/* ── Pins ─────────────────────────────────────────────────────────────── */
+
+/* Contenedor posicionado absolutamente para cada pin.
+ * `transform: translate(-50%, -100%)` alinea el vértice inferior al punto. */
+.pinWrap {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  cursor: pointer;
+  z-index: 5;
+}
+
+.pinWrap:hover {
+  z-index: 15;
+}
+
+/* Pin activo está por encima */
+.pinActive {
+  z-index: 20;
+}
+
+/* ── Popup ────────────────────────────────────────────────────────────── */
+
+.popup {
+  position: absolute;
+  bottom: calc(100% + 8px);   /* encima del pin, con margen */
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  background: white;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0 0 0 / 0.25);
+  padding: 10px 32px 10px 14px;
+  z-index: 30;
+  min-width: 200px;
+}
+
+/* Flecha del popup apuntando al pin */
+.popup::after {
+  content: '';
+  position: absolute;
+  bottom: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 7px solid white;
+  filter: drop-shadow(0 2px 3px rgba(0 0 0 / 0.15));
+}
+
+.popupClose {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  line-height: 1;
+  color: #888;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.popupClose:hover {
+  color: #333;
+}
+
+.popupName {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #222;
+  margin-bottom: 3px;
+}
+
+.popupAddress {
+  font-size: 12px;
+  color: #444;
+  margin-bottom: 2px;
+}
+
+.popupHours {
+  font-size: 12px;
+  color: #D97706; /* amber — igual al color de horario en Figma */
+}
+
+/* ── Atribución ───────────────────────────────────────────────────────── */
+
+.attribution {
+  position: absolute;
+  bottom: 4px;
+  right: 6px;
+  font-size: 10px;
+  color: #888;
+  background: rgba(255 255 255 / 0.7);
+  padding: 0 3px;
+  border-radius: 2px;
+  z-index: 5;
+}

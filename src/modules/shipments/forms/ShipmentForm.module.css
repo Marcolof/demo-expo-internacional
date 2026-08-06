@@ -67,7 +67,7 @@
   }
 }
 
-/* Radios Pick Up / Sucursal: alineados a la izquierda, cada uno ~col-6. */
+/* Radios PickUp / Sucursal — Figma: width 383, height 24, gap 12px */
 .originKind {
   display: flex;
   justify-content: flex-start;
@@ -76,17 +76,18 @@
 }
 
 .originRadios {
-  width: 100%;
+  /* ancho máx del spec de Figma */
+  max-width: 383px;
   flex-direction: row;
   flex-wrap: nowrap;
-  justify-content: flex-start;
-  gap: 0;
+  align-items: center;
+  gap: 12px;
 }
 
+/* Cada opción toma solo el ancho que necesita su contenido */
 .originRadios > * {
-  flex: 0 0 50%;
-  max-width: 50%;
-  box-sizing: border-box;
+  flex: 0 0 auto;
+  max-width: none;
 }
 
 /* Fila de tres medidas (largo / ancho / alto). */
