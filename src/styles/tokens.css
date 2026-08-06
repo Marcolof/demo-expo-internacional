@@ -103,6 +103,7 @@
   --space-12: 3rem; /* 48px */
 
   /* --- Radios ----------------------------------------------------------- */
+  --radius-hairline: 1px; /* dropzone de carga masiva */
   --radius-xs: 5px; /* inputs, tab superior */
   --radius-sm: 6px; /* error-msg */
   --radius-md: 10px; /* filas de tabla */
@@ -171,6 +172,9 @@
   --border-subtle: var(--grey-200);
   --border-strong: var(--correo-yellow);
   --border-focus: var(--blue-focus);
+
+  /* --- Iconos ----------------------------------------------------------- */
+  --icon-enabled: var(--text-muted);
 
   /* --- Estado: error ---------------------------------------------------- */
   --feedback-danger-bg: var(--red-100);
@@ -258,7 +262,7 @@
   --field-padding: 10px;
   --field-font-size: var(--font-size-md);
   --field-radius: var(--radius-xs);
-  --field-bg: var(--white);
+  --field-bg: var(--surface-raised);
   --field-border: var(--border-width-thin) solid var(--border-default);
   --field-border-focus: var(--border-width-thin) solid var(--border-focus);
   --field-text: var(--grey-900);
@@ -286,6 +290,7 @@
   --stepper-dot-size-active: 30px;
   --stepper-dot-font-size: 22px;
   --stepper-connector-height: var(--border-width-stepper);
+  --stepper-intl-dot-size: 24px; /* stepper del flujo internacional (Figma) */
   --stepper-color-pending: var(--grey-600);
   --stepper-color-visited: var(--correo-blue);
   --stepper-color-active: var(--correo-yellow);
@@ -318,6 +323,7 @@
   --modal-width-lg: 800px;
   --modal-width-xl: 600px;
   --modal-max-height-xl: 750px;
+  --modal-footer-actions-max-width: 480px;
 
   /* --- Dropdown --------------------------------------------------------- */
   --dropdown-min-width: 10rem;
@@ -331,6 +337,9 @@
   --badge-radius: var(--radius-pill);
   --badge-font-size: var(--font-size-xs);
   --badge-font-weight: var(--font-weight-semibold);
+
+  /* --- Alert (banner de feedback) ---------------------------------------- */
+  --alert-min-height: var(--space-12);
 
   /* --- Switch (Figma 8040:120132) ---------------------------------------- */
   --switch-color-on: var(--feedback-success-strong);

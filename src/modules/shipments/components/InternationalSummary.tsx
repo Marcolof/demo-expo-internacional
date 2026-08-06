@@ -152,6 +152,8 @@ export interface InternationalSummaryProps {
   readonly origen?: Remitente
   /** Datos del paso Destino. Sin esto la sección muestra "-". */
   readonly destino?: DestinoSummaryData
+  /** Callback del botón "Pagar". Sin definir, el botón queda deshabilitado. */
+  readonly onPay?: () => void
 }
 
 /**
@@ -168,6 +170,7 @@ export function InternationalSummary({
   paquete,
   origen,
   destino,
+  onPay,
 }: InternationalSummaryProps) {
   const origenSectionRows = origenRows(origen)
   const destinoSectionRows = destinoRows(destino)
@@ -188,8 +191,8 @@ export function InternationalSummary({
   const unlockedIndices =
     unlockedSteps !== undefined
       ? new Set(
-          INTERNATIONAL_STEPS.map((s, i) => i).filter((i) =>
-            unlockedSteps.has(INTERNATIONAL_STEPS[i]),
+          INTERNATIONAL_STEPS.map((_, i) => i).filter((i) =>
+            unlockedSteps.has(INTERNATIONAL_STEPS[i]!),
           ),
         )
       : undefined
@@ -204,7 +207,7 @@ export function InternationalSummary({
           showLabels
           onStepClick={
             onStepClick !== undefined
-              ? (index) => onStepClick(INTERNATIONAL_STEPS[index])
+              ? (index) => onStepClick(INTERNATIONAL_STEPS[index]!)
               : undefined
           }
         />
@@ -239,7 +242,7 @@ export function InternationalSummary({
         />
       </div>
 
-      <Button variant="primary" shape="square" fullWidth disabled>
+      <Button variant="primary" shape="square" fullWidth disabled={onPay === undefined} onClick={onPay}>
         Pagar
       </Button>
     </div>

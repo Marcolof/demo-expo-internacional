@@ -72,6 +72,7 @@ export function BranchMap({ branches, selectedBranchId, className }: BranchMapPr
       {/* Pins */}
       {visibleBranches.map((branch, i) => {
         const pos = PIN_POSITIONS[i]
+        if (pos === undefined) return null
         const isActive = branch.id === selectedBranchId
 
         return (

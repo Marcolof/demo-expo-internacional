@@ -1,0 +1,28 @@
+/* Datos del destinatario (Figma 5589:10467). */
+
+/* `container-type` propio: `.carga` es sólo la mitad de la página (al lado
+ * va el panel Resumen), así que una media query por viewport apilaría las
+ * columnas tarde o temprano en el ancho equivocado (mismo problema resuelto
+ * en Origen con `.originContainer`). Acá se mide el ancho real del bloque. */
+.fields {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+/* Nombre y apellido / Razón social, y Código de país / Teléfono: dos
+ * columnas iguales, apiladas si el contenedor no tiene lugar. */
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+@container (max-width: 480px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+}

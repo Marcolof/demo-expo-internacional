@@ -1,0 +1,78 @@
+/*
+ * Checkout ("Realizá tu pago"). A diferencia del alta de envío, acá no hay
+ * grilla de dos columnas con panel lateral: la tabla ocupa todo el ancho y
+ * recién debajo se parte en medio de pago (izquierda) y totales (derecha).
+ *
+ * El padding horizontal es el mismo que usa `.carga` en
+ * NewShipmentPage.module.css, para que el contenido quede alineado con el
+ * resto de la aplicación.
+ */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: 100%;
+  /* El padding inferior deja libre la esquina donde vive la burbuja flotante
+   * de chat (fija, 52px + 24px de margen): en esta pantalla el botón "Pagar"
+   * va abajo a la derecha y sin este aire la burbuja lo taparía. */
+  padding: 0 var(--space-12) calc(var(--space-12) + var(--space-8));
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.itemsCount {
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+}
+
+/* --- Medio de pago + totales ---------------------------------------------- */
+
+.bottom {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+  align-items: start;
+  width: 100%;
+  margin-top: var(--space-2);
+}
+
+@media (min-width: 992px) {
+  .bottom {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+    gap: var(--space-8);
+  }
+}
+
+.payment {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.sectionTitle {
+  color: var(--text-primary);
+  font-size: 1.125rem; /* 18px, igual que el resto de los títulos de sección */
+  font-weight: var(--font-weight-semibold);
+}
+
+.totals {
+  min-width: 0;
+}
+
+/* --- Acciones del pie ----------------------------------------------------- */
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  margin-top: var(--space-4);
+}
