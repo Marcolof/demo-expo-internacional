@@ -47,6 +47,7 @@
   --red-700: #ed143d; /* help-block */
   --blue-focus: #2196f3; /* borde de input enfocado */
   --green-700: #0f5132;
+  --green-600: #2a8a54; /* Switch activado (Figma 8040:120132) */
   --green-100: #d1e7dd;
 
   /* --- Tipografía: familias --------------------------------------------- */
@@ -179,6 +180,7 @@
   --feedback-success-bg: var(--green-100);
   --feedback-success-text: var(--green-700);
   --feedback-success-border: var(--green-700);
+  --feedback-success-strong: var(--green-600);
 
   /* --- Estado: info / advertencia --------------------------------------- */
   --feedback-info-bg: var(--grey-200);
@@ -327,6 +329,9 @@
   --badge-radius: var(--radius-pill);
   --badge-font-size: var(--font-size-xs);
   --badge-font-weight: var(--font-weight-semibold);
+
+  /* --- Switch (Figma 8040:120132) ---------------------------------------- */
+  --switch-color-on: var(--feedback-success-strong);
 
   /* --- Panel de resumen ------------------------------------------------- */
   --summary-label-size: var(--font-size-xs);
