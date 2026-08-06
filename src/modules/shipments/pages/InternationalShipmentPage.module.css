@@ -120,7 +120,6 @@
 
 /* --- Paso Paquete: medidas ------------------------------------------------ */
 
-/* Fila de tres medidas (largo / ancho / alto), Figma 8040:120214. */
 .measuresRow {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -128,7 +127,6 @@
   width: 100%;
 }
 
-/* "Guardar medida", alineado a la derecha bajo la fila de medidas. */
 .saveMeasureRow {
   display: flex;
   justify-content: flex-end;
@@ -140,4 +138,96 @@
   font-weight: var(--font-weight-medium);
   color: var(--text-link);
   text-decoration: underline;
+}
+
+/* --- Paso Origen ----------------------------------------------------------- */
+
+/*
+ * Layout de 2 columnas: formulario izquierda + mapa derecha.
+ * Reemplaza el wrapper `.form` para este paso (no tiene max-width fijo).
+ */
+.origenLayout {
+  display: grid;
+  /* SVG: form col ≈376px, map col ≈359px — forma ligeramente más ancha */
+  grid-template-columns: 376fr 359fr;
+  gap: var(--space-5);
+  width: 100%;
+  align-items: start;
+}
+
+.origenForm {
+  min-width: 0;
+}
+
+.origenMap {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-top: var(--space-10); /* alinea visualmente con el formulario */
+}
+
+.branchAddress {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* Subsección dentro de Origen (Remitente / Sucursal). */
+.subsection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.subsectionTitle {
+  margin: 0;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+/* Texto descriptivo debajo de subtítulos. */
+.fieldNote {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* --- Paso Destino ---------------------------------------------------------- */
+
+/* Fila de dos campos lado a lado (nombre/razón, código/teléfono, ciudad/CP). */
+.twoColRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+/* Indicador de país seleccionado en la sección Destino. */
+.destinoCountry {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+}
+
+.destinoCountryLabel {
+  color: var(--text-muted);
+}
+
+.destinoCountryValue {
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+/* Precio de servicio postal en el RadioGroup. */
+.servicePrice {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
 }
