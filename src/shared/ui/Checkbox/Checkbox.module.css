@@ -25,7 +25,12 @@
   border-radius: var(--radius-xs);
 }
 
+/* Figma: radio 20px, borde gris claro sin seleccionar, sin margin-top (centrado con label) */
 .radio {
+  width: 20px;
+  height: 20px;
+  margin-top: 0;
+  border-color: var(--grey-300);
   border-radius: var(--radius-full);
 }
 
@@ -41,8 +46,11 @@
   background-size: 100% 100%;
 }
 
+/* Radio seleccionado: fondo blanco + borde azul + punto interno azul (Figma #152663) */
 .radio:checked {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='2' fill='%23fff'/%3e%3c/svg%3e");
+  background-color: var(--field-bg);
+  border-color: var(--correo-blue);
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='2' fill='%23152663'/%3e%3c/svg%3e");
   background-size: 100% 100%;
 }
 
@@ -74,6 +82,16 @@
   margin-top: 2px;
   font-size: var(--font-size-xs);
   color: var(--text-muted);
+}
+
+/* Radios no seleccionados: label en gris (#afaeae ≈ --grey-500) */
+.wrapper:has(.radio:not(:checked)) .label {
+  color: var(--grey-500);
+}
+
+/* Disabled tiene prioridad sobre el gris de no-seleccionado */
+.wrapper:has(.radio:disabled) .label {
+  color: var(--text-disabled);
 }
 
 /* --- Grupo de radios ---------------------------------------------------- */

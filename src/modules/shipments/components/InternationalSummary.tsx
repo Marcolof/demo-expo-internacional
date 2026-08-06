@@ -1,11 +1,16 @@
 import { useState } from 'react'
 import { Button } from '@/shared/ui/Button'
+import { Stepper } from '@/shared/ui/Stepper'
 import { cn } from '@/shared/lib/cn'
 import { formatUsd, formatWeightKg } from '@/shared/lib/formatCurrency'
 import type { Remitente } from '../types/remitente.types'
-import { InternationalStepper } from './InternationalStepper'
-import type { InternationalStep } from './InternationalStepper'
 import styles from './InternationalSummary.module.css'
+
+/** Pasos del flujo internacional, en orden. Re-exportados para el page. */
+export const INTERNATIONAL_STEPS = ['Declaración', 'Paquete', 'Origen', 'Destino'] as const
+export type InternationalStep = (typeof INTERNATIONAL_STEPS)[number]
+
+const INTL_STEPPER_STEPS = INTERNATIONAL_STEPS.map((id) => ({ id, label: id }))
 
 export interface SummaryRow {
   readonly label: string
@@ -62,6 +67,23 @@ function origenRows(remitente?: Remitente): readonly SummaryRow[] | undefined {
     { label: 'Nombre y apellido / Razón social', value: remitente.razonSocial },
     { label: 'Dirección', value: remitente.direccionFiscal },
     { label: 'Remitente', value: remitente.direccionRemitente },
+  ]
+}
+
+/** Datos del paso Destino para el panel Resumen. */
+export interface DestinoSummaryData {
+  readonly countryLabel?: string
+  readonly city?: string
+  readonly address?: string
+}
+
+function destinoRows(data?: DestinoSummaryData): readonly SummaryRow[] | undefined {
+  if (data === undefined) return undefined
+
+  return [
+    { label: 'País de destino', value: data.countryLabel ?? EMPTY },
+    { label: 'Ciudad',          value: data.city          ?? EMPTY },
+    { label: 'Dirección',       value: data.address       ?? EMPTY },
   ]
 }
 
@@ -125,11 +147,11 @@ export interface InternationalSummaryProps {
   /** Medidas y peso del paso Paquete. Sin esto, la sección queda sin filas. */
   readonly paquete?: PaqueteSummaryData
   /**
-   * Remitente para la sección Origen. Hardcodeado por ahora (ver
-   * `remitentes.mocks.ts`); en una próxima iteración se elige por búsqueda de
-   * CUIT antes de llegar a este paso, o llega vía API.
+   * Remitente para la sección Origen. Se elige en el paso 3 vía Select.
    */
   readonly origen?: Remitente
+  /** Datos del paso Destino. Sin esto la sección muestra "-". */
+  readonly destino?: DestinoSummaryData
 }
 
 /**
@@ -145,8 +167,10 @@ export function InternationalSummary({
   declaracion,
   paquete,
   origen,
+  destino,
 }: InternationalSummaryProps) {
   const origenSectionRows = origenRows(origen)
+  const destinoSectionRows = destinoRows(destino)
   const [open, setOpen] = useState<ReadonlySet<string>>(
     new Set(origenSectionRows !== undefined ? ['Declaración', 'Origen'] : ['Declaración']),
   )
@@ -160,13 +184,31 @@ export function InternationalSummary({
     })
   }
 
+  const currentIndex = INTERNATIONAL_STEPS.indexOf(currentStep)
+  const unlockedIndices =
+    unlockedSteps !== undefined
+      ? new Set(
+          INTERNATIONAL_STEPS.map((s, i) => i).filter((i) =>
+            unlockedSteps.has(INTERNATIONAL_STEPS[i]),
+          ),
+        )
+      : undefined
+
   return (
     <div className={cn(styles.card, className)}>
-      <InternationalStepper
-        current={currentStep}
-        unlockedSteps={unlockedSteps}
-        onStepClick={onStepClick !== undefined ? (step) => onStepClick(step) : undefined}
-      />
+      <div className={styles.stepperWrap}>
+        <Stepper
+          steps={INTL_STEPPER_STEPS}
+          currentIndex={currentIndex}
+          unlockedIndices={unlockedIndices}
+          showLabels
+          onStepClick={
+            onStepClick !== undefined
+              ? (index) => onStepClick(INTERNATIONAL_STEPS[index])
+              : undefined
+          }
+        />
+      </div>
 
       <div className={styles.info}>
         <p className={styles.heading}>Resumen</p>
@@ -189,7 +231,12 @@ export function InternationalSummary({
           onToggle={() => toggle('Origen')}
           rows={origenSectionRows}
         />
-        <Section title="Destino" open={open.has('Destino')} onToggle={() => toggle('Destino')} />
+        <Section
+          title="Destino"
+          open={open.has('Destino')}
+          onToggle={() => toggle('Destino')}
+          rows={destinoSectionRows}
+        />
       </div>
 
       <Button variant="primary" shape="square" fullWidth disabled>

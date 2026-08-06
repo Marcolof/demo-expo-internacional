@@ -1,105 +1,129 @@
-/* Stepper — réplica visual de `.tabenvios` del HTML de referencia.
+/* Stepper — indicador de pasos unificado (Nacional e Internacional).
  *
- * Estado inicial (paso Origen):
- *   - círculo 1: disco amarillo + anillo amarillo (bi-circle-fill + .active)
- *   - círculos 2 y 3: outline gris (bi-circle)
- *   - línea gris continua detrás de los puntos (#8a8a8a, 4px)
+ * Todos los valores vienen de tokens COMPONENT (--stepper-*) definidos en
+ * tokens.css. Ningún valor hardcodeado salvo el border del dotPending (2px)
+ * que coincide con --border-width-base y el border del dotActive (1px).
+ *
+ * Estados visuales:
+ *   pending  → círculo con borde gris
+ *   visited  → disco azul sólido (clicable si onStepClick está definido)
+ *   active   → anillo amarillo + disco amarillo interior
  */
 
 .stepper {
   display: flex;
-  justify-content: space-around;
   align-items: center;
-  position: relative;
-  isolation: isolate;
   width: 100%;
-  max-width: 600px;
-  margin: 0 auto var(--space-3);
-  padding: 0;
-  list-style: none;
-  border: none;
-  /* Alto fijo del punto activo para alinear la línea al centro. */
-  min-height: var(--stepper-dot-size-active);
 }
 
-/* Línea continua detrás de los tres puntos (equivalente a los ::after
- * de #lienvio / #lidestino, unidos en un solo trazo como se ve en pantalla). */
-.stepper::before {
-  content: '';
-  position: absolute;
-  /* Centros del 1.er y 3.er paso con space-around (≈ 1/6 y 5/6). */
-  left: 16.67%;
-  right: 16.67%;
-  top: 50%;
-  height: var(--stepper-connector-height);
-  margin-top: calc(var(--stepper-connector-height) / -2);
-  background-color: var(--stepper-color-pending);
-  z-index: 0;
-  pointer-events: none;
+/* Reserva espacio bajo los puntos para los labels absolutos (showLabels=true). */
+.stepperWithLabels {
+  padding-bottom: var(--space-8);
 }
 
+/* --- Punto (step) --------------------------------------------------------- */
+
+/* El step tiene el tamaño del punto activo (el más grande) para que el anillo
+ * nunca desborde el contenedor flex y el hitArea tenga área constante. */
 .step {
   position: relative;
-  z-index: 1;
+  flex-shrink: 0;
+  width: var(--stepper-dot-size-active);
+  height: var(--stepper-dot-size-active);
+}
+
+/* Botón que ocupa todo el step: sin estilos propios, solo centrado. */
+.hitArea {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 18%;
-  text-align: center;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
 }
 
-/* Cuando hay progreso, la línea pasa a azul de marca (visited). */
-.stepperHasProgress::before {
-  background-color: var(--stepper-color-visited);
+.hitArea:disabled {
+  cursor: default;
 }
 
-/* --- Punto (réplica de `.tabenvios li i`) ------------------------------- */
+/* --- Disco / anillo ------------------------------------------------------- */
 
 .dot {
-  display: block;
-  box-sizing: border-box;
-  margin: 0 auto;
-  border-radius: 50%;
-  background-color: var(--stepper-dot-bg);
-}
-
-/* Pendiente: outline gris, como `bi bi-circle` (font-size 22px). */
-.dotPending {
-  width: var(--stepper-dot-size);
-  height: var(--stepper-dot-size);
-  border: 2px solid var(--stepper-color-pending);
-}
-
-/* Visitado: disco azul, como `bi bi-circle-fill` en secondary. */
-.dotVisited {
-  width: var(--stepper-dot-size);
-  height: var(--stepper-dot-size);
-  border: none;
-  background-color: var(--stepper-color-visited);
-}
-
-/* Activo: caja 30×30, borde amarillo 1px, disco amarillo interior
- * (como `.tabenvios li.active i` + `bi-circle-fill`). */
-.dotActive {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: var(--stepper-dot-size-active);
-  height: var(--stepper-dot-size-active);
-  border: 1px solid var(--stepper-color-active);
+  flex-shrink: 0;
+  box-sizing: border-box;
+  border-radius: var(--radius-full);
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.dotPending {
+  width: var(--stepper-dot-size);
+  height: var(--stepper-dot-size);
+  border: var(--border-width-base) solid var(--stepper-color-pending);
   background-color: var(--stepper-dot-bg);
 }
 
-/* Disco amarillo interior: mismo diámetro que los demás círculos
- * (glifo `bi-circle-fill` a 22px en la referencia), no más chico. */
+.dotVisited {
+  width: var(--stepper-dot-size);
+  height: var(--stepper-dot-size);
+  background-color: var(--stepper-color-visited);
+}
+
+/* Anillo exterior + disco interior: mismo diámetro que el resto de puntos. */
+.dotActive {
+  width: var(--stepper-dot-size-active);
+  height: var(--stepper-dot-size-active);
+  border: var(--border-width-thin) solid var(--stepper-color-active);
+  background-color: var(--stepper-dot-bg);
+}
+
 .dotActive::before {
   content: '';
   width: var(--stepper-dot-size);
   height: var(--stepper-dot-size);
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   background-color: var(--stepper-color-active);
 }
+
+.hitArea:not(:disabled):hover .dotVisited {
+  opacity: 0.8;
+}
+
+/* --- Conector entre pasos ------------------------------------------------- */
+
+.connector {
+  flex: 1 1 0;
+  height: var(--stepper-connector-height);
+  background-color: var(--stepper-color-pending);
+  transition: background-color var(--transition-fast);
+}
+
+/* Tramo ya recorrido (hasta el paso actual inclusive): azul de marca. */
+.connectorPassed {
+  background-color: var(--stepper-color-visited);
+}
+
+/* --- Label visible (showLabels=true) -------------------------------------- */
+
+.label {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* --- Label accesible (showLabels=false) ----------------------------------- */
 
 .srOnly {
   position: absolute;

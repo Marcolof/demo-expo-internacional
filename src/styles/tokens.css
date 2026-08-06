@@ -283,7 +283,6 @@
   --stepper-dot-size-active: 30px;
   --stepper-dot-font-size: 22px;
   --stepper-connector-height: var(--border-width-stepper);
-  --stepper-intl-dot-size: 24px; /* stepper del flujo internacional (Figma) */
   --stepper-color-pending: var(--grey-600);
   --stepper-color-visited: var(--correo-blue);
   --stepper-color-active: var(--correo-yellow);
