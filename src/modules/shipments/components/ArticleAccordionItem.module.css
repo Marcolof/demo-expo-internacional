@@ -13,7 +13,7 @@
 }
 
 .cardInvalid {
-  border-color: var(--feedback-danger-border);
+  border-color: var(--feedback-danger-icon);
 }
 
 .header {

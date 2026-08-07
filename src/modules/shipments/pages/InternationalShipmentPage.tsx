@@ -11,7 +11,6 @@ import { Checkbox } from '@/shared/ui/Checkbox'
 import { RadioGroup } from '@/shared/ui/Checkbox/RadioGroup'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { Input } from '@/shared/ui/Input'
-import { Textarea } from '@/shared/ui/Input/Textarea'
 import { Select } from '@/shared/ui/Select'
 import { Switch } from '@/shared/ui/Switch'
 import { ScopeSwitch } from '../components/ScopeSwitch'
@@ -69,7 +68,16 @@ const REMITENTE_OPTIONS: readonly SelectOption[] = REMITENTES_SEED.map((r) => ({
   label: `${r.razonSocial} | ${r.direccionRemitente}`,
 }))
 
-const ADDRESS_MAX = 59
+const ADDRESS_LINE_MAX = 90
+
+function MinusCircleIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M8 12h8" />
+    </svg>
+  )
+}
 
 function PlusIcon() {
   return (
@@ -83,6 +91,23 @@ function PlusIcon() {
       aria-hidden="true"
     >
       <path d="M12 5v14M5 12h14" />
+    </svg>
+  )
+}
+
+function PlusCircleIcon() {
+  return (
+    <svg
+      className={styles.addLineBtnIcon}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 8v8M8 12h8" />
     </svg>
   )
 }
@@ -103,6 +128,7 @@ export function InternationalShipmentPage() {
   const [commercial, setCommercial] = useState(false)
   const [category, setCategory] = useState('REGALO')
   const [declarationAccepted, setDeclarationAccepted] = useState(false)
+  const [declarationError, setDeclarationError] = useState(false)
   const [articles, setArticles] = useState<readonly DeclaredArticle[]>(DECLARED_ARTICLES_SEED)
   const [isArticleModalOpen, setArticleModalOpen] = useState(false)
 
@@ -114,7 +140,7 @@ export function InternationalShipmentPage() {
   const [packageWeightKg, setPackageWeightKg] = useState('')
 
   /* ── Paso 3: Origen ──────────────────────────────────────────────── */
-  const [remitenteCuit, setRemitenteCuit] = useState(REMITENTES_SEED[0].cuit)
+  const [remitenteCuit, setRemitenteCuit] = useState(REMITENTES_SEED[0]?.cuit ?? '')
   const [province, setProvince] = useState('BA')
   const [branchId, setBranchId] = useState('BA-001')
 
@@ -129,7 +155,7 @@ export function InternationalShipmentPage() {
   const [destinoState, setDestinoState]                 = useState('')
   const [destinoCity, setDestinoCity]                   = useState('Houston')
   const [destinoPostalCode, setDestinoPostalCode]       = useState('77001')
-  const [destinoAddress, setDestinoAddress]             = useState('901 Bagby st. Tower golden 9°D')
+  const [destinoAddressLines, setDestinoAddressLines]   = useState<string[]>(['901 Bagby st. Tower golden 9°D'])
   const [destinoOrderNum, setDestinoOrderNum]           = useState('')
   const [aduanaRepresentation, setAduanaRepresentation] = useState(true)
   const [aduanaModalOpen, setAduanaModalOpen]           = useState(false)
@@ -182,7 +208,8 @@ export function InternationalShipmentPage() {
       : formatWeightKg(Number(packageWeightKg.replace(',', '.')) || 0)
 
   /* Paso 3 */
-  const selectedRemitente = REMITENTES_SEED.find((r) => r.cuit === remitenteCuit) ?? REMITENTES_SEED[0]
+  const selectedRemitente =
+    REMITENTES_SEED.find((r) => r.cuit === remitenteCuit) ?? REMITENTES_SEED[0]
   const branchOptions     = getBranchOptions(province)
   const provinceBranches  = BRANCHES_BY_PROVINCE[province] ?? []
   const selectedBranch    = findBranch(branchId)
@@ -190,6 +217,15 @@ export function InternationalShipmentPage() {
   const handleProvinceChange = (value: string) => {
     setProvince(value)
     setBranchId('-1')
+  }
+
+  const handleNext = () => {
+    if (currentStep === 'Declaración' && !declarationAccepted) {
+      setDeclarationError(true)
+      return
+    }
+    setDeclarationError(false)
+    next()
   }
 
   /* Paso 4 */
@@ -308,8 +344,14 @@ export function InternationalShipmentPage() {
                     id="declaration-accepted"
                     label="Confirmo que la información ingresada en esta declaración jurada es correcta y completa."
                     checked={declarationAccepted}
-                    onChange={setDeclarationAccepted}
+                    onChange={(v) => { setDeclarationAccepted(v); if (v) setDeclarationError(false) }}
                   />
+
+                  {declarationError && (
+                    <Alert tone="danger">
+                      Debés aceptar la Declaración Jurada para continuar.
+                    </Alert>
+                  )}
                 </div>
               </section>
             </div>
@@ -377,7 +419,7 @@ export function InternationalShipmentPage() {
             </div>
           )}
 
-          {/* ── Paso 3: Origen ────────────────────────────────────── */}
+          {/* ── Paso 3: Origen ───────────────────────────────────── */}
           {currentStep === 'Origen' && (
             <div className={styles.origenLayout}>
               <div className={styles.origenForm}>
@@ -493,13 +535,15 @@ export function InternationalShipmentPage() {
                     hint="Ingresá el número fiscal del destinatario"
                   />
 
-                  <Input
-                    id="factura-e"
-                    label="Factura E"
-                    value={facturaE}
-                    onChange={(e) => setFacturaE(e.currentTarget.value)}
-                    hint="La factura debe corresponder al envío completo."
-                  />
+                  {commercial && (
+                    <Input
+                      id="factura-e"
+                      label="Factura E"
+                      value={facturaE}
+                      onChange={(e) => setFacturaE(e.currentTarget.value)}
+                      hint="La factura debe corresponder al envío completo."
+                    />
+                  )}
                 </div>
               </section>
 
@@ -507,10 +551,13 @@ export function InternationalShipmentPage() {
                 <h4 className={styles.sectionTitle}>Destino</h4>
 
                 <div className={styles.fields}>
-                  <div className={styles.destinoCountry}>
-                    <span className={styles.destinoCountryLabel}>País de destino seleccionado:</span>
-                    <span className={styles.destinoCountryValue}>{destinoCountryLabel ?? '—'}</span>
-                  </div>
+                  <Input
+                    id="destino-country-display"
+                    label="País de destino seleccionado"
+                    value={destinoCountryLabel ?? ''}
+                    onChange={() => {}}
+                    disabled
+                  />
 
                   <Input
                     id="destino-state"
@@ -534,19 +581,56 @@ export function InternationalShipmentPage() {
                     />
                   </div>
 
-                  <p className={styles.fieldNote}>
-                    Ingresá la dirección de entrega tal como debe figurar en el envío. Incluí
-                    calle, número y datos adicionales como piso, departamento, torre o edificio.
-                  </p>
+                  <div className={styles.addressSection}>
+                    <p className={styles.subsectionTitle}>Dirección</p>
+                    <p className={styles.fieldNote}>
+                      Ingresá la dirección de entrega tal como debe figurar en el envío. Incluí
+                      calle, número y datos adicionales como piso, departamento, torre o edificio.
+                    </p>
 
-                  <Textarea
-                    id="destino-address"
-                    label="Dirección"
-                    value={destinoAddress}
-                    onChange={(e) => setDestinoAddress(e.currentTarget.value.slice(0, ADDRESS_MAX))}
-                    rows={2}
-                    hint={`Caracteres ${destinoAddress.length}/${ADDRESS_MAX}`}
-                  />
+                    {destinoAddressLines.map((line, index) => (
+                      <div key={index} className={styles.addressLineGroup}>
+                        <div className={styles.addressLineRow}>
+                          <div className={styles.addressLineInput}>
+                            <Input
+                              id={`destino-address-${index}`}
+                              label={`Línea ${index + 1} de dirección`}
+                              value={line}
+                              onChange={(e) => {
+                                const next = [...destinoAddressLines]
+                                next[index] = e.currentTarget.value.slice(0, ADDRESS_LINE_MAX)
+                                setDestinoAddressLines(next)
+                              }}
+                            />
+                          </div>
+                          {index > 0 && (
+                            <button
+                              type="button"
+                              className={styles.removeLineBtn}
+                              onClick={() => setDestinoAddressLines((prev) => prev.filter((_, i) => i !== index))}
+                              aria-label={`Eliminar línea ${index + 1}`}
+                            >
+                              <MinusCircleIcon />
+                            </button>
+                          )}
+                        </div>
+                        <span className={styles.addressLineHint}>
+                          Caracteres {line.length}/{ADDRESS_LINE_MAX}
+                        </span>
+                      </div>
+                    ))}
+
+                    {destinoAddressLines.length < 3 && (
+                      <button
+                        type="button"
+                        className={styles.addLineBtn}
+                        onClick={() => setDestinoAddressLines((prev) => [...prev, ''])}
+                      >
+                        <PlusCircleIcon />
+                        Agregar otra línea de dirección
+                      </button>
+                    )}
+                  </div>
 
                   <Input
                     id="destino-order"
@@ -647,7 +731,7 @@ export function InternationalShipmentPage() {
                 destino={{
                   countryLabel: destinoCountryLabel,
                   city: destinoCity || undefined,
-                  address: destinoAddress || undefined,
+                  address: destinoAddressLines[0] || undefined,
                 }}
               />
             </div>
@@ -671,7 +755,7 @@ export function InternationalShipmentPage() {
               <Button
                 variant="primary"
                 size="step"
-                onClick={next}
+                onClick={handleNext}
                 disabled={currentStep === 'Destino'}
               >
                 {currentStep === 'Destino' ? 'Guardar' : 'Siguiente'}

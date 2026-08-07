@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { cn } from '@/shared/lib/cn'
 import type { Branch } from '../mocks/branches.mocks'
+import mapAsset from '@/assets/img/map-asset.png'
 import styles from './BranchMap.module.css'
 
 /** Posiciones fijas para hasta 4 pins dentro del canvas del mapa. */
@@ -60,9 +61,7 @@ export function BranchMap({ branches, selectedBranchId, className }: BranchMapPr
   return (
     <div className={cn(styles.root, className)}>
       {/* Fondo de mapa */}
-      <div className={styles.mapBg} aria-hidden="true" />
-      <div className={styles.park} aria-hidden="true" />
-      <div className={styles.plaza} aria-hidden="true" />
+      <img src={mapAsset} alt="" aria-hidden="true" className={styles.mapImg} />
 
       {/* Controles de zoom (decorativos) */}
       <div className={styles.zoomControls} aria-hidden="true">
@@ -73,6 +72,7 @@ export function BranchMap({ branches, selectedBranchId, className }: BranchMapPr
       {/* Pins */}
       {visibleBranches.map((branch, i) => {
         const pos = PIN_POSITIONS[i]
+        if (pos === undefined) return null
         const isActive = branch.id === selectedBranchId
 
         return (
