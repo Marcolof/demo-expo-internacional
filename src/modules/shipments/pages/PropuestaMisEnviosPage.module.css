@@ -164,7 +164,6 @@
 
 .tableWrap {
   overflow-x: auto;
-  border-radius: var(--radius-md);
   border: var(--border-width-thin) solid var(--border-default);
   background: var(--surface-raised);
 }

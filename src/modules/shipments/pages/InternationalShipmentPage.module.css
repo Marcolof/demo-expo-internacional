@@ -148,8 +148,7 @@
  */
 .origenLayout {
   display: grid;
-  /* SVG: form col ≈376px, map col ≈359px — forma ligeramente más ancha */
-  grid-template-columns: 376fr 359fr;
+  grid-template-columns: 1fr 1fr;
   gap: var(--space-5);
   width: 100%;
   align-items: start;
