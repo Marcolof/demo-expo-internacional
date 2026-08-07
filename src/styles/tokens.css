@@ -129,6 +129,13 @@
   --transition-fast: 0.2s ease-out;
   --transition-base: 0.2s ease-in-out;
 
+@media (prefers-reduced-motion: reduce) {
+  * {
+    --transition-fast: 0ms;
+    --transition-base: 0ms;
+  }
+}
+
   /* --- Capas (z-index) -------------------------------------------------- */
   --z-base: 0;
   --z-sidebar-rail: 10;
