@@ -21,6 +21,7 @@ import { AddArticleModal } from '../components/AddArticleModal'
 import { ArticleAccordionItem } from '../components/ArticleAccordionItem'
 import { AduanaConfirmModal } from '../components/AduanaConfirmModal'
 import { BranchMap } from '../components/BranchMap'
+import { PhoneCountryCodeSelect } from '../components/PhoneCountryCodeSelect'
 import { articleTotalPriceUsd, articleTotalWeightKg, ARTICLE_KIND_TEXT } from '../types/article.types'
 import type { ArticleKind, DeclaredArticle } from '../types/article.types'
 import { DECLARED_ARTICLES_SEED, DECLARED_DOCUMENTS_SEED } from '../mocks/articles.mocks'
@@ -29,7 +30,7 @@ import { shipmentsStore, wizardStore } from '../stores/session.store'
 import type { WizardSnapshot } from '../stores/session.store'
 import { REMITENTES_SEED } from '../mocks/remitentes.mocks'
 import { PROVINCE_OPTIONS, getBranchOptions, findBranch, BRANCHES_BY_PROVINCE } from '../mocks/branches.mocks'
-import { FREQUENT_MEASURE_OPTIONS } from '../mocks/shipments.mocks'
+import { FREQUENT_MEASURE_OPTIONS, PHONE_COUNTRY_CODES } from '../mocks/shipments.mocks'
 import packageOpenIcon from '@/assets/icons/package-open.svg'
 import layout from './NewShipmentPage.module.css'
 import styles from './InternationalShipmentPage.module.css'
@@ -80,18 +81,6 @@ const COMMERCIAL_CATEGORIES: readonly SelectOption[] = [
   { value: COMMERCIAL_CATEGORY_VALUE, label: 'Envío de mercadería' },
 ]
 
-const PHONE_CODE_OPTIONS: readonly SelectOption[] = [
-  { value: '+54',  label: '+54 (Argentina)' },
-  { value: '+1',   label: '+1 (EE.UU.)' },
-  { value: '+55',  label: '+55 (Brasil)' },
-  { value: '+56',  label: '+56 (Chile)' },
-  { value: '+598', label: '+598 (Uruguay)' },
-  { value: '+34',  label: '+34 (España)' },
-  { value: '+52',  label: '+52 (México)' },
-  { value: '+30',  label: '+30 (Grecia)' },
-  { value: '+7',   label: '+7 (Rusia)' },
-  { value: '+53',  label: '+53 (Cuba)' },
-]
 
 const PACKAGE_MAX_SIDE_CM = 90
 const PACKAGE_MAX_OVERSIZED_SIDES = 1
@@ -157,7 +146,11 @@ function validateDestinoFields(params: {
 }): ReadonlySet<string> {
   const errors = new Set<string>()
   if (!params.recipientName.trim()) errors.add('recipientName')
-  if (!params.recipientPhone.trim()) errors.add('recipientPhone')
+  if (!params.recipientPhone.trim()) {
+    errors.add('recipientPhone')
+  } else if (!/^\d+$/.test(params.recipientPhone.trim())) {
+    errors.add('recipientPhoneFormat')
+  }
   if (!params.recipientEmail.trim()) errors.add('recipientEmail')
   if (!params.recipientTaxId.trim()) errors.add('recipientTaxId')
   if (params.commercial && !params.facturaE.trim()) errors.add('facturaE')
@@ -257,8 +250,8 @@ export function InternationalShipmentPage() {
   /* ── Paso 4: Destino ─────────────────────────────────────────────── */
   const [recipientName, setRecipientName]               = useState('Juan Perez')
   const [recipientRazonSocial, setRecipientRazonSocial] = useState('Logística ecuatorial')
-  const [recipientPhoneCode, setRecipientPhoneCode]     = useState('+30')
-  const [recipientPhone, setRecipientPhone]             = useState('1234567B')
+  const [recipientPhoneCode, setRecipientPhoneCode]     = useState('+54')
+  const [recipientPhone, setRecipientPhone]             = useState('12345678')
   const [recipientEmail, setRecipientEmail]             = useState('ecuatorlogistic@eculogi.com')
   const [recipientTaxId, setRecipientTaxId]             = useState('123456789001213123')
   const [facturaE, setFacturaE]                         = useState('00001-00000108')
@@ -752,21 +745,29 @@ export function InternationalShipmentPage() {
                   </div>
 
                   <div className={styles.twoColRow}>
-                    <Select
+                    <PhoneCountryCodeSelect
                       id="recipient-phone-code"
                       label="Código de país"
-                      options={PHONE_CODE_OPTIONS}
+                      options={PHONE_COUNTRY_CODES}
                       value={recipientPhoneCode}
-                      onChange={(e) => setRecipientPhoneCode(e.currentTarget.value)}
+                      onChange={setRecipientPhoneCode}
                     />
                     <Input
                       id="recipient-phone"
                       label="Número de teléfono"
                       inputMode="tel"
                       value={recipientPhone}
-                      onChange={(e) => { setRecipientPhone(e.currentTarget.value); clearError('recipientPhone') }}
-                      invalid={step4Errors.has('recipientPhone')}
-                      hint={step4Errors.has('recipientPhone') ? 'Campo requerido' : undefined}
+                      onChange={(e) => {
+                        setRecipientPhone(e.currentTarget.value)
+                        clearError('recipientPhone')
+                        clearError('recipientPhoneFormat')
+                      }}
+                      invalid={step4Errors.has('recipientPhone') || step4Errors.has('recipientPhoneFormat')}
+                      hint={
+                        step4Errors.has('recipientPhone') ? 'Campo requerido' :
+                        step4Errors.has('recipientPhoneFormat') ? 'Solo se permiten números' :
+                        'Solo números, sin espacios ni guiones'
+                      }
                     />
                   </div>
 
