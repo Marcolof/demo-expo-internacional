@@ -50,7 +50,7 @@
 .carga {
   grid-area: carga;
   min-width: 0;
-  padding: 0 var(--space-12);
+  padding: 0 var(--space-12) var(--space-4);
 }
 
 /* h3 "Nuevo envío | Paquetería" — .mt-3 (16px) + margen inferior por

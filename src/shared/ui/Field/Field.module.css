@@ -80,7 +80,9 @@
   color: var(--field-text);
   font-family: var(--font-family-base);
   font-size: var(--field-font-size);
-  line-height: var(--line-height-snug);
+  font-weight: var(--font-weight-regular);
+  line-height: 1;
+  letter-spacing: 0;
   outline: none;
   transition: border-color var(--transition-fast);
 }

@@ -1,0 +1,149 @@
+/*
+ * Panel Resumen de la carga masiva (Figma 5658:21815). Mismo look de tarjeta
+ * que `InternationalSummary` (radio, superficie, botón Pagar), pero sin
+ * stepper y con secciones de "pills" de estadísticas en vez de filas
+ * etiqueta/valor.
+ */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow: hidden;
+  background-color: var(--surface-raised);
+  border-radius: 24px; /* mismo radio que InternationalSummary */
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  flex: 1 1 auto;
+  padding: var(--space-6) var(--space-6) var(--space-10);
+}
+
+.heading {
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  line-height: 24px;
+}
+
+/* --- Sección colapsable --------------------------------------------------- */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sectionTitle {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: 24px;
+}
+
+.edit {
+  flex-shrink: 0;
+  color: var(--correo-blue);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: 24px;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--text-primary);
+  opacity: 0.5; /* aspecto más claro (Figma 5658:21815) */
+  transition: transform var(--transition-base);
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+/* Truco `grid-template-rows: 0fr → 1fr`: anima una altura "auto" con CSS
+ * puro, sin medir nada en JS (no se puede transicionar `height:auto`
+ * directamente). `.sectionBodyInner` recorta con `overflow:hidden` mientras
+ * la fila de grid crece de 0 a 1fr.
+ *
+ * `minmax(0, …)`, no un `Xfr` a secas: sin el `minmax`, el mínimo automático
+ * de la fila usa el tamaño mínimo del contenido del ítem — y el
+ * `padding-top` de `.sectionBodyInner` cuenta ahí aunque tenga
+ * `min-height:0`, dejando un resto visible (~12px) en vez de cerrar a 0. */
+.sectionBody {
+  display: grid;
+  grid-template-rows: minmax(0, 0fr);
+  transition: grid-template-rows var(--transition-base);
+}
+
+.sectionBodyOpen {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.sectionBodyInner {
+  min-height: 0;
+  overflow: hidden;
+  /* Reemplaza el `gap` que tenía `.section` (ya no sirve: el wrapper de abajo
+   * queda siempre montado, con o sin contenido visible). El padding entra
+   * en la altura que anima `.sectionBody`, así que no se ve un salto. */
+  padding-top: var(--space-3);
+}
+
+/* --- Pills de estadísticas -------------------------------------------------- */
+
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.statPill {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: var(--border-width-thin) solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background-color: var(--surface-sunken);
+}
+
+.statIcon {
+  flex-shrink: 0;
+  color: var(--correo-blue);
+  opacity: 0.5; /* aspecto más claro (Figma 5658:21815) */
+}
+
+.statLabel {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-primary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.statValue {
+  flex-shrink: 0;
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}

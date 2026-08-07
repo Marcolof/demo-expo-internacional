@@ -1,0 +1,185 @@
+/*
+ * Carga masiva del flujo internacional (Figma 5658:21808). El layout general
+ * (grilla, tabs, alineación del switch) se reutiliza de
+ * NewShipmentPage.module.css; acá viven sólo las secciones propias de esta
+ * pantalla.
+ */
+
+/* Switch Nacional/Internacional responsive — mismo criterio que
+ * InternationalShipmentPage.module.css (duplicado acá porque son módulos
+ * CSS distintos, sin selector cruzado posible). */
+.scopeSwitchMobileOnly {
+  margin-bottom: var(--space-5);
+}
+
+@media (min-width: 768px) {
+  .scopeSwitchMobileOnly {
+    display: none;
+  }
+}
+
+.scopeSwitchDesktopOnly {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .scopeSwitchDesktopOnly {
+    display: flex;
+  }
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  width: 100%;
+  max-width: 600px;
+}
+
+/* Separación con la barra Cancelar/Guardar, que no trae padding vertical
+ * propio (ver NewShipmentPage.module.css → .navActions). Va en el último
+ * paso, no en su último campo, para que el espacio no cambie según si el
+ * archivo/banner de éxito están visibles o no. */
+.content > .step:last-child {
+  margin-bottom: var(--space-6);
+}
+
+.sectionTitle {
+  color: var(--text-primary);
+  font-size: 1.125rem; /* 18px, igual que el resto de los títulos de sección */
+  font-weight: var(--font-weight-semibold);
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.stepTitle {
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+}
+
+/* --- Paso 1: descargas -------------------------------------------------- */
+
+.downloadList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.downloadRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.downloadLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-link);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.downloadLink:hover {
+  text-decoration: underline;
+}
+
+.downloadIcon {
+  flex-shrink: 0;
+}
+
+.updatedAt {
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+}
+
+/* --- Paso 2: subir archivo (Figma 5658:33719) ----------------------------- */
+
+/* Fila: "Subir" a la izquierda, dropzone a la derecha ocupando el resto del
+ * ancho. `align-items: stretch` (default de flex) hace que el dropzone tome
+ * exactamente el alto real del botón — no un valor fijo adivinado. */
+.uploadRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+/* "Subir": rellena el ancho disponible (fila angosta / mobile) pero nunca
+ * pasa de 140px (Figma 5658:33719). */
+.uploadButton {
+  flex: 1 1 140px;
+  max-width: 140px;
+}
+
+.dropzone {
+  display: flex;
+  flex: 1 1 240px;
+  max-width: 300px; /* Figma 5658:33719 */
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-hairline);
+  color: var(--text-disabled);
+  font-size: var(--font-size-base);
+  text-align: center;
+  /* Borde punteado a mano (no `border-style:dashed`): el guión propio del
+   * navegador no permite fijar el largo del trazo ni el hueco entre guiones.
+   * Figma: trazo 6px, hueco 6px, repetidos en las 4 caras. */
+  background-image: linear-gradient(
+      to right,
+      var(--border-default) 0 6px,
+      transparent 6px 12px
+    ),
+    linear-gradient(to right, var(--border-default) 0 6px, transparent 6px 12px),
+    linear-gradient(to bottom, var(--border-default) 0 6px, transparent 6px 12px),
+    linear-gradient(to bottom, var(--border-default) 0 6px, transparent 6px 12px);
+  background-position: left top, left bottom, left top, right top;
+  background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+  background-size: 12px 1px, 12px 1px, 1px 12px, 1px 12px;
+}
+
+/* --- Archivo "importado" (mock) -------------------------------------------
+ * No hay archivo real ni diálogo del sistema: "Subir" sólo muestra este
+ * nombre fijo con la opción de sacarlo (vuelve al estado vacío). */
+.uploadedFile {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.fileName {
+  color: var(--correo-blue);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+}
+
+.removeFile {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.removeFile:hover {
+  color: var(--text-primary);
+}

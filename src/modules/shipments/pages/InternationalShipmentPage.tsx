@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@/shared/lib/cn'
+import { COUNTRIES } from '@/shared/lib/countries'
 import type { SelectOption } from '@/core/types/common'
 import { PageContainer } from '@/shared/layout/PageContainer'
 import { formatDimensionsCm, formatUsd, formatWeightKg } from '@/shared/lib/formatCurrency'
@@ -11,7 +12,6 @@ import { Checkbox } from '@/shared/ui/Checkbox'
 import { RadioGroup } from '@/shared/ui/Checkbox/RadioGroup'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { Input } from '@/shared/ui/Input'
-import { Textarea } from '@/shared/ui/Input/Textarea'
 import { Select } from '@/shared/ui/Select'
 import { Switch } from '@/shared/ui/Switch'
 import { ScopeSwitch } from '../components/ScopeSwitch'
@@ -23,7 +23,6 @@ import { BranchMap } from '../components/BranchMap'
 import { articleTotalPriceUsd, articleTotalWeightKg } from '../types/article.types'
 import type { DeclaredArticle } from '../types/article.types'
 import { DECLARED_ARTICLES_SEED } from '../mocks/articles.mocks'
-import { DESTINATION_COUNTRIES_DATA } from '../mocks/countries.mocks'
 import { COUNTRY_CONTENT_RESTRICTIONS } from '../mocks/country-restrictions.mocks'
 import { REMITENTES_SEED } from '../mocks/remitentes.mocks'
 import { PROVINCE_OPTIONS, getBranchOptions, findBranch, BRANCHES_BY_PROVINCE } from '../mocks/branches.mocks'
@@ -32,17 +31,14 @@ import packageOpenIcon from '@/assets/icons/package-open.svg'
 import layout from './NewShipmentPage.module.css'
 import styles from './InternationalShipmentPage.module.css'
 
-const DESTINATION_COUNTRY_OPTIONS: readonly SelectOption[] = DESTINATION_COUNTRIES_DATA.map(
-  ({ value, label }) => ({ value, label }),
-)
-
-const COUNTRY_UNAVAILABLE_ERROR =
-  'El país seleccionado no está disponible para envíos internacionales.'
+/** Doc funcional §7.2: con más de 2 kg declarados, sólo sucursales con asiento aduanero. */
+const CUSTOMS_OFFICE_REQUIRED_OVER_KG = 2
 
 const NON_COMMERCIAL_CATEGORIES: readonly SelectOption[] = [
   { value: 'REGALO', label: 'Regalo' },
   { value: 'DOCUMENTO', label: 'Documento' },
   { value: 'MUESTRA', label: 'Muestra comercial' },
+  { value: 'AYUDA_FAMILIAR', label: 'Ayuda familiar' },
 ]
 
 const COMMERCIAL_CATEGORY_VALUE = 'MERCADERIA'
@@ -64,12 +60,69 @@ const PHONE_CODE_OPTIONS: readonly SelectOption[] = [
   { value: '+53',  label: '+53 (Cuba)' },
 ]
 
+const PACKAGE_MAX_SIDE_CM = 90
+const PACKAGE_MAX_OVERSIZED_SIDES = 1
+const PACKAGE_MAX_WEIGHT_KG = 20
+
+function validatePackageStep(
+  lengthCm: string,
+  widthCm: string,
+  heightCm: string,
+  packageWeightKg: string,
+  declaredContentWeightKg: number,
+): string | null {
+  const length = Number(lengthCm.replace(',', '.'))
+  const width = Number(widthCm.replace(',', '.'))
+  const height = Number(heightCm.replace(',', '.'))
+
+  const hasValidMeasures =
+    lengthCm.trim() !== '' &&
+    widthCm.trim() !== '' &&
+    heightCm.trim() !== '' &&
+    Number.isFinite(length) && Number.isFinite(width) && Number.isFinite(height) &&
+    length > 0 && width > 0 && height > 0
+
+  if (!hasValidMeasures) {
+    return 'Completá el largo, el ancho y el alto del paquete para continuar.'
+  }
+
+  const oversizedSides = [length, width, height].filter((side) => side > PACKAGE_MAX_SIDE_CM).length
+  if (oversizedSides > PACKAGE_MAX_OVERSIZED_SIDES) {
+    return `Al menos dos lados del paquete superan los ${PACKAGE_MAX_SIDE_CM} cm. Revisá las medidas para continuar.`
+  }
+
+  const weight = Number(packageWeightKg.replace(',', '.'))
+  const hasValidWeight = packageWeightKg.trim() !== '' && Number.isFinite(weight) && weight > 0
+  if (!hasValidWeight) {
+    return 'Completá el peso del paquete para continuar.'
+  }
+
+  if (weight < declaredContentWeightKg) {
+    return 'El peso total del paquete no puede ser menor al peso del contenido declarado.'
+  }
+
+  if (weight > PACKAGE_MAX_WEIGHT_KG) {
+    return `El peso del paquete supera el máximo permitido (${PACKAGE_MAX_WEIGHT_KG} kg) para envíos internacionales.`
+  }
+
+  return null
+}
+
 const REMITENTE_OPTIONS: readonly SelectOption[] = REMITENTES_SEED.map((r) => ({
   value: r.cuit,
   label: `${r.razonSocial} | ${r.direccionRemitente}`,
 }))
 
-const ADDRESS_MAX = 59
+const ADDRESS_LINE_MAX = 90
+
+function MinusCircleIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M8 12h8" />
+    </svg>
+  )
+}
 
 function PlusIcon() {
   return (
@@ -83,6 +136,23 @@ function PlusIcon() {
       aria-hidden="true"
     >
       <path d="M12 5v14M5 12h14" />
+    </svg>
+  )
+}
+
+function PlusCircleIcon() {
+  return (
+    <svg
+      className={styles.addLineBtnIcon}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 8v8M8 12h8" />
     </svg>
   )
 }
@@ -103,6 +173,7 @@ export function InternationalShipmentPage() {
   const [commercial, setCommercial] = useState(false)
   const [category, setCategory] = useState('REGALO')
   const [declarationAccepted, setDeclarationAccepted] = useState(false)
+  const [declarationError, setDeclarationError] = useState(false)
   const [articles, setArticles] = useState<readonly DeclaredArticle[]>(DECLARED_ARTICLES_SEED)
   const [isArticleModalOpen, setArticleModalOpen] = useState(false)
 
@@ -112,9 +183,10 @@ export function InternationalShipmentPage() {
   const [widthCm, setWidthCm] = useState('')
   const [heightCm, setHeightCm] = useState('')
   const [packageWeightKg, setPackageWeightKg] = useState('')
+  const [packageError, setPackageError] = useState<string | null>(null)
 
   /* ── Paso 3: Origen ──────────────────────────────────────────────── */
-  const [remitenteCuit, setRemitenteCuit] = useState(REMITENTES_SEED[0].cuit)
+  const [remitenteCuit, setRemitenteCuit] = useState(REMITENTES_SEED[0]!.cuit)
   const [province, setProvince] = useState('BA')
   const [branchId, setBranchId] = useState('BA-001')
 
@@ -129,13 +201,13 @@ export function InternationalShipmentPage() {
   const [destinoState, setDestinoState]                 = useState('')
   const [destinoCity, setDestinoCity]                   = useState('Houston')
   const [destinoPostalCode, setDestinoPostalCode]       = useState('77001')
-  const [destinoAddress, setDestinoAddress]             = useState('901 Bagby st. Tower golden 9°D')
+  const [destinoAddressLines, setDestinoAddressLines]   = useState<string[]>(['901 Bagby st. Tower golden 9°D'])
   const [destinoOrderNum, setDestinoOrderNum]           = useState('')
   const [aduanaRepresentation, setAduanaRepresentation] = useState(true)
   const [aduanaModalOpen, setAduanaModalOpen]           = useState(false)
   const [representanteName, setRepresentanteName]       = useState('Juan Perez')
   const [representanteCuil, setRepresentanteCuil]       = useState('20.31211156.3')
-  const [shippingService, setShippingService]           = useState<'EMS' | 'ENCOMIENDA' | null>('EMS')
+  const [shippingService, setShippingService]           = useState<'EMS' | 'ENCOMIENDA' | 'PEQUENO_PAQUETE' | 'EMS_DOCUMENTACION' | null>('EMS')
 
   /* ── Derivados ───────────────────────────────────────────────────── */
   const categoryOptions = commercial ? COMMERCIAL_CATEGORIES : NON_COMMERCIAL_CATEGORIES
@@ -146,13 +218,9 @@ export function InternationalShipmentPage() {
     // Los artículos se conservan en ambos modos; el seed se carga solo al montar
   }
 
-  const selectedCountry = DESTINATION_COUNTRIES_DATA.find((c) => c.value === country)
-  const countryError =
-    selectedCountry !== undefined && !selectedCountry.shippingAvailable
-      ? COUNTRY_UNAVAILABLE_ERROR
-      : null
+  const selectedCountry = COUNTRIES.find((c) => c.value === country)
 
-  const canAddArticle = country !== '-1' && countryError === null && category !== '-1'
+  const canAddArticle = country !== '-1' && category !== '-1'
 
   const restrictedIds = useMemo(() => {
     const ids = COUNTRY_CONTENT_RESTRICTIONS[country] ?? []
@@ -192,6 +260,22 @@ export function InternationalShipmentPage() {
     setBranchId('-1')
   }
 
+  const handleNext = () => {
+    if (currentStep === 'Declaración' && !declarationAccepted) {
+      setDeclarationError(true)
+      return
+    }
+    setDeclarationError(false)
+
+    if (currentStep === 'Paquete') {
+      const error = validatePackageStep(lengthCm, widthCm, heightCm, packageWeightKg, totalWeightKg)
+      setPackageError(error)
+      if (error !== null) return
+    }
+
+    next()
+  }
+
   /* Paso 4 */
   const destinoCountryLabel = selectedCountry?.label
 
@@ -221,14 +305,10 @@ export function InternationalShipmentPage() {
                 <Select
                   id="destination-country"
                   label="País de destino"
-                  options={DESTINATION_COUNTRY_OPTIONS}
+                  options={COUNTRIES}
                   value={country}
                   onChange={(event) => setCountry(event.currentTarget.value)}
-                  invalid={countryError !== null}
                 />
-                {countryError !== null && (
-                  <Alert tone="danger">{countryError}</Alert>
-                )}
               </section>
 
               <section className={styles.section}>
@@ -308,8 +388,14 @@ export function InternationalShipmentPage() {
                     id="declaration-accepted"
                     label="Confirmo que la información ingresada en esta declaración jurada es correcta y completa."
                     checked={declarationAccepted}
-                    onChange={setDeclarationAccepted}
+                    onChange={(v) => { setDeclarationAccepted(v); if (v) setDeclarationError(false) }}
                   />
+
+                  {declarationError && (
+                    <Alert tone="danger">
+                      Debés aceptar la Declaración Jurada para continuar.
+                    </Alert>
+                  )}
                 </div>
               </section>
             </div>
@@ -370,14 +456,19 @@ export function InternationalShipmentPage() {
                     label="Peso del paquete (kg)"
                     inputMode="decimal"
                     value={packageWeightKg}
-                    onChange={(event) => setPackageWeightKg(event.currentTarget.value)}
+                    onChange={(event) => { setPackageWeightKg(event.currentTarget.value); setPackageError(null) }}
+                    invalid={packageError !== null}
                   />
+
+                  {packageError !== null && (
+                    <Alert tone="danger">{packageError}</Alert>
+                  )}
                 </div>
               </section>
             </div>
           )}
 
-          {/* ── Paso 3: Origen ────────────────────────────────────── */}
+          {/* ── Paso 3: Origen ───────────────────────────────────── */}
           {currentStep === 'Origen' && (
             <div className={styles.origenLayout}>
               <div className={styles.origenForm}>
@@ -403,8 +494,8 @@ export function InternationalShipmentPage() {
                     <div className={styles.subsection}>
                       <p className={styles.subsectionTitle}>Sucursal de origen</p>
                       <p className={styles.fieldNote}>
-                        Para envíos con fines comerciales solo se mostrarán sucursales con
-                        asiento aduanero.
+                        Para envíos con fines comerciales o con más de {CUSTOMS_OFFICE_REQUIRED_OVER_KG} kg declarados
+                        solo se mostrarán sucursales con asiento aduanero.
                       </p>
                       <Select
                         id="province"
@@ -493,13 +584,15 @@ export function InternationalShipmentPage() {
                     hint="Ingresá el número fiscal del destinatario"
                   />
 
-                  <Input
-                    id="factura-e"
-                    label="Factura E"
-                    value={facturaE}
-                    onChange={(e) => setFacturaE(e.currentTarget.value)}
-                    hint="La factura debe corresponder al envío completo."
-                  />
+                  {commercial && (
+                    <Input
+                      id="factura-e"
+                      label="Factura E"
+                      value={facturaE}
+                      onChange={(e) => setFacturaE(e.currentTarget.value)}
+                      hint="La factura debe corresponder al envío completo."
+                    />
+                  )}
                 </div>
               </section>
 
@@ -507,10 +600,13 @@ export function InternationalShipmentPage() {
                 <h4 className={styles.sectionTitle}>Destino</h4>
 
                 <div className={styles.fields}>
-                  <div className={styles.destinoCountry}>
-                    <span className={styles.destinoCountryLabel}>País de destino seleccionado:</span>
-                    <span className={styles.destinoCountryValue}>{destinoCountryLabel ?? '—'}</span>
-                  </div>
+                  <Input
+                    id="destino-country-display"
+                    label="País de destino seleccionado"
+                    value={destinoCountryLabel ?? ''}
+                    onChange={() => {}}
+                    disabled
+                  />
 
                   <Input
                     id="destino-state"
@@ -534,19 +630,56 @@ export function InternationalShipmentPage() {
                     />
                   </div>
 
-                  <p className={styles.fieldNote}>
-                    Ingresá la dirección de entrega tal como debe figurar en el envío. Incluí
-                    calle, número y datos adicionales como piso, departamento, torre o edificio.
-                  </p>
+                  <div className={styles.addressSection}>
+                    <p className={styles.subsectionTitle}>Dirección</p>
+                    <p className={styles.fieldNote}>
+                      Ingresá la dirección de entrega tal como debe figurar en el envío. Incluí
+                      calle, número y datos adicionales como piso, departamento, torre o edificio.
+                    </p>
 
-                  <Textarea
-                    id="destino-address"
-                    label="Dirección"
-                    value={destinoAddress}
-                    onChange={(e) => setDestinoAddress(e.currentTarget.value.slice(0, ADDRESS_MAX))}
-                    rows={2}
-                    hint={`Caracteres ${destinoAddress.length}/${ADDRESS_MAX}`}
-                  />
+                    {destinoAddressLines.map((line, index) => (
+                      <div key={index} className={styles.addressLineGroup}>
+                        <div className={styles.addressLineRow}>
+                          <div className={styles.addressLineInput}>
+                            <Input
+                              id={`destino-address-${index}`}
+                              label={`Línea ${index + 1} de dirección`}
+                              value={line}
+                              onChange={(e) => {
+                                const next = [...destinoAddressLines]
+                                next[index] = e.currentTarget.value.slice(0, ADDRESS_LINE_MAX)
+                                setDestinoAddressLines(next)
+                              }}
+                            />
+                          </div>
+                          {index > 0 && (
+                            <button
+                              type="button"
+                              className={styles.removeLineBtn}
+                              onClick={() => setDestinoAddressLines((prev) => prev.filter((_, i) => i !== index))}
+                              aria-label={`Eliminar línea ${index + 1}`}
+                            >
+                              <MinusCircleIcon />
+                            </button>
+                          )}
+                        </div>
+                        <span className={styles.addressLineHint}>
+                          Caracteres {line.length}/{ADDRESS_LINE_MAX}
+                        </span>
+                      </div>
+                    ))}
+
+                    {destinoAddressLines.length < 3 && (
+                      <button
+                        type="button"
+                        className={styles.addLineBtn}
+                        onClick={() => setDestinoAddressLines((prev) => [...prev, ''])}
+                      >
+                        <PlusCircleIcon />
+                        Agregar otra línea de dirección
+                      </button>
+                    )}
+                  </div>
 
                   <Input
                     id="destino-order"
@@ -618,6 +751,18 @@ export function InternationalShipmentPage() {
                       description: 'Entrega estimada entre 7 y 21 días hábiles, según el destino.',
                       trailing: <span className={styles.servicePrice}>$10.000,00</span>,
                     },
+                    {
+                      value: 'PEQUENO_PAQUETE' as const,
+                      label: 'Pequeño Paquete',
+                      description: 'Entrega estimada entre 10 y 30 días hábiles, según el destino.',
+                      trailing: <span className={styles.servicePrice}>$7.500,00</span>,
+                    },
+                    {
+                      value: 'EMS_DOCUMENTACION' as const,
+                      label: 'EMS Documentación',
+                      description: 'Solo para documentos. Entrega estimada entre 2 y 8 días hábiles.',
+                      trailing: <span className={styles.servicePrice}>$8.000,00</span>,
+                    },
                   ]}
                 />
               </section>
@@ -647,7 +792,7 @@ export function InternationalShipmentPage() {
                 destino={{
                   countryLabel: destinoCountryLabel,
                   city: destinoCity || undefined,
-                  address: destinoAddress || undefined,
+                  address: destinoAddressLines[0] || undefined,
                 }}
               />
             </div>
@@ -671,7 +816,7 @@ export function InternationalShipmentPage() {
               <Button
                 variant="primary"
                 size="step"
-                onClick={next}
+                onClick={handleNext}
                 disabled={currentStep === 'Destino'}
               >
                 {currentStep === 'Destino' ? 'Guardar' : 'Siguiente'}
