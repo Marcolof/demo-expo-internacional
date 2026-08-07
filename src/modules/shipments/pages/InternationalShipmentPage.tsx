@@ -320,9 +320,15 @@ export function InternationalShipmentPage() {
               <button type="button" role="tab" aria-selected="true" className={layout.loadTabActive}>
                 Individual
               </button>
-              <span role="tab" aria-selected="false" className={layout.loadTabInactive}>
+              <button
+                type="button"
+                role="tab"
+                aria-selected="false"
+                className={layout.loadTabInactive}
+                onClick={() => navigate('/internacional/masivo')}
+              >
                 Masivo
-              </span>
+              </button>
             </div>
           </div>
 
