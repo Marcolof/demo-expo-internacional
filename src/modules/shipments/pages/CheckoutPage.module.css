@@ -13,10 +13,16 @@
   flex-direction: column;
   gap: var(--space-6);
   width: 100%;
-  /* El padding inferior deja libre la esquina donde vive la burbuja flotante
-   * de chat (fija, 52px + 24px de margen): en esta pantalla el botón "Pagar"
-   * va abajo a la derecha y sin este aire la burbuja lo taparía. */
-  padding: 0 var(--space-12) calc(var(--space-12) + var(--space-8));
+  /* Top y lados: igual que PropuestaMisEnviosPage para coherencia visual.
+   * Bottom: deja aire sobre la burbuja de chat fija (52px + 24px de margen). */
+  padding: var(--space-6) var(--space-8) calc(var(--space-12) + var(--space-8));
+}
+
+.pageTitle {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
 }
 
 .header {

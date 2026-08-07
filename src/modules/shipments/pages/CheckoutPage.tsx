@@ -9,7 +9,6 @@ import { CHECKOUT_ITEMS, CHECKOUT_PICKUP_FEE } from '../mocks/checkout.mocks'
 import { CHECKOUT_PAYMENT_METHOD_LABELS, checkoutTotals } from '../types/checkout.types'
 import type { CheckoutPaymentMethod, CheckoutItem, InternationalCheckoutItem } from '../types/checkout.types'
 import { wizardStore } from '../stores/session.store'
-import layout from './NewShipmentPage.module.css'
 import styles from './CheckoutPage.module.css'
 
 interface IntlCheckoutState {
@@ -86,7 +85,7 @@ export function CheckoutPage() {
     <PageContainer width="full">
       <div className={styles.page}>
         <div className={styles.header}>
-          <h3 className={layout.title}>Realizá tu pago</h3>
+          <h1 className={styles.pageTitle}>Realizá tu pago</h1>
           <p className={styles.itemsCount}>Ítems cotizados: {items.length}</p>
         </div>
 
