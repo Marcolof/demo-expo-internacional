@@ -267,6 +267,17 @@
   color: var(--correo-blue, #2563C5);
 }
 
+.productoIconIntl {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: #fff8e1;
+  border-radius: 50%;
+  color: var(--correo-yellow, #F5A623);
+}
+
 /* ── Badge de estado ──────────────────────────────────────────────── */
 
 .badge {

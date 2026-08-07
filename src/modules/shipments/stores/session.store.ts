@@ -8,6 +8,7 @@
 
 export interface SessionShipment {
   readonly id: string
+  readonly scope?: 'INTERNACIONAL' | 'NACIONAL'
   readonly integracion: string
   readonly nOrden: string
   readonly origen: string

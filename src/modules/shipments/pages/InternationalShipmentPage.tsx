@@ -424,6 +424,7 @@ export function InternationalShipmentPage() {
       const snap = buildSnapshot()
       shipmentsStore.add({
         id: `S-${Date.now()}`,
+        scope: 'INTERNACIONAL',
         integracion: 'MiCorreo',
         nOrden: destinoOrderNum || '-',
         origen: selectedRemitente?.razonSocial ?? 'Correo Argentino',
