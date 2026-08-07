@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import type { SelectOption } from '@/core/types/common'
 import { PageContainer } from '@/shared/layout/PageContainer'
 import { Input } from '@/shared/ui/Input'
@@ -7,6 +7,7 @@ import { Select } from '@/shared/ui/Select'
 import { Tabs, type TabsProps } from '@/shared/ui/Tabs'
 import { ScopeSwitch } from '../components/ScopeSwitch'
 import { PROVINCE_OPTIONS } from '../mocks/branches.mocks'
+import { shipmentsStore } from '../stores/session.store'
 import styles from './PropuestaMisEnviosPage.module.css'
 
 /* ── Mocks de filtros ─────────────────────────────────────────────── */
@@ -45,7 +46,7 @@ const ENVIOS_MOCK: readonly EnvioRow[] = [
   {
     id: 'E-001',
     integracion: 'MiCorreo',
-    nOrden: '-',
+    nOrden: 'ORD-10045',
     origen: 'Pickup – Benjamín Matienzo 5548 –',
     destinatario: 'Juan Perez',
     destino: 'Austria – Salzburgo',
@@ -56,7 +57,7 @@ const ENVIOS_MOCK: readonly EnvioRow[] = [
   {
     id: 'E-002',
     integracion: 'Correo',
-    nOrden: '-',
+    nOrden: 'ORD-10046',
     origen: 'Descripción de material genérico.',
     destinatario: 'Juan Perez',
     destino: 'Austria – Salzburgo',
@@ -67,7 +68,7 @@ const ENVIOS_MOCK: readonly EnvioRow[] = [
   {
     id: 'E-003',
     integracion: 'Correo',
-    nOrden: '-',
+    nOrden: 'ORD-10047',
     origen: 'Suc. – Cdp CABA – Sur',
     destinatario: 'Juan Perez',
     destino: 'Suc. Banfield',
@@ -78,7 +79,7 @@ const ENVIOS_MOCK: readonly EnvioRow[] = [
   {
     id: 'E-004',
     integracion: 'Correo',
-    nOrden: '-',
+    nOrden: 'ORD-10048',
     origen: 'Descripción de material genérico.',
     destinatario: 'Juan Perez',
     destino: 'Suc. Banfield',
@@ -138,6 +139,7 @@ const MENU_ITEMS = ['Ver detalle', 'Modificar', 'Duplicar', 'Cotizar', 'Eliminar
 
 export function PropuestaMisEnviosPage() {
   const navigate = useNavigate()
+  useLocation() // suscribirse a cambios de ruta (recarga sesión al volver)
   const [activeTab, setActiveTab] = useState<EnvioTab>('pendientes')
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set())
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
@@ -149,8 +151,21 @@ export function PropuestaMisEnviosPage() {
   const [integracion, setIntegracion]   = useState('-1')
   const [nOrden, setNOrden]             = useState('-1')
 
+  /* Envíos de sesión guardados + mock base */
+  const [sessionRows, setSessionRows] = useState<readonly EnvioRow[]>(() => shipmentsStore.get())
+
+  /* Re-leer el store al montar (por si volvemos de /internacional con Guardar) */
+  useEffect(() => {
+    setSessionRows(shipmentsStore.get())
+  }, [])
+
+  const ALL_ROWS: readonly EnvioRow[] = [...sessionRows, ...ENVIOS_MOCK]
+
   /* Filas visibles — se actualizan al hacer clic en "Consultar" */
-  const [visibleRows, setVisibleRows] = useState<readonly EnvioRow[]>(ENVIOS_MOCK)
+  const [visibleRows, setVisibleRows] = useState<readonly EnvioRow[]>(() => [
+    ...shipmentsStore.get(),
+    ...ENVIOS_MOCK,
+  ])
 
   /* Cerrar menú al hacer clic fuera */
   useEffect(() => {
@@ -178,7 +193,7 @@ export function PropuestaMisEnviosPage() {
     })
 
   const applyFilters = () => {
-    let rows: readonly EnvioRow[] = ENVIOS_MOCK
+    let rows: readonly EnvioRow[] = ALL_ROWS
     if (destinatario.trim() !== '') {
       const q = destinatario.trim().toLowerCase()
       rows = rows.filter((r) => r.destinatario.toLowerCase().includes(q))
@@ -199,7 +214,7 @@ export function PropuestaMisEnviosPage() {
     setProvincia('-1')
     setIntegracion('-1')
     setNOrden('-1')
-    setVisibleRows(ENVIOS_MOCK)
+    setVisibleRows(ALL_ROWS)
     setSelectedIds(new Set())
   }
 

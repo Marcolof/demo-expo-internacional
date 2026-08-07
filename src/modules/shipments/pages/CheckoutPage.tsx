@@ -8,6 +8,7 @@ import { CheckoutTotalsPanel } from '../components/CheckoutTotalsPanel'
 import { CHECKOUT_ITEMS, CHECKOUT_PICKUP_FEE } from '../mocks/checkout.mocks'
 import { CHECKOUT_PAYMENT_METHOD_LABELS, checkoutTotals } from '../types/checkout.types'
 import type { CheckoutPaymentMethod, CheckoutItem, InternationalCheckoutItem } from '../types/checkout.types'
+import { wizardStore } from '../stores/session.store'
 import layout from './NewShipmentPage.module.css'
 import styles from './CheckoutPage.module.css'
 
@@ -117,8 +118,13 @@ export function CheckoutPage() {
             Atrás
           </Button>
 
-          {/* Sin flujo de confirmación de pago todavía (ver documentación). */}
-          <Button variant="primary" onClick={() => undefined}>
+          <Button
+            variant="primary"
+            onClick={() => {
+              wizardStore.clear()
+              navigate('/propuesta/mis-envios', { replace: true })
+            }}
+          >
             Pagar
           </Button>
         </div>
