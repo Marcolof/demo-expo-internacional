@@ -34,6 +34,9 @@ import styles from './InternationalShipmentPage.module.css'
 /** Doc funcional §7.2: con más de 2 kg declarados, sólo sucursales con asiento aduanero. */
 const CUSTOMS_OFFICE_REQUIRED_OVER_KG = 2
 
+/** Países sin servicio de envío internacional disponible (maqueta). */
+const COUNTRIES_WITHOUT_SHIPPING: ReadonlySet<string> = new Set(['RU', 'CU', 'KP'])
+
 const NON_COMMERCIAL_CATEGORIES: readonly SelectOption[] = [
   { value: 'REGALO', label: 'Regalo' },
   { value: 'DOCUMENTO', label: 'Documento' },
@@ -144,15 +147,16 @@ function PlusCircleIcon() {
   return (
     <svg
       className={styles.addLineBtnIcon}
+      width="24"
+      height="24"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
       aria-hidden="true"
     >
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 8v8M8 12h8" />
+      <path
+        d="M21 12C21 7.02944 16.9706 3 12 3C7.02944 3 3 7.02944 3 12C3 16.9706 7.02944 21 12 21C16.9706 21 21 16.9706 21 12ZM11 16V13H8C7.44772 13 7 12.5523 7 12C7 11.4477 7.44772 11 8 11H11V8C11 7.44772 11.4477 7 12 7C12.5523 7 13 7.44772 13 8V11H16C16.5523 11 17 11.4477 17 12C17 12.5523 16.5523 13 16 13H13V16C13 16.5523 12.5523 17 12 17C11.4477 17 11 16.5523 11 16ZM23 12C23 18.0751 18.0751 23 12 23C5.92487 23 1 18.0751 1 12C1 5.92487 5.92487 1 12 1C18.0751 1 23 5.92487 23 12Z"
+        fill="var(--correo-yellow)"
+      />
     </svg>
   )
 }
@@ -208,6 +212,8 @@ export function InternationalShipmentPage() {
   const [representanteName, setRepresentanteName]       = useState('Juan Perez')
   const [representanteCuil, setRepresentanteCuil]       = useState('20.31211156.3')
   const [shippingService, setShippingService]           = useState<'EMS' | 'ENCOMIENDA' | 'PEQUENO_PAQUETE' | 'EMS_DOCUMENTACION' | null>('EMS')
+  const [step4Errors, setStep4Errors]                   = useState<ReadonlySet<string>>(new Set())
+  const [destinoSaved, setDestinoSaved]                 = useState(false)
 
   /* ── Derivados ───────────────────────────────────────────────────── */
   const categoryOptions = commercial ? COMMERCIAL_CATEGORIES : NON_COMMERCIAL_CATEGORIES
@@ -219,8 +225,12 @@ export function InternationalShipmentPage() {
   }
 
   const selectedCountry = COUNTRIES.find((c) => c.value === country)
+  const countryHasShipping = country === '-1' || !COUNTRIES_WITHOUT_SHIPPING.has(country)
 
-  const canAddArticle = country !== '-1' && category !== '-1'
+  const clearError = (key: string) =>
+    setStep4Errors((prev) => { const s = new Set(prev); s.delete(key); return s })
+
+  const canAddArticle = country !== '-1' && category !== '-1' && countryHasShipping
 
   const restrictedIds = useMemo(() => {
     const ids = COUNTRY_CONTENT_RESTRICTIONS[country] ?? []
@@ -261,16 +271,35 @@ export function InternationalShipmentPage() {
   }
 
   const handleNext = () => {
-    if (currentStep === 'Declaración' && !declarationAccepted) {
-      setDeclarationError(true)
-      return
+    if (currentStep === 'Declaración') {
+      if (!declarationAccepted) { setDeclarationError(true); return }
+      if (!countryHasShipping) return
+      setDeclarationError(false)
     }
-    setDeclarationError(false)
 
     if (currentStep === 'Paquete') {
       const error = validatePackageStep(lengthCm, widthCm, heightCm, packageWeightKg, totalWeightKg)
       setPackageError(error)
       if (error !== null) return
+    }
+
+    if (currentStep === 'Destino') {
+      const errors = new Set<string>()
+      if (!recipientName.trim()) errors.add('recipientName')
+      if (!recipientPhone.trim()) errors.add('recipientPhone')
+      if (!recipientEmail.trim()) errors.add('recipientEmail')
+      if (!recipientTaxId.trim()) errors.add('recipientTaxId')
+      if (commercial && !facturaE.trim()) errors.add('facturaE')
+      if (!destinoState.trim()) errors.add('destinoState')
+      if (!destinoCity.trim()) errors.add('destinoCity')
+      if (!destinoPostalCode.trim()) errors.add('destinoPostalCode')
+      if (!(destinoAddressLines[0]?.trim())) errors.add('destinoAddress0')
+      if (!aduanaRepresentation && !representanteName.trim()) errors.add('representanteName')
+      if (!aduanaRepresentation && !representanteCuil.trim()) errors.add('representanteCuil')
+      if (errors.size > 0) { setStep4Errors(errors); return }
+      setStep4Errors(new Set())
+      setDestinoSaved(true)
+      return
     }
 
     next()
@@ -291,9 +320,15 @@ export function InternationalShipmentPage() {
               <button type="button" role="tab" aria-selected="true" className={layout.loadTabActive}>
                 Individual
               </button>
-              <span role="tab" aria-selected="false" className={layout.loadTabInactive}>
+              <button
+                type="button"
+                role="tab"
+                aria-selected="false"
+                className={layout.loadTabInactive}
+                onClick={() => navigate('/internacional/masivo')}
+              >
                 Masivo
-              </span>
+              </button>
             </div>
           </div>
 
@@ -309,6 +344,12 @@ export function InternationalShipmentPage() {
                   value={country}
                   onChange={(event) => setCountry(event.currentTarget.value)}
                 />
+                {country !== '-1' && !countryHasShipping && (
+                  <Alert tone="danger">
+                    El servicio de envíos internacionales no está disponible para{' '}
+                    {selectedCountry?.label ?? 'el país seleccionado'}.
+                  </Alert>
+                )}
               </section>
 
               <section className={styles.section}>
@@ -541,7 +582,9 @@ export function InternationalShipmentPage() {
                       id="recipient-name"
                       label="Nombre y apellido"
                       value={recipientName}
-                      onChange={(e) => setRecipientName(e.currentTarget.value)}
+                      onChange={(e) => { setRecipientName(e.currentTarget.value); clearError('recipientName') }}
+                      invalid={step4Errors.has('recipientName')}
+                      hint={step4Errors.has('recipientName') ? 'Campo requerido' : undefined}
                     />
                     <Input
                       id="recipient-razon"
@@ -564,7 +607,9 @@ export function InternationalShipmentPage() {
                       label="Número de teléfono"
                       inputMode="tel"
                       value={recipientPhone}
-                      onChange={(e) => setRecipientPhone(e.currentTarget.value)}
+                      onChange={(e) => { setRecipientPhone(e.currentTarget.value); clearError('recipientPhone') }}
+                      invalid={step4Errors.has('recipientPhone')}
+                      hint={step4Errors.has('recipientPhone') ? 'Campo requerido' : undefined}
                     />
                   </div>
 
@@ -573,15 +618,18 @@ export function InternationalShipmentPage() {
                     label="Correo electrónico"
                     inputMode="email"
                     value={recipientEmail}
-                    onChange={(e) => setRecipientEmail(e.currentTarget.value)}
+                    onChange={(e) => { setRecipientEmail(e.currentTarget.value); clearError('recipientEmail') }}
+                    invalid={step4Errors.has('recipientEmail')}
+                    hint={step4Errors.has('recipientEmail') ? 'Campo requerido' : undefined}
                   />
 
                   <Input
                     id="recipient-tax-id"
                     label="Identificación tributaria del destinatario"
                     value={recipientTaxId}
-                    onChange={(e) => setRecipientTaxId(e.currentTarget.value)}
-                    hint="Ingresá el número fiscal del destinatario"
+                    onChange={(e) => { setRecipientTaxId(e.currentTarget.value); clearError('recipientTaxId') }}
+                    invalid={step4Errors.has('recipientTaxId')}
+                    hint={step4Errors.has('recipientTaxId') ? 'Campo requerido' : 'Ingresá el número fiscal del destinatario'}
                   />
 
                   {commercial && (
@@ -589,8 +637,9 @@ export function InternationalShipmentPage() {
                       id="factura-e"
                       label="Factura E"
                       value={facturaE}
-                      onChange={(e) => setFacturaE(e.currentTarget.value)}
-                      hint="La factura debe corresponder al envío completo."
+                      onChange={(e) => { setFacturaE(e.currentTarget.value); clearError('facturaE') }}
+                      invalid={step4Errors.has('facturaE')}
+                      hint={step4Errors.has('facturaE') ? 'Campo requerido' : 'La factura debe corresponder al envío completo.'}
                     />
                   )}
                 </div>
@@ -612,7 +661,9 @@ export function InternationalShipmentPage() {
                     id="destino-state"
                     label="Provincia / estado"
                     value={destinoState}
-                    onChange={(e) => setDestinoState(e.currentTarget.value)}
+                    onChange={(e) => { setDestinoState(e.currentTarget.value); clearError('destinoState') }}
+                    invalid={step4Errors.has('destinoState')}
+                    hint={step4Errors.has('destinoState') ? 'Campo requerido' : undefined}
                   />
 
                   <div className={styles.twoColRow}>
@@ -620,13 +671,17 @@ export function InternationalShipmentPage() {
                       id="destino-city"
                       label="Ciudad"
                       value={destinoCity}
-                      onChange={(e) => setDestinoCity(e.currentTarget.value)}
+                      onChange={(e) => { setDestinoCity(e.currentTarget.value); clearError('destinoCity') }}
+                      invalid={step4Errors.has('destinoCity')}
+                      hint={step4Errors.has('destinoCity') ? 'Campo requerido' : undefined}
                     />
                     <Input
                       id="destino-postal"
                       label="Código postal"
                       value={destinoPostalCode}
-                      onChange={(e) => setDestinoPostalCode(e.currentTarget.value)}
+                      onChange={(e) => { setDestinoPostalCode(e.currentTarget.value); clearError('destinoPostalCode') }}
+                      invalid={step4Errors.has('destinoPostalCode')}
+                      hint={step4Errors.has('destinoPostalCode') ? 'Campo requerido' : undefined}
                     />
                   </div>
 
@@ -649,7 +704,10 @@ export function InternationalShipmentPage() {
                                 const next = [...destinoAddressLines]
                                 next[index] = e.currentTarget.value.slice(0, ADDRESS_LINE_MAX)
                                 setDestinoAddressLines(next)
+                                if (index === 0) clearError('destinoAddress0')
                               }}
+                              invalid={index === 0 && step4Errors.has('destinoAddress0')}
+                              hint={index === 0 && step4Errors.has('destinoAddress0') ? 'Campo requerido' : undefined}
                             />
                           </div>
                           {index > 0 && (
@@ -718,13 +776,17 @@ export function InternationalShipmentPage() {
                       id="representante-name"
                       label="Nombre y apellido del representante"
                       value={representanteName}
-                      onChange={(e) => setRepresentanteName(e.currentTarget.value)}
+                      onChange={(e) => { setRepresentanteName(e.currentTarget.value); clearError('representanteName') }}
+                      invalid={step4Errors.has('representanteName')}
+                      hint={step4Errors.has('representanteName') ? 'Campo requerido' : undefined}
                     />
                     <Input
                       id="representante-cuil"
                       label="CUIL/CUIT representante"
                       value={representanteCuil}
-                      onChange={(e) => setRepresentanteCuil(e.currentTarget.value)}
+                      onChange={(e) => { setRepresentanteCuil(e.currentTarget.value); clearError('representanteCuil') }}
+                      invalid={step4Errors.has('representanteCuil')}
+                      hint={step4Errors.has('representanteCuil') ? 'Campo requerido' : undefined}
                     />
                   </div>
                 )}
@@ -794,6 +856,7 @@ export function InternationalShipmentPage() {
                   city: destinoCity || undefined,
                   address: destinoAddressLines[0] || undefined,
                 }}
+                onPay={destinoSaved ? () => navigate('/checkout') : undefined}
               />
             </div>
           </div>
@@ -817,7 +880,6 @@ export function InternationalShipmentPage() {
                 variant="primary"
                 size="step"
                 onClick={handleNext}
-                disabled={currentStep === 'Destino'}
               >
                 {currentStep === 'Destino' ? 'Guardar' : 'Siguiente'}
               </Button>
