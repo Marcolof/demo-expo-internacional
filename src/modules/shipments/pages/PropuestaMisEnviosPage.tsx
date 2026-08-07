@@ -135,7 +135,7 @@ export function PropuestaMisEnviosPage() {
   const [activeTab, setActiveTab] = useState<EnvioTab>('pendientes')
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set())
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
-  const menuRef = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLTableCellElement>(null)
 
   /* Filtros */
   const [destinatario, setDestinatario] = useState('')
