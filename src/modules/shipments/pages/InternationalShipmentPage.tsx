@@ -21,9 +21,9 @@ import { AddArticleModal } from '../components/AddArticleModal'
 import { ArticleAccordionItem } from '../components/ArticleAccordionItem'
 import { AduanaConfirmModal } from '../components/AduanaConfirmModal'
 import { BranchMap } from '../components/BranchMap'
-import { articleTotalPriceUsd, articleTotalWeightKg } from '../types/article.types'
-import type { DeclaredArticle } from '../types/article.types'
-import { DECLARED_ARTICLES_SEED } from '../mocks/articles.mocks'
+import { articleTotalPriceUsd, articleTotalWeightKg, ARTICLE_KIND_TEXT } from '../types/article.types'
+import type { ArticleKind, DeclaredArticle } from '../types/article.types'
+import { DECLARED_ARTICLES_SEED, DECLARED_DOCUMENTS_SEED } from '../mocks/articles.mocks'
 import { COUNTRY_CONTENT_RESTRICTIONS } from '../mocks/country-restrictions.mocks'
 import { shipmentsStore, wizardStore } from '../stores/session.store'
 import type { WizardSnapshot } from '../stores/session.store'
@@ -323,7 +323,22 @@ export function InternationalShipmentPage() {
 
   const handleCountryChange = (value: string) => {
     setCountry(value)
-    if (value !== '-1' && AUTO_SEED_COUNTRIES.has(value)) {
+    if (value === '-1') { setArticles([]); return }
+    if (category === 'DOCUMENTO') {
+      setArticles(DECLARED_DOCUMENTS_SEED)
+    } else if (AUTO_SEED_COUNTRIES.has(value)) {
+      setArticles(DECLARED_ARTICLES_SEED)
+    } else {
+      setArticles([])
+    }
+  }
+
+  const handleCategoryChange = (value: string) => {
+    setCategory(value)
+    if (country === '-1') return
+    if (value === 'DOCUMENTO') {
+      setArticles(DECLARED_DOCUMENTS_SEED)
+    } else if (AUTO_SEED_COUNTRIES.has(country)) {
       setArticles(DECLARED_ARTICLES_SEED)
     } else {
       setArticles([])
@@ -344,6 +359,7 @@ export function InternationalShipmentPage() {
       aduanaRepresentation, representanteName, representanteCuil,
     })
 
+  const articleKind: ArticleKind = category === 'DOCUMENTO' ? 'DOCUMENT' : 'ARTICLE'
   const canAddArticle = country !== '-1' && category !== '-1' && countryHasShipping
 
   const restrictedIds = useMemo(() => {
@@ -492,7 +508,7 @@ export function InternationalShipmentPage() {
                     label="Categoría de envío"
                     options={categoryOptions}
                     value={category}
-                    onChange={(event) => setCategory(event.currentTarget.value)}
+                    onChange={(event) => handleCategoryChange(event.currentTarget.value)}
                     disabled={commercial}
                   />
 
@@ -503,17 +519,18 @@ export function InternationalShipmentPage() {
                     onClick={() => setArticleModalOpen(true)}
                   >
                     <PlusIcon />
-                    Agregar artículo
+                    {ARTICLE_KIND_TEXT[articleKind].addButtonLabel}
                   </button>
 
                   {articles.length === 0 ? (
-                    <EmptyState title="Acá vas a ver los artículos que agregues" iconSrc={packageOpenIcon} />
+                    <EmptyState title={ARTICLE_KIND_TEXT[articleKind].emptyStateTitle} iconSrc={packageOpenIcon} />
                   ) : (
                     <div className={styles.articleList}>
                       {articles.map((article, index) => (
                         <ArticleAccordionItem
                           key={article.id}
                           article={article}
+                          kind={articleKind}
                           onRemove={removeArticle}
                           onEdit={(a) => { setEditingArticle(a); setArticleModalOpen(true) }}
                           defaultOpen={index === articles.length - 1}
@@ -525,7 +542,7 @@ export function InternationalShipmentPage() {
 
                   <div className={styles.totals}>
                     <div className={styles.totalRow}>
-                      <span className={styles.totalLabel}>Cantidad de artículos</span>
+                      <span className={styles.totalLabel}>{ARTICLE_KIND_TEXT[articleKind].quantityTotalLabel}</span>
                       <span className={styles.totalValue}>{totalArticles}</span>
                     </div>
                     <div className={styles.totalRow}>
@@ -1067,6 +1084,7 @@ export function InternationalShipmentPage() {
 
       <AddArticleModal
         isOpen={isArticleModalOpen}
+        kind={articleKind}
         onClose={() => { setArticleModalOpen(false); setEditingArticle(null) }}
         initialValues={editingArticle ?? undefined}
         onSubmit={(input) => {
