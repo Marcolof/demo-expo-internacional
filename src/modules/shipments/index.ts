@@ -6,6 +6,9 @@
 
 export { NewShipmentPage } from './pages/NewShipmentPage'
 export { InternationalShipmentPage } from './pages/InternationalShipmentPage'
+export { InternationalBulkShipmentPage } from './pages/InternationalBulkShipmentPage'
+export { CheckoutPage } from './pages/CheckoutPage'
+export { PropuestaMisEnviosPage } from './pages/PropuestaMisEnviosPage'
 
 export { shipmentsScenarios } from './scenarios/shipments.scenarios'
 export type { ShipmentsScenarioData } from './scenarios/shipments.scenarios'

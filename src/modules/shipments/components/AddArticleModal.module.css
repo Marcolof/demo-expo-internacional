@@ -128,4 +128,10 @@
   justify-content: center;
   gap: var(--space-3);
   width: 100%;
+  max-width: var(--modal-footer-actions-max-width);
+  margin: 0 auto;
+}
+
+.footerActions > * {
+  flex: 1 1 0;
 }
