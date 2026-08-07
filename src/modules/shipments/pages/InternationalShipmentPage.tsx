@@ -299,7 +299,6 @@ export function InternationalShipmentPage() {
       if (errors.size > 0) { setStep4Errors(errors); return }
       setStep4Errors(new Set())
       setDestinoSaved(true)
-      navigate('/checkout')
       return
     }
 
