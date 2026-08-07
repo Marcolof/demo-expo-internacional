@@ -111,6 +111,36 @@ function validatePackageStep(
   return null
 }
 
+function validateDestinoFields(params: {
+  recipientName: string
+  recipientPhone: string
+  recipientEmail: string
+  recipientTaxId: string
+  commercial: boolean
+  facturaE: string
+  destinoState: string
+  destinoCity: string
+  destinoPostalCode: string
+  destinoAddressLines: readonly string[]
+  aduanaRepresentation: boolean
+  representanteName: string
+  representanteCuil: string
+}): ReadonlySet<string> {
+  const errors = new Set<string>()
+  if (!params.recipientName.trim()) errors.add('recipientName')
+  if (!params.recipientPhone.trim()) errors.add('recipientPhone')
+  if (!params.recipientEmail.trim()) errors.add('recipientEmail')
+  if (!params.recipientTaxId.trim()) errors.add('recipientTaxId')
+  if (params.commercial && !params.facturaE.trim()) errors.add('facturaE')
+  if (!params.destinoState.trim()) errors.add('destinoState')
+  if (!params.destinoCity.trim()) errors.add('destinoCity')
+  if (!params.destinoPostalCode.trim()) errors.add('destinoPostalCode')
+  if (!(params.destinoAddressLines[0]?.trim())) errors.add('destinoAddress0')
+  if (!params.aduanaRepresentation && !params.representanteName.trim()) errors.add('representanteName')
+  if (!params.aduanaRepresentation && !params.representanteCuil.trim()) errors.add('representanteCuil')
+  return errors
+}
+
 const REMITENTE_OPTIONS: readonly SelectOption[] = REMITENTES_SEED.map((r) => ({
   value: r.cuit,
   label: `${r.razonSocial} | ${r.direccionRemitente}`,
@@ -213,7 +243,6 @@ export function InternationalShipmentPage() {
   const [representanteCuil, setRepresentanteCuil]       = useState('20.31211156.3')
   const [shippingService, setShippingService]           = useState<'EMS' | 'ENCOMIENDA' | 'PEQUENO_PAQUETE' | 'EMS_DOCUMENTACION' | null>('EMS')
   const [step4Errors, setStep4Errors]                   = useState<ReadonlySet<string>>(new Set())
-  const [destinoSaved, setDestinoSaved]                 = useState(false)
 
   /* ── Derivados ───────────────────────────────────────────────────── */
   const categoryOptions = commercial ? COMMERCIAL_CATEGORIES : NON_COMMERCIAL_CATEGORIES
@@ -229,6 +258,14 @@ export function InternationalShipmentPage() {
 
   const clearError = (key: string) =>
     setStep4Errors((prev) => { const s = new Set(prev); s.delete(key); return s })
+
+  const runDestinoValidation = () =>
+    validateDestinoFields({
+      recipientName, recipientPhone, recipientEmail, recipientTaxId,
+      commercial, facturaE,
+      destinoState, destinoCity, destinoPostalCode, destinoAddressLines,
+      aduanaRepresentation, representanteName, representanteCuil,
+    })
 
   const canAddArticle = country !== '-1' && category !== '-1' && countryHasShipping
 
@@ -284,21 +321,10 @@ export function InternationalShipmentPage() {
     }
 
     if (currentStep === 'Destino') {
-      const errors = new Set<string>()
-      if (!recipientName.trim()) errors.add('recipientName')
-      if (!recipientPhone.trim()) errors.add('recipientPhone')
-      if (!recipientEmail.trim()) errors.add('recipientEmail')
-      if (!recipientTaxId.trim()) errors.add('recipientTaxId')
-      if (commercial && !facturaE.trim()) errors.add('facturaE')
-      if (!destinoState.trim()) errors.add('destinoState')
-      if (!destinoCity.trim()) errors.add('destinoCity')
-      if (!destinoPostalCode.trim()) errors.add('destinoPostalCode')
-      if (!(destinoAddressLines[0]?.trim())) errors.add('destinoAddress0')
-      if (!aduanaRepresentation && !representanteName.trim()) errors.add('representanteName')
-      if (!aduanaRepresentation && !representanteCuil.trim()) errors.add('representanteCuil')
+      const errors = runDestinoValidation()
       if (errors.size > 0) { setStep4Errors(errors); return }
       setStep4Errors(new Set())
-      setDestinoSaved(true)
+      navigate('/propuesta/mis-envios')
       return
     }
 
@@ -856,7 +882,12 @@ export function InternationalShipmentPage() {
                   city: destinoCity || undefined,
                   address: destinoAddressLines[0] || undefined,
                 }}
-                onPay={destinoSaved ? () => navigate('/checkout') : undefined}
+                onPay={() => {
+                  const errors = runDestinoValidation()
+                  if (errors.size > 0) { setStep4Errors(errors); return }
+                  setStep4Errors(new Set())
+                  navigate('/checkout')
+                }}
               />
             </div>
           </div>
