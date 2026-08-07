@@ -20,6 +20,14 @@
   color: var(--text-primary);
 }
 
+/* Wrapper para contener el ancho del ScopeSwitch — su track tiene width:100%
+   así que necesita un contenedor con dimensión fija. El valor coincide con el
+   ancho visual que tiene el switch en la vista de nuevo envío (~320px). */
+.scopeSwitchWrap {
+  width: 320px;
+  flex-shrink: 0;
+}
+
 /* ── Tabs — contenedor (botones usan layout.loadTabActive/Inactive) ── */
 
 .tabsWrap {

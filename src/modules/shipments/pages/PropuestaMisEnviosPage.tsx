@@ -182,10 +182,12 @@ export function PropuestaMisEnviosPage() {
         {/* ── Encabezado ─────────────────────────────────────────── */}
         <div className={styles.pageHeader}>
           <h1 className={styles.pageTitle}>Mis envíos</h1>
-          <ScopeSwitch
-            value="internacional"
-            onChange={(scope) => { if (scope === 'nacional') navigate('/') }}
-          />
+          <div className={styles.scopeSwitchWrap}>
+            <ScopeSwitch
+              value="internacional"
+              onChange={(scope) => { if (scope === 'nacional') navigate('/') }}
+            />
+          </div>
         </div>
 
         {/* ── Tabs — mismos estilos que Individual/Masivo ────────── */}
