@@ -1,9 +1,31 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import type { SelectOption } from '@/core/types/common'
 import { PageContainer } from '@/shared/layout/PageContainer'
+import { Input } from '@/shared/ui/Input'
+import { Select } from '@/shared/ui/Select'
+import { ScopeSwitch } from '../components/ScopeSwitch'
+import { PROVINCE_OPTIONS } from '../mocks/branches.mocks'
+import layout from './NewShipmentPage.module.css'
 import styles from './PropuestaMisEnviosPage.module.css'
 
-/* ── Tipos y datos mock ───────────────────────────────────────────── */
+/* ── Mocks de filtros ─────────────────────────────────────────────── */
+
+const INTEGRACION_OPTIONS: readonly SelectOption[] = [
+  { value: 'micorreo', label: 'MiCorreo' },
+  { value: 'correo',   label: 'Correo Argentino' },
+  { value: 'api',      label: 'API externa' },
+]
+
+const NORDEN_OPTIONS: readonly SelectOption[] = [
+  { value: 'ORD-10045', label: 'ORD-10045' },
+  { value: 'ORD-10046', label: 'ORD-10046' },
+  { value: 'ORD-10047', label: 'ORD-10047' },
+  { value: 'ORD-10048', label: 'ORD-10048' },
+  { value: 'ORD-10039', label: 'ORD-10039' },
+]
+
+/* ── Tipos y datos de tabla ───────────────────────────────────────── */
 
 type EnvioTab = 'pendientes' | 'pagados' | 'usuario'
 
@@ -68,16 +90,6 @@ const ENVIOS_MOCK: readonly EnvioRow[] = [
 
 /* ── Íconos inline ────────────────────────────────────────────────── */
 
-function GlobeIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="10" />
-      <line x1="2" y1="12" x2="22" y2="12" />
-      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-    </svg>
-  )
-}
-
 function PackageIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -110,6 +122,14 @@ function DotsIcon() {
 
 /* ── Componente ───────────────────────────────────────────────────── */
 
+const TABS: { id: EnvioTab; label: string }[] = [
+  { id: 'pendientes', label: 'Pendientes' },
+  { id: 'pagados',    label: 'Pagados' },
+  { id: 'usuario',    label: 'Envíos de usuario' },
+]
+
+const MENU_ITEMS = ['Ver detalle', 'Modificar', 'Duplicar', 'Cotizar', 'Eliminar']
+
 export function PropuestaMisEnviosPage() {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<EnvioTab>('pendientes')
@@ -117,12 +137,11 @@ export function PropuestaMisEnviosPage() {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
-  /* Filtros (visuales — sin lógica de filtrado real en la maqueta) */
+  /* Filtros */
   const [destinatario, setDestinatario] = useState('')
-  const [provincia, setProvincia] = useState('')
-  const [sucursal, setSucursal] = useState('')
-  const [integracion, setIntegracion] = useState('todos')
-  const [nOrden, setNOrden] = useState('todos')
+  const [provincia, setProvincia]       = useState('-1')
+  const [integracion, setIntegracion]   = useState('-1')
+  const [nOrden, setNOrden]             = useState('-1')
 
   /* Cerrar menú al hacer clic fuera */
   useEffect(() => {
@@ -135,31 +154,26 @@ export function PropuestaMisEnviosPage() {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  /* Selección */
+  /* Selección de filas */
   const allIds = ENVIOS_MOCK.map((r) => r.id)
-  const allSelected = allIds.every((id) => selectedIds.has(id))
+  const allSelected  = allIds.every((id) => selectedIds.has(id))
   const someSelected = allIds.some((id) => selectedIds.has(id)) && !allSelected
 
-  const toggleAll = () => {
-    setSelectedIds(allSelected ? new Set() : new Set(allIds))
-  }
-
-  const toggleRow = (id: string) => {
+  const toggleAll = () => setSelectedIds(allSelected ? new Set() : new Set(allIds))
+  const toggleRow = (id: string) =>
     setSelectedIds((prev) => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
       else next.add(id)
       return next
     })
+
+  const clearFilters = () => {
+    setDestinatario('')
+    setProvincia('-1')
+    setIntegracion('-1')
+    setNOrden('-1')
   }
-
-  const TABS: { id: EnvioTab; label: string }[] = [
-    { id: 'pendientes', label: 'Pendientes' },
-    { id: 'pagados',    label: 'Pagados' },
-    { id: 'usuario',    label: 'Envíos de usuario' },
-  ]
-
-  const MENU_ITEMS = ['Ver detalle', 'Modificar', 'Duplicar', 'Cotizar', 'Eliminar']
 
   return (
     <PageContainer width="full">
@@ -168,106 +182,77 @@ export function PropuestaMisEnviosPage() {
         {/* ── Encabezado ─────────────────────────────────────────── */}
         <div className={styles.pageHeader}>
           <h1 className={styles.pageTitle}>Mis envíos</h1>
-
-          <div className={styles.scopeToggle}>
-            <button
-              type="button"
-              className={styles.scopeBtn}
-              onClick={() => navigate('/')}
-            >
-              Nacional
-            </button>
-            <button
-              type="button"
-              className={`${styles.scopeBtn} ${styles.scopeBtnActive}`}
-            >
-              <GlobeIcon />
-              Internacional
-            </button>
-          </div>
+          <ScopeSwitch
+            value="internacional"
+            onChange={(scope) => { if (scope === 'nacional') navigate('/') }}
+          />
         </div>
 
-        {/* ── Tabs ───────────────────────────────────────────────── */}
-        <div className={styles.tabBar} role="tablist">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              role="tab"
-              aria-selected={activeTab === tab.id}
-              className={activeTab === tab.id ? styles.tabActive : styles.tabInactive}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              {tab.label}
-            </button>
-          ))}
+        {/* ── Tabs — mismos estilos que Individual/Masivo ────────── */}
+        <div className={styles.tabsWrap}>
+          <div className={styles.tabList} role="tablist">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={activeTab === tab.id}
+                className={activeTab === tab.id ? layout.loadTabActive : layout.loadTabInactive}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* ── Filtros ────────────────────────────────────────────── */}
         <div className={styles.filters}>
+          {/* Fila 1: 4 campos */}
           <div className={styles.filtersGrid}>
-            <input
-              className={styles.filterInput}
-              type="text"
-              placeholder="Destinatario"
+            <Input
+              id="filter-destinatario"
+              label="Destinatario"
               value={destinatario}
-              onChange={(e) => setDestinatario(e.target.value)}
+              onChange={(e) => setDestinatario(e.currentTarget.value)}
             />
-
-            <div className={styles.filterSelectWrap}>
-              <label className={styles.filterSelectLabel}>Provincia de destino</label>
-              <select
-                className={styles.filterSelect}
-                value={provincia}
-                onChange={(e) => setProvincia(e.target.value)}
-              >
-                <option value="">Todas...</option>
-                <option value="BA">Buenos Aires</option>
-                <option value="CA">CABA</option>
-                <option value="CO">Córdoba</option>
-              </select>
-              <span className={styles.filterSelectChevron}>▾</span>
-            </div>
-
-            <input
-              className={styles.filterInput}
-              type="text"
-              placeholder="Sucursal de destino"
-              value={sucursal}
-              onChange={(e) => setSucursal(e.target.value)}
+            <Select
+              id="filter-provincia"
+              label="Provincia de destino"
+              options={PROVINCE_OPTIONS}
+              value={provincia}
+              onChange={(e) => setProvincia(e.currentTarget.value)}
+              placeholderOption="Todas..."
             />
-
-            <div className={styles.filterSelectWrap}>
-              <label className={styles.filterSelectLabel}>Integración</label>
-              <select
-                className={styles.filterSelect}
-                value={integracion}
-                onChange={(e) => setIntegracion(e.target.value)}
-              >
-                <option value="todos">Todos</option>
-                <option value="micorreo">MiCorreo</option>
-                <option value="correo">Correo</option>
-              </select>
-              <span className={styles.filterSelectChevron}>▾</span>
-            </div>
+            <Input
+              id="filter-sucursal"
+              label="Sucursal de destino"
+              value=""
+              onChange={() => {}}
+            />
+            <Select
+              id="filter-integracion"
+              label="Integración"
+              options={INTEGRACION_OPTIONS}
+              value={integracion}
+              onChange={(e) => setIntegracion(e.currentTarget.value)}
+              placeholderOption="Todas..."
+            />
           </div>
 
-          <div className={styles.filtersRow2}>
-            <div className={styles.filterSelectWrap}>
-              <label className={styles.filterSelectLabel}>N de orden</label>
-              <select
-                className={`${styles.filterSelect} ${styles.filterSelectFull}`}
-                value={nOrden}
-                onChange={(e) => setNOrden(e.target.value)}
-              >
-                <option value="todos">Todos...</option>
-              </select>
-              <span className={styles.filterSelectChevron}>▾</span>
-            </div>
-          </div>
+          {/* Fila 2: N° de orden (ancho completo) */}
+          <Select
+            id="filter-norden"
+            label="N° de orden"
+            options={NORDEN_OPTIONS}
+            value={nOrden}
+            onChange={(e) => setNOrden(e.currentTarget.value)}
+            placeholderOption="Todos..."
+          />
 
+          {/* Acciones */}
           <div className={styles.filtersActions}>
-            <button type="button" className={styles.clearBtn} onClick={() => { setDestinatario(''); setProvincia(''); setSucursal(''); setIntegracion('todos'); setNOrden('todos') }}>
+            <button type="button" className={styles.clearBtn} onClick={clearFilters}>
               Limpiar filtros
             </button>
             <button type="button" className={styles.consultarBtn}>
@@ -362,9 +347,7 @@ export function PropuestaMisEnviosPage() {
                   </td>
 
                   <td className={styles.td}>
-                    <span className={styles.productoIcon}>
-                      <PackageIcon />
-                    </span>
+                    <span className={styles.productoIcon}><PackageIcon /></span>
                   </td>
                   <td className={styles.td}>{row.integracion}</td>
                   <td className={styles.td}>{row.nOrden}</td>

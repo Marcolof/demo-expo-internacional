@@ -1,7 +1,6 @@
 .page {
   padding: var(--space-6) var(--space-8);
   min-height: 100%;
-  background: var(--surface-page, #f4f5f7);
 }
 
 /* ── Encabezado ────────────────────────────────────────────────────── */
@@ -21,179 +20,47 @@
   color: var(--text-primary);
 }
 
-/* ── Toggle Nacional / Internacional ──────────────────────────────── */
+/* ── Tabs — contenedor (botones usan layout.loadTabActive/Inactive) ── */
 
-.scopeToggle {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  border: var(--border-width-thin) solid var(--border-default);
-  border-radius: 9999px;
-  overflow: hidden;
-  background: var(--surface-raised);
-}
-
-.scopeBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: 6px var(--space-4);
-  border: none;
-  background: transparent;
-  font-family: var(--font-family-base);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  color: var(--text-muted);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background var(--transition-base), color var(--transition-base);
-}
-
-.scopeBtn:hover {
-  color: var(--text-primary);
-}
-
-.scopeBtnActive {
-  background: var(--correo-yellow);
-  color: var(--text-primary);
-  font-weight: var(--font-weight-semibold);
-}
-
-/* ── Tabs ─────────────────────────────────────────────────────────── */
-
-.tabBar {
-  display: flex;
-  align-items: flex-end;
-  gap: 0;
-  border-bottom: 2px solid var(--border-default);
+.tabsWrap {
   margin-bottom: var(--space-5);
 }
 
-.tabActive,
-.tabInactive {
-  display: inline-flex;
-  align-items: center;
-  padding: var(--space-2) var(--space-4);
-  border: none;
-  background: none;
-  font-family: var(--font-family-base);
-  font-size: var(--font-size-base);
+/*
+ * Tres pestañas side by side con borde inferior igual que Individual/Masivo.
+ * Los botones hijos usan layout.loadTabActive / loadTabInactive para el estilo
+ * visual; aquí solo definimos el contenedor.
+ */
+.tabList {
+  display: flex;
+  gap: 0;
+  border-bottom: var(--border-width-thick) solid var(--tab-border-color);
+}
+
+/* Las pestañas inactivas de esta página son clickeables, a diferencia de la
+   original donde cursor:default ya está definido. Sobreescribimos solo eso. */
+.tabList [role="tab"]:not([aria-selected="true"]) {
   cursor: pointer;
-  white-space: nowrap;
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-  transition: background var(--transition-base);
-}
-
-.tabActive {
-  background: var(--correo-yellow);
-  color: var(--text-primary);
-  font-weight: var(--font-weight-semibold);
-}
-
-.tabInactive {
-  color: var(--text-muted);
-  font-weight: var(--font-weight-medium);
-}
-
-.tabInactive:hover {
-  color: var(--text-primary);
-  background: var(--surface-sunken);
 }
 
 /* ── Filtros ───────────────────────────────────────────────────────── */
 
 .filters {
-  background: var(--surface-raised);
-  border-radius: var(--radius-md);
-  padding: var(--space-4) var(--space-5);
-  margin-bottom: var(--space-4);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  margin-bottom: var(--space-4);
 }
 
+/* Cuatro campos en una sola fila */
 .filtersGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: var(--space-3);
+  align-items: start;
 }
 
-.filtersRow2 {
-  display: grid;
-  grid-template-columns: 1fr;
-}
-
-.filterInput {
-  height: 40px;
-  padding: 0 var(--space-3);
-  border: var(--border-width-thin) solid var(--border-default);
-  border-radius: var(--radius-sm);
-  background: var(--surface-raised);
-  font-family: var(--font-family-base);
-  font-size: var(--font-size-sm);
-  color: var(--text-primary);
-  outline: none;
-  transition: border-color var(--transition-base);
-}
-
-.filterInput::placeholder {
-  color: var(--text-muted);
-}
-
-.filterInput:focus {
-  border-color: var(--correo-blue);
-}
-
-.filterSelectWrap {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.filterSelectLabel {
-  position: absolute;
-  top: 6px;
-  left: var(--space-3);
-  font-size: 10px;
-  font-weight: var(--font-weight-medium);
-  color: var(--text-muted);
-  pointer-events: none;
-  z-index: 1;
-}
-
-.filterSelect {
-  height: 40px;
-  padding: 12px var(--space-8) 0 var(--space-3);
-  border: var(--border-width-thin) solid var(--border-default);
-  border-radius: var(--radius-sm);
-  background: var(--surface-raised);
-  font-family: var(--font-family-base);
-  font-size: var(--font-size-sm);
-  color: var(--text-primary);
-  outline: none;
-  appearance: none;
-  cursor: pointer;
-  transition: border-color var(--transition-base);
-}
-
-.filterSelect:focus {
-  border-color: var(--correo-blue);
-}
-
-.filterSelectFull {
-  width: 100%;
-}
-
-.filterSelectChevron {
-  position: absolute;
-  right: var(--space-3);
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 12px;
-  color: var(--text-muted);
-  pointer-events: none;
-}
+/* El Select de N° de orden ya ocupa 100% por ser directo hijo de .filters */
 
 .filtersActions {
   display: flex;
@@ -331,7 +198,7 @@
 }
 
 .th {
-  padding: var(--space-3) var(--space-3);
+  padding: var(--space-3);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   color: var(--text-muted);
@@ -382,7 +249,7 @@
 }
 
 .td {
-  padding: var(--space-3) var(--space-3);
+  padding: var(--space-3);
   color: var(--text-primary);
   vertical-align: middle;
   max-width: 200px;
