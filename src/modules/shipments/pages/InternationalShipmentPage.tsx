@@ -367,8 +367,7 @@ export function InternationalShipmentPage() {
                 />
                 {country !== '-1' && !countryHasShipping && (
                   <Alert tone="danger">
-                    El servicio de envíos internacionales no está disponible para{' '}
-                    {selectedCountry?.label ?? 'el país seleccionado'}.
+                    El país seleccionado no está disponible para envíos internacionales.
                   </Alert>
                 )}
               </section>
