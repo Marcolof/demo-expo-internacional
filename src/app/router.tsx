@@ -4,6 +4,7 @@ import {
   InternationalBulkShipmentPage,
   InternationalShipmentPage,
   NewShipmentPage,
+  PropuestaMisEnviosPage,
 } from '@/modules/shipments'
 import { AppShell } from './AppShell'
 
@@ -23,6 +24,7 @@ export function AppRouter() {
         <Route path="internacional" element={<InternationalShipmentPage />} />
         <Route path="internacional/masivo" element={<InternationalBulkShipmentPage />} />
         <Route path="checkout" element={<CheckoutPage />} />
+        <Route path="propuesta/mis-envios" element={<PropuestaMisEnviosPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
