@@ -83,7 +83,6 @@ const COMMERCIAL_CATEGORIES: readonly SelectOption[] = [
 
 
 const PACKAGE_MAX_SIDE_CM = 90
-const PACKAGE_MAX_OVERSIZED_SIDES = 1
 const PACKAGE_MAX_WEIGHT_KG = 20
 
 interface PackageValidationErrors {
@@ -422,7 +421,6 @@ export function InternationalShipmentPage() {
       const errors = runDestinoValidation()
       if (errors.size > 0) { setStep4Errors(errors); return }
       setStep4Errors(new Set())
-      const snap = buildSnapshot()
       shipmentsStore.add({
         id: `S-${Date.now()}`,
         integracion: 'MiCorreo',
