@@ -92,41 +92,6 @@
   }
 }
 
-/*
- * Los dos tabs (`.col-6`) ocupan 50% cada uno. Grid de dos columnas iguales +
- * `min-width: 0` para que sean exactamente la mitad (como `col-6`), sin que el
- * contenido los descompense.
- */
-.loadTablist {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  border-bottom: var(--border-width-thick) solid var(--tab-border-color);
-}
-
-.loadTabActive,
-.loadTabInactive {
-  min-width: 0;
-  padding: 5px; /* .btn-ne */
-  border: none;
-  border-radius: var(--tab-radius);
-  font-family: var(--font-family-base);
-  font-size: var(--font-size-base);
-  text-align: center;
-  cursor: default;
-}
-
-.loadTabActive {
-  background-color: var(--tab-active-bg);
-  color: var(--tab-active-text);
-  font-weight: var(--font-weight-semibold);
-}
-
-.loadTabInactive {
-  background-color: transparent;
-  color: var(--tab-text);
-  font-weight: var(--font-weight-medium);
-}
-
 /* #resumenMobile */
 .resumen {
   grid-area: resumen;

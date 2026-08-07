@@ -282,31 +282,29 @@
   color: var(--feedback-danger-strong);
 }
 
-/* Botón para agregar una línea extra (máx 3) — borde punteado, ancho completo. */
+/* Botón para agregar una línea extra (máx 3) — link con ícono circular amarillo. */
 .addLineBtn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-3);
-  width: 100%;
-  padding: var(--space-3) var(--space-4);
-  border: 1.5px dashed var(--correo-blue);
-  border-radius: var(--radius-sm);
+  gap: var(--space-2);
+  padding: 0;
+  border: none;
   background: none;
-  color: var(--correo-blue);
+  color: #474747;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: background-color var(--transition-base);
+  transition: opacity var(--transition-base);
 }
 
 .addLineBtn:hover {
-  background-color: var(--surface-sunken);
+  opacity: 0.75;
 }
 
 .addLineBtnIcon {
   flex-shrink: 0;
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
 }
 
 /* Precio de servicio postal en el RadioGroup. */

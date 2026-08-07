@@ -4,14 +4,20 @@
 
 .alert {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--space-2);
   width: 100%;
+  min-height: var(--alert-min-height);
   padding: var(--space-4);
   border: var(--border-width-thin) solid transparent;
   border-radius: var(--radius-sm);
+  box-sizing: border-box;
   font-size: var(--font-size-sm);
   line-height: var(--line-height-normal);
+}
+
+.alert:has(.title) {
+  align-items: flex-start;
 }
 
 .content {
