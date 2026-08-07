@@ -4,9 +4,9 @@ import type { SelectOption } from '@/core/types/common'
 import { PageContainer } from '@/shared/layout/PageContainer'
 import { Input } from '@/shared/ui/Input'
 import { Select } from '@/shared/ui/Select'
+import { Tabs, type TabsProps } from '@/shared/ui/Tabs'
 import { ScopeSwitch } from '../components/ScopeSwitch'
 import { PROVINCE_OPTIONS } from '../mocks/branches.mocks'
-import layout from './NewShipmentPage.module.css'
 import styles from './PropuestaMisEnviosPage.module.css'
 
 /* ── Mocks de filtros ─────────────────────────────────────────────── */
@@ -122,7 +122,7 @@ function DotsIcon() {
 
 /* ── Componente ───────────────────────────────────────────────────── */
 
-const TABS: { id: EnvioTab; label: string }[] = [
+const TABS: TabsProps['items'] = [
   { id: 'pendientes', label: 'Pendientes' },
   { id: 'pagados',    label: 'Pagados' },
   { id: 'usuario',    label: 'Envíos de usuario' },
@@ -190,23 +190,15 @@ export function PropuestaMisEnviosPage() {
           </div>
         </div>
 
-        {/* ── Tabs — mismos estilos que Individual/Masivo ────────── */}
-        <div className={styles.tabsWrap}>
-          <div className={styles.tabList} role="tablist">
-            {TABS.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                aria-selected={activeTab === tab.id}
-                className={activeTab === tab.id ? layout.loadTabActive : layout.loadTabInactive}
-                onClick={() => setActiveTab(tab.id)}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* ── Tabs ───────────────────────────────────────────────── */}
+        <Tabs
+          items={TABS}
+          activeId={activeTab}
+          onChange={(id) => setActiveTab(id as EnvioTab)}
+          grow={false}
+          ariaLabel="Tipo de envío"
+          className={styles.tabsRow}
+        />
 
         {/* ── Filtros ────────────────────────────────────────────── */}
         <div className={styles.filters}>

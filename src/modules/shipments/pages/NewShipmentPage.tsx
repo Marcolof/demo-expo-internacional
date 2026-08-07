@@ -5,6 +5,7 @@ import { usePermissions } from '@/shared/hooks/usePermissions'
 import { PageContainer } from '@/shared/layout/PageContainer'
 import { formatCurrency, formatWeightKg } from '@/shared/lib/formatCurrency'
 import { Button } from '@/shared/ui/Button'
+import { Tabs } from '@/shared/ui/Tabs'
 import { ShipmentSummary } from '../components/ShipmentSummary'
 import type { SummaryRow } from '../components/ShipmentSummary'
 import { initialNewShipmentForm } from '../forms/shipment.defaults'
@@ -150,16 +151,15 @@ export function NewShipmentPage() {
         <div className={styles.carga}>
           <h3 className={styles.title}>Nuevo envío | Paquetería</h3>
 
-          <div className={styles.loadTabs} role="tablist" aria-label="Tipo de carga">
-            <div className={styles.loadTablist}>
-              <button type="button" role="tab" aria-selected="true" className={styles.loadTabActive}>
-                Individual
-              </button>
-              <span role="tab" aria-selected="false" className={styles.loadTabInactive}>
-                Masivo
-              </span>
-            </div>
-          </div>
+          <Tabs
+            items={[
+              { id: 'individual', label: 'Individual' },
+              { id: 'masivo', label: 'Masivo', disabled: true },
+            ]}
+            activeId="individual"
+            onChange={() => {}}
+            className={styles.loadTabs}
+          />
 
           <ShipmentForm
             values={values}

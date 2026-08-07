@@ -14,6 +14,7 @@ import { EmptyState } from '@/shared/ui/EmptyState'
 import { Input } from '@/shared/ui/Input'
 import { Select } from '@/shared/ui/Select'
 import { Switch } from '@/shared/ui/Switch'
+import { Tabs } from '@/shared/ui/Tabs'
 import { ScopeSwitch } from '../components/ScopeSwitch'
 import { INTERNATIONAL_STEPS, InternationalSummary } from '../components/InternationalSummary'
 import { AddArticleModal } from '../components/AddArticleModal'
@@ -341,22 +342,15 @@ export function InternationalShipmentPage() {
         <div className={layout.carga}>
           <h3 className={layout.title}>Nuevo envío | Paquetería</h3>
 
-          <div className={layout.loadTabs} role="tablist" aria-label="Tipo de carga">
-            <div className={layout.loadTablist}>
-              <button type="button" role="tab" aria-selected="true" className={layout.loadTabActive}>
-                Individual
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected="false"
-                className={layout.loadTabInactive}
-                onClick={() => navigate('/internacional/masivo')}
-              >
-                Masivo
-              </button>
-            </div>
-          </div>
+          <Tabs
+            items={[
+              { id: 'individual', label: 'Individual' },
+              { id: 'masivo', label: 'Masivo', to: '/internacional/masivo' },
+            ]}
+            activeId="individual"
+            onChange={() => {}}
+            className={layout.loadTabs}
+          />
 
           {/* ── Paso 1: Declaración ───────────────────────────────── */}
           {currentStep === 'Declaración' && (

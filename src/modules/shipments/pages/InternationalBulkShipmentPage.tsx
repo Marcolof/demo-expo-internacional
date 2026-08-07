@@ -4,6 +4,7 @@ import { cn } from '@/shared/lib/cn'
 import { PageContainer } from '@/shared/layout/PageContainer'
 import { Alert } from '@/shared/ui/Alert'
 import { Button } from '@/shared/ui/Button'
+import { Tabs } from '@/shared/ui/Tabs'
 import { ScopeSwitch } from '../components/ScopeSwitch'
 import { BulkShipmentSummary } from '../components/BulkShipmentSummary'
 import type { BulkSummaryData } from '../components/BulkShipmentSummary'
@@ -57,22 +58,15 @@ export function InternationalBulkShipmentPage() {
             }}
           />
 
-          <div className={layout.loadTabs} role="tablist" aria-label="Tipo de carga">
-            <div className={layout.loadTablist}>
-              <button
-                type="button"
-                role="tab"
-                aria-selected="false"
-                className={layout.loadTabInactive}
-                onClick={() => navigate('/internacional')}
-              >
-                Individual
-              </button>
-              <button type="button" role="tab" aria-selected="true" className={layout.loadTabActive}>
-                Masivo
-              </button>
-            </div>
-          </div>
+          <Tabs
+            items={[
+              { id: 'individual', label: 'Individual', to: '/internacional' },
+              { id: 'masivo', label: 'Masivo' },
+            ]}
+            activeId="masivo"
+            onChange={() => {}}
+            className={layout.loadTabs}
+          />
 
           <div className={styles.content}>
             <h4 className={styles.sectionTitle}>Cargá tu envío en 2 pasos</h4>

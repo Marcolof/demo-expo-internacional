@@ -14,9 +14,13 @@
 
 .tab {
   flex: 1 1 0;
-  padding: var(--space-1) var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  padding: 0 var(--space-5);
   border: none;
-  border-radius: var(--tab-radius);
+  border-radius: 8px 8px 0 0;
   background-color: transparent;
   color: var(--tab-text);
   font-family: var(--font-family-base);

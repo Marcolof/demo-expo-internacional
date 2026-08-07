@@ -28,27 +28,10 @@
   flex-shrink: 0;
 }
 
-/* ── Tabs — contenedor (botones usan layout.loadTabActive/Inactive) ── */
+/* ── Tabs ──────────────────────────────────────────────────────────── */
 
-.tabsWrap {
+.tabsRow {
   margin-bottom: var(--space-5);
-}
-
-/*
- * Tres pestañas side by side con borde inferior igual que Individual/Masivo.
- * Los botones hijos usan layout.loadTabActive / loadTabInactive para el estilo
- * visual; aquí solo definimos el contenedor.
- */
-.tabList {
-  display: flex;
-  gap: 0;
-  border-bottom: var(--border-width-thick) solid var(--tab-border-color);
-}
-
-/* Las pestañas inactivas de esta página son clickeables, a diferencia de la
-   original donde cursor:default ya está definido. Sobreescribimos solo eso. */
-.tabList [role="tab"]:not([aria-selected="true"]) {
-  cursor: pointer;
 }
 
 /* ── Filtros ───────────────────────────────────────────────────────── */
