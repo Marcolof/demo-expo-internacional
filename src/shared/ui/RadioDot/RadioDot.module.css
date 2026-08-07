@@ -1,0 +1,27 @@
+/* Anillo + punto interior, dibujado en SVG (ver medidas en RadioDot.tsx). */
+
+.dot {
+  flex-shrink: 0;
+}
+
+.ring {
+  stroke: var(--border-default);
+  fill: none;
+  transition: stroke var(--transition-fast);
+}
+
+.ringSelected {
+  stroke: var(--correo-blue);
+}
+
+.ringDisabled {
+  stroke: var(--border-subtle);
+}
+
+.innerDot {
+  fill: var(--correo-blue);
+}
+
+.innerDotDisabled {
+  fill: var(--text-disabled);
+}

@@ -1,0 +1,352 @@
+.page {
+  padding: var(--space-6) var(--space-8);
+  min-height: 100%;
+}
+
+/* ── Encabezado ────────────────────────────────────────────────────── */
+
+.pageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.pageTitle {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+/* Wrapper para contener el ancho del ScopeSwitch — su track tiene width:100%
+   así que necesita un contenedor con dimensión fija. El valor coincide con el
+   ancho visual que tiene el switch en la vista de nuevo envío (~320px). */
+.scopeSwitchWrap {
+  width: 320px;
+  flex-shrink: 0;
+}
+
+/* ── Tabs ──────────────────────────────────────────────────────────── */
+
+.tabsRow {
+  margin-bottom: var(--space-5);
+}
+
+/* ── Filtros ───────────────────────────────────────────────────────── */
+
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+/* Cuatro campos en una sola fila */
+.filtersGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-3);
+  align-items: start;
+}
+
+/* El Select de N° de orden ya ocupa 100% por ser directo hijo de .filters */
+
+.filtersActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-4);
+}
+
+.clearBtn {
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  color: var(--text-link);
+  cursor: pointer;
+  font-weight: var(--font-weight-medium);
+}
+
+.clearBtn:hover {
+  text-decoration: underline;
+}
+
+.consultarBtn {
+  height: 36px;
+  padding: 0 var(--space-5);
+  border: none;
+  border-radius: 9999px;
+  background: var(--correo-yellow);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: opacity var(--transition-base);
+}
+
+.consultarBtn:hover {
+  opacity: 0.85;
+}
+
+/* ── Controles de tabla ────────────────────────────────────────────── */
+
+.tableControls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.selectedCount {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-muted);
+}
+
+.tableControlsRight {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.filtrarBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 34px;
+  padding: 0 var(--space-4);
+  border: var(--border-width-thin) solid var(--border-default);
+  border-radius: 9999px;
+  background: var(--surface-raised);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: border-color var(--transition-base);
+}
+
+.filtrarBtn:hover {
+  border-color: var(--correo-blue);
+}
+
+.cotizarBtn {
+  height: 34px;
+  padding: 0 var(--space-4);
+  border: var(--border-width-thin) solid var(--border-default);
+  border-radius: 9999px;
+  background: var(--surface-raised);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.cotizarBtn:not(:disabled):hover {
+  border-color: var(--correo-blue);
+  color: var(--text-primary);
+}
+
+.cotizarBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Tabla ─────────────────────────────────────────────────────────── */
+
+.tableWrap {
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  border: var(--border-width-thin) solid var(--border-default);
+  background: var(--surface-raised);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+  font-size: var(--font-size-sm);
+}
+
+.tableHead {
+  border-bottom: var(--border-width-thin) solid var(--border-default);
+  background: var(--surface-raised);
+}
+
+.thCheck,
+.thMenu {
+  width: 40px;
+  padding: var(--space-3) var(--space-2);
+  text-align: center;
+}
+
+.th {
+  padding: var(--space-3);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-muted);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.thSub {
+  display: block;
+  font-size: 10px;
+  font-weight: var(--font-weight-regular);
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.tableRow {
+  border-bottom: var(--border-width-thin) solid var(--border-default);
+  transition: background var(--transition-base);
+}
+
+.tableRow:last-child {
+  border-bottom: none;
+}
+
+.tableRow:hover {
+  background: var(--surface-sunken);
+}
+
+.tableRowSelected {
+  background: color-mix(in srgb, var(--correo-yellow) 8%, transparent);
+}
+
+.tableRowSelected:hover {
+  background: color-mix(in srgb, var(--correo-yellow) 12%, transparent);
+}
+
+.tdCheck {
+  width: 40px;
+  padding: var(--space-3) var(--space-2);
+  text-align: center;
+}
+
+.tdMenu {
+  width: 40px;
+  padding: var(--space-3) var(--space-2);
+  text-align: center;
+  position: relative;
+}
+
+.td {
+  padding: var(--space-3);
+  color: var(--text-primary);
+  vertical-align: middle;
+  max-width: 200px;
+}
+
+/* ── Checkbox ─────────────────────────────────────────────────────── */
+
+.checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--correo-yellow);
+}
+
+/* ── Ícono de producto ────────────────────────────────────────────── */
+
+.productoIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: #e8f0fe;
+  border-radius: 50%;
+  color: var(--correo-blue, #2563C5);
+}
+
+/* ── Badge de estado ──────────────────────────────────────────────── */
+
+.badge {
+  display: inline-block;
+  padding: 3px var(--space-2);
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.badgeValidado {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.badgePendiente {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.badgeEncamino {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+/* ── Menú contextual ──────────────────────────────────────────────── */
+
+.menuTrigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background var(--transition-base), color var(--transition-base);
+}
+
+.menuTrigger:hover {
+  background: var(--surface-sunken);
+  color: var(--text-primary);
+}
+
+.contextMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 100;
+  min-width: 140px;
+  background: var(--surface-raised);
+  border: var(--border-width-thin) solid var(--border-default);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.12);
+  overflow: hidden;
+}
+
+.contextMenuItem {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  background: none;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--transition-base);
+}
+
+.contextMenuItem:hover {
+  background: var(--surface-sunken);
+}
+
+.contextMenuItemDanger {
+  color: var(--feedback-danger-strong, #dc2626);
+}
