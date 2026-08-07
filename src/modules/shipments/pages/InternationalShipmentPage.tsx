@@ -882,12 +882,11 @@ export function InternationalShipmentPage() {
                   city: destinoCity || undefined,
                   address: destinoAddressLines[0] || undefined,
                 }}
-                onPay={() => {
-                  const errors = runDestinoValidation()
-                  if (errors.size > 0) { setStep4Errors(errors); return }
-                  setStep4Errors(new Set())
-                  navigate('/checkout')
-                }}
+                onPay={
+                  currentStep === 'Destino' && runDestinoValidation().size === 0
+                    ? () => navigate('/checkout')
+                    : undefined
+                }
               />
             </div>
           </div>

@@ -1,145 +1,494 @@
 .page {
-  padding: var(--space-8) var(--space-12);
-  max-width: 860px;
-  margin: 0 auto;
+  padding: var(--space-6) var(--space-8);
+  min-height: 100%;
+  background: var(--surface-page, #f4f5f7);
 }
 
-.header {
+/* ── Encabezado ────────────────────────────────────────────────────── */
+
+.pageHeader {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  margin-bottom: var(--space-8);
+  margin-bottom: var(--space-5);
 }
 
-.headerText {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.title {
+.pageTitle {
   margin: 0;
-  font-size: 1.75rem;
+  font-size: 2rem;
   font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
 }
 
-.subtitle {
-  margin: 0;
-  font-size: var(--font-size-base);
-  color: var(--text-muted);
-}
+/* ── Toggle Nacional / Internacional ──────────────────────────────── */
 
-.list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.card {
+.scopeToggle {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-5);
-  background: var(--surface-raised);
+  gap: 0;
   border: var(--border-width-thin) solid var(--border-default);
-  border-radius: var(--radius-md);
-  transition: box-shadow var(--transition-base);
+  border-radius: 9999px;
+  overflow: hidden;
+  background: var(--surface-raised);
 }
 
-.card:hover {
-  box-shadow: 0 2px 8px rgb(0 0 0 / 0.08);
-}
-
-.cardIcon {
-  flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  display: flex;
+.scopeBtn {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
+  gap: var(--space-1);
+  padding: 6px var(--space-4);
+  border: none;
+  background: transparent;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition-base), color var(--transition-base);
+}
+
+.scopeBtn:hover {
+  color: var(--text-primary);
+}
+
+.scopeBtnActive {
+  background: var(--correo-yellow);
+  color: var(--text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* ── Tabs ─────────────────────────────────────────────────────────── */
+
+.tabBar {
+  display: flex;
+  align-items: flex-end;
+  gap: 0;
+  border-bottom: 2px solid var(--border-default);
+  margin-bottom: var(--space-5);
+}
+
+.tabActive,
+.tabInactive {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  background: none;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  cursor: pointer;
+  white-space: nowrap;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  transition: background var(--transition-base);
+}
+
+.tabActive {
+  background: var(--correo-yellow);
+  color: var(--text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.tabInactive {
+  color: var(--text-muted);
+  font-weight: var(--font-weight-medium);
+}
+
+.tabInactive:hover {
+  color: var(--text-primary);
   background: var(--surface-sunken);
+}
+
+/* ── Filtros ───────────────────────────────────────────────────────── */
+
+.filters {
+  background: var(--surface-raised);
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-5);
+  margin-bottom: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.filtersGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-3);
+}
+
+.filtersRow2 {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.filterInput {
+  height: 40px;
+  padding: 0 var(--space-3);
+  border: var(--border-width-thin) solid var(--border-default);
   border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color var(--transition-base);
+}
+
+.filterInput::placeholder {
   color: var(--text-muted);
 }
 
-.cardBody {
-  flex: 1 1 0;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
+.filterInput:focus {
+  border-color: var(--correo-blue);
 }
 
-.cardTop {
+.filterSelectWrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.filterSelectLabel {
+  position: absolute;
+  top: 6px;
+  left: var(--space-3);
+  font-size: 10px;
+  font-weight: var(--font-weight-medium);
+  color: var(--text-muted);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.filterSelect {
+  height: 40px;
+  padding: 12px var(--space-8) 0 var(--space-3);
+  border: var(--border-width-thin) solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+  transition: border-color var(--transition-base);
+}
+
+.filterSelect:focus {
+  border-color: var(--correo-blue);
+}
+
+.filterSelectFull {
+  width: 100%;
+}
+
+.filterSelectChevron {
+  position: absolute;
+  right: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.filtersActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-4);
+}
+
+.clearBtn {
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  color: var(--text-link);
+  cursor: pointer;
+  font-weight: var(--font-weight-medium);
+}
+
+.clearBtn:hover {
+  text-decoration: underline;
+}
+
+.consultarBtn {
+  height: 36px;
+  padding: 0 var(--space-5);
+  border: none;
+  border-radius: 9999px;
+  background: var(--correo-yellow);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: opacity var(--transition-base);
+}
+
+.consultarBtn:hover {
+  opacity: 0.85;
+}
+
+/* ── Controles de tabla ────────────────────────────────────────────── */
+
+.tableControls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.selectedCount {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-muted);
+}
+
+.tableControlsRight {
   display: flex;
   align-items: center;
   gap: var(--space-3);
 }
 
-.cardId {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-primary);
-}
-
-.badgeGuardada,
-.badgePendiente {
+.filtrarBtn {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
-  padding: 2px var(--space-2);
-  border-radius: var(--radius-full, 9999px);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  line-height: 1.4;
+  gap: var(--space-2);
+  height: 34px;
+  padding: 0 var(--space-4);
+  border: var(--border-width-thin) solid var(--border-default);
+  border-radius: 9999px;
+  background: var(--surface-raised);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: border-color var(--transition-base);
 }
 
-.badgeGuardada {
-  background: color-mix(in srgb, var(--correo-yellow) 15%, transparent);
-  color: #7a5900;
+.filtrarBtn:hover {
+  border-color: var(--correo-blue);
+}
+
+.cotizarBtn {
+  height: 34px;
+  padding: 0 var(--space-4);
+  border: var(--border-width-thin) solid var(--border-default);
+  border-radius: 9999px;
+  background: var(--surface-raised);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.cotizarBtn:not(:disabled):hover {
+  border-color: var(--correo-blue);
+  color: var(--text-primary);
+}
+
+.cotizarBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Tabla ─────────────────────────────────────────────────────────── */
+
+.tableWrap {
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  border: var(--border-width-thin) solid var(--border-default);
+  background: var(--surface-raised);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+  font-size: var(--font-size-sm);
+}
+
+.tableHead {
+  border-bottom: var(--border-width-thin) solid var(--border-default);
+  background: var(--surface-raised);
+}
+
+.thCheck,
+.thMenu {
+  width: 40px;
+  padding: var(--space-3) var(--space-2);
+  text-align: center;
+}
+
+.th {
+  padding: var(--space-3) var(--space-3);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-muted);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.thSub {
+  display: block;
+  font-size: 10px;
+  font-weight: var(--font-weight-regular);
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.tableRow {
+  border-bottom: var(--border-width-thin) solid var(--border-default);
+  transition: background var(--transition-base);
+}
+
+.tableRow:last-child {
+  border-bottom: none;
+}
+
+.tableRow:hover {
+  background: var(--surface-sunken);
+}
+
+.tableRowSelected {
+  background: color-mix(in srgb, var(--correo-yellow) 8%, transparent);
+}
+
+.tableRowSelected:hover {
+  background: color-mix(in srgb, var(--correo-yellow) 12%, transparent);
+}
+
+.tdCheck {
+  width: 40px;
+  padding: var(--space-3) var(--space-2);
+  text-align: center;
+}
+
+.tdMenu {
+  width: 40px;
+  padding: var(--space-3) var(--space-2);
+  text-align: center;
+  position: relative;
+}
+
+.td {
+  padding: var(--space-3) var(--space-3);
+  color: var(--text-primary);
+  vertical-align: middle;
+  max-width: 200px;
+}
+
+/* ── Checkbox ─────────────────────────────────────────────────────── */
+
+.checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--correo-yellow);
+}
+
+/* ── Ícono de producto ────────────────────────────────────────────── */
+
+.productoIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: #e8f0fe;
+  border-radius: 50%;
+  color: var(--correo-blue, #2563C5);
+}
+
+/* ── Badge de estado ──────────────────────────────────────────────── */
+
+.badge {
+  display: inline-block;
+  padding: 3px var(--space-2);
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.badgeValidado {
+  background: #dcfce7;
+  color: #15803d;
 }
 
 .badgePendiente {
-  background: var(--surface-sunken);
-  color: var(--text-muted);
+  background: #fef9c3;
+  color: #854d0e;
 }
 
-.cardDestino {
-  margin: 0;
-  font-size: var(--font-size-base);
+.badgeEncamino {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+/* ── Menú contextual ──────────────────────────────────────────────── */
+
+.menuTrigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background var(--transition-base), color var(--transition-base);
+}
+
+.menuTrigger:hover {
+  background: var(--surface-sunken);
+  color: var(--text-primary);
+}
+
+.contextMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 100;
+  min-width: 140px;
+  background: var(--surface-raised);
+  border: var(--border-width-thin) solid var(--border-default);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.12);
+  overflow: hidden;
+}
+
+.contextMenuItem {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  background: none;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--transition-base);
 }
 
-.cardMeta {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--font-size-sm);
-  color: var(--text-muted);
+.contextMenuItem:hover {
+  background: var(--surface-sunken);
 }
 
-.dot {
-  font-size: var(--font-size-base);
-  line-height: 1;
-}
-
-.cardActions {
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: var(--space-2);
-}
-
-.cardPrecio {
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-primary);
-  white-space: nowrap;
+.contextMenuItemDanger {
+  color: var(--feedback-danger-strong, #dc2626);
 }
