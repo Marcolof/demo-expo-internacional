@@ -75,16 +75,19 @@ export interface DestinoSummaryData {
   readonly countryLabel?: string
   readonly city?: string
   readonly address?: string
+  readonly shippingService?: string
 }
 
 function destinoRows(data?: DestinoSummaryData): readonly SummaryRow[] | undefined {
   if (data === undefined) return undefined
 
-  return [
+  const rows: SummaryRow[] = [
     { label: 'País de destino', value: data.countryLabel ?? EMPTY },
     { label: 'Ciudad',          value: data.city          ?? EMPTY },
     { label: 'Dirección',       value: data.address       ?? EMPTY },
   ]
+  if (data.shippingService) rows.push({ label: 'Servicio postal', value: data.shippingService })
+  return rows
 }
 
 function Chevron({ open }: { readonly open: boolean }) {

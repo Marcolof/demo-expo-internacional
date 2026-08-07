@@ -38,6 +38,33 @@ const CUSTOMS_OFFICE_REQUIRED_OVER_KG = 2
 /** Países sin servicio de envío internacional disponible (maqueta). */
 const COUNTRIES_WITHOUT_SHIPPING: ReadonlySet<string> = new Set(['RU', 'CU', 'KP'])
 
+/** Países que reciben artículos del seed automáticamente al seleccionarlos. */
+const AUTO_SEED_COUNTRIES: ReadonlySet<string> = new Set([
+  'US',
+  ...Object.keys(COUNTRY_CONTENT_RESTRICTIONS),
+])
+
+const SHIPPING_SERVICE_LABELS: Record<'EMS' | 'ENCOMIENDA' | 'PEQUENO_PAQUETE' | 'EMS_DOCUMENTACION', string> = {
+  EMS: 'EMS Paquetería',
+  ENCOMIENDA: 'Encomienda Internacional',
+  PEQUENO_PAQUETE: 'Pequeño Paquete',
+  EMS_DOCUMENTACION: 'EMS Documentación',
+}
+
+const SHIPPING_SERVICE_PRICES_ARS: Record<'EMS' | 'ENCOMIENDA' | 'PEQUENO_PAQUETE' | 'EMS_DOCUMENTACION', number> = {
+  EMS: 15000,
+  ENCOMIENDA: 10000,
+  PEQUENO_PAQUETE: 7500,
+  EMS_DOCUMENTACION: 8000,
+}
+
+const SHIPPING_SERVICE_TO_POSTAL: Record<'EMS' | 'ENCOMIENDA' | 'PEQUENO_PAQUETE' | 'EMS_DOCUMENTACION', string> = {
+  EMS: 'EMS_PAQUETERIA',
+  ENCOMIENDA: 'ENCOMIENDA_INTERNACIONAL',
+  PEQUENO_PAQUETE: 'PEQUENO_PAQUETE',
+  EMS_DOCUMENTACION: 'EMS_DOCUMENTACION',
+}
+
 const NON_COMMERCIAL_CATEGORIES: readonly SelectOption[] = [
   { value: 'REGALO', label: 'Regalo' },
   { value: 'DOCUMENTO', label: 'Documento' },
@@ -209,8 +236,9 @@ export function InternationalShipmentPage() {
   const [category, setCategory] = useState('REGALO')
   const [declarationAccepted, setDeclarationAccepted] = useState(false)
   const [declarationError, setDeclarationError] = useState(false)
-  const [articles, setArticles] = useState<readonly DeclaredArticle[]>(DECLARED_ARTICLES_SEED)
+  const [articles, setArticles] = useState<readonly DeclaredArticle[]>([])
   const [isArticleModalOpen, setArticleModalOpen] = useState(false)
+  const [editingArticle, setEditingArticle] = useState<DeclaredArticle | null>(null)
 
   /* ── Paso 2: Paquete ─────────────────────────────────────────────── */
   const [frequentMeasureId, setFrequentMeasureId] = useState('-1')
@@ -252,6 +280,15 @@ export function InternationalShipmentPage() {
     setCommercial(next)
     setCategory(next ? COMMERCIAL_CATEGORY_VALUE : 'REGALO')
     // Los artículos se conservan en ambos modos; el seed se carga solo al montar
+  }
+
+  const handleCountryChange = (value: string) => {
+    setCountry(value)
+    if (value !== '-1' && AUTO_SEED_COUNTRIES.has(value)) {
+      setArticles(DECLARED_ARTICLES_SEED)
+    } else {
+      setArticles([])
+    }
   }
 
   const selectedCountry = COUNTRIES.find((c) => c.value === country)
@@ -362,7 +399,7 @@ export function InternationalShipmentPage() {
                   label="País de destino"
                   options={COUNTRIES}
                   value={country}
-                  onChange={(event) => setCountry(event.currentTarget.value)}
+                  onChange={(event) => handleCountryChange(event.currentTarget.value)}
                 />
                 {country !== '-1' && !countryHasShipping && (
                   <Alert tone="danger">
@@ -415,6 +452,7 @@ export function InternationalShipmentPage() {
                           key={article.id}
                           article={article}
                           onRemove={removeArticle}
+                          onEdit={(a) => { setEditingArticle(a); setArticleModalOpen(true) }}
                           defaultOpen={index === articles.length - 1}
                           invalid={restrictedIds.has(article.id)}
                         />
@@ -875,10 +913,30 @@ export function InternationalShipmentPage() {
                   countryLabel: destinoCountryLabel,
                   city: destinoCity || undefined,
                   address: destinoAddressLines[0] || undefined,
+                  shippingService: shippingService ? SHIPPING_SERVICE_LABELS[shippingService] : undefined,
                 }}
                 onPay={
                   currentStep === 'Destino' && runDestinoValidation().size === 0
-                    ? () => navigate('/checkout')
+                    ? () => {
+                        const priceArs = shippingService ? SHIPPING_SERVICE_PRICES_ARS[shippingService] : 15000
+                        navigate('/checkout', {
+                          state: {
+                            intl: {
+                              service: shippingService ? SHIPPING_SERVICE_TO_POSTAL[shippingService] : 'EMS_PAQUETERIA',
+                              servicePriceArs: priceArs,
+                              serviceLabel: shippingService ? SHIPPING_SERVICE_LABELS[shippingService] : 'EMS Paquetería',
+                              totalValueUsd,
+                              packageWeightKg: Number(packageWeightKg) || 0,
+                              lengthCm: Number(lengthCm) || 0,
+                              widthCm: Number(widthCm) || 0,
+                              heightCm: Number(heightCm) || 0,
+                              originLabel: selectedRemitente?.razonSocial ?? 'Correo Argentino',
+                              destinationLabel: [destinoCity, selectedCountry?.label].filter(Boolean).join(', '),
+                              orderNumber: destinoOrderNum || undefined,
+                            },
+                          },
+                        })
+                      }
                     : undefined
                 }
               />
@@ -926,10 +984,18 @@ export function InternationalShipmentPage() {
 
       <AddArticleModal
         isOpen={isArticleModalOpen}
-        onClose={() => setArticleModalOpen(false)}
+        onClose={() => { setArticleModalOpen(false); setEditingArticle(null) }}
+        initialValues={editingArticle ?? undefined}
         onSubmit={(input) => {
-          const article: DeclaredArticle = { ...input, id: crypto.randomUUID() }
-          setArticles((current) => [...current, article])
+          if (editingArticle !== null) {
+            setArticles((current) =>
+              current.map((a) => (a.id === editingArticle.id ? { ...input, id: editingArticle.id } : a)),
+            )
+            setEditingArticle(null)
+          } else {
+            const article: DeclaredArticle = { ...input, id: crypto.randomUUID() }
+            setArticles((current) => [...current, article])
+          }
         }}
       />
     </PageContainer>
