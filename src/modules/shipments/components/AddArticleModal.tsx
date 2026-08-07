@@ -16,6 +16,8 @@ export interface AddArticleModalProps {
   readonly onSubmit: (article: DeclaredArticleInput) => void
   /** "Documento" (doc funcional §5.5) cambia título/label/empty state — ver `article.types.ts`. */
   readonly kind?: ArticleKind
+  /** Cuando se pasa, el modal abre en modo "editar" pre-poblando los campos. */
+  readonly initialValues?: DeclaredArticleInput
 }
 
 interface FormState {
@@ -98,19 +100,28 @@ function DisclosureIcon({ open }: { readonly open: boolean }) {
  * el modal no cierra: marca los campos inválidos y muestra un aviso arriba
  * de los botones (Figma node de referencia del banner de error).
  */
-export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE' }: AddArticleModalProps) {
+export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', initialValues }: AddArticleModalProps) {
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [submitted, setSubmitted] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
   const text = ARTICLE_KIND_TEXT[kind]
 
-  // Formulario limpio cada vez que se abre (evita arrastrar datos del artículo anterior).
   useEffect(() => {
     if (isOpen) {
-      setForm(EMPTY_FORM)
+      setForm(
+        initialValues
+          ? {
+              description: initialValues.description,
+              harmonizedCode: initialValues.harmonizedCode,
+              quantity: String(initialValues.quantity),
+              unitPriceUsd: String(initialValues.unitPriceUsd),
+              unitWeightKg: String(initialValues.unitWeightKg),
+            }
+          : EMPTY_FORM,
+      )
       setSubmitted(false)
     }
-  }, [isOpen])
+  }, [isOpen, initialValues])
 
   const errors = validate(form)
   const hasErrors = Object.values(errors).some((message) => message !== undefined)

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@/shared/lib/cn'
 import { COUNTRIES } from '@/shared/lib/countries'
@@ -21,13 +21,16 @@ import { AddArticleModal } from '../components/AddArticleModal'
 import { ArticleAccordionItem } from '../components/ArticleAccordionItem'
 import { AduanaConfirmModal } from '../components/AduanaConfirmModal'
 import { BranchMap } from '../components/BranchMap'
-import { articleTotalPriceUsd, articleTotalWeightKg } from '../types/article.types'
-import type { DeclaredArticle } from '../types/article.types'
-import { DECLARED_ARTICLES_SEED } from '../mocks/articles.mocks'
+import { PhoneCountryCodeSelect } from '../components/PhoneCountryCodeSelect'
+import { articleTotalPriceUsd, articleTotalWeightKg, ARTICLE_KIND_TEXT } from '../types/article.types'
+import type { ArticleKind, DeclaredArticle } from '../types/article.types'
+import { DECLARED_ARTICLES_SEED, DECLARED_DOCUMENTS_SEED } from '../mocks/articles.mocks'
 import { COUNTRY_CONTENT_RESTRICTIONS } from '../mocks/country-restrictions.mocks'
+import { shipmentsStore, wizardStore } from '../stores/session.store'
+import type { WizardSnapshot } from '../stores/session.store'
 import { REMITENTES_SEED } from '../mocks/remitentes.mocks'
 import { PROVINCE_OPTIONS, getBranchOptions, findBranch, BRANCHES_BY_PROVINCE } from '../mocks/branches.mocks'
-import { FREQUENT_MEASURE_OPTIONS } from '../mocks/shipments.mocks'
+import { FREQUENT_MEASURE_OPTIONS, PHONE_COUNTRY_CODES } from '../mocks/shipments.mocks'
 import packageOpenIcon from '@/assets/icons/package-open.svg'
 import layout from './NewShipmentPage.module.css'
 import styles from './InternationalShipmentPage.module.css'
@@ -37,6 +40,33 @@ const CUSTOMS_OFFICE_REQUIRED_OVER_KG = 2
 
 /** Países sin servicio de envío internacional disponible (maqueta). */
 const COUNTRIES_WITHOUT_SHIPPING: ReadonlySet<string> = new Set(['RU', 'CU', 'KP'])
+
+/** Países que reciben artículos del seed automáticamente al seleccionarlos. */
+const AUTO_SEED_COUNTRIES: ReadonlySet<string> = new Set([
+  'US',
+  ...Object.keys(COUNTRY_CONTENT_RESTRICTIONS),
+])
+
+const SHIPPING_SERVICE_LABELS: Record<'EMS' | 'ENCOMIENDA' | 'PEQUENO_PAQUETE' | 'EMS_DOCUMENTACION', string> = {
+  EMS: 'EMS Paquetería',
+  ENCOMIENDA: 'Encomienda Internacional',
+  PEQUENO_PAQUETE: 'Pequeño Paquete',
+  EMS_DOCUMENTACION: 'EMS Documentación',
+}
+
+const SHIPPING_SERVICE_PRICES_ARS: Record<'EMS' | 'ENCOMIENDA' | 'PEQUENO_PAQUETE' | 'EMS_DOCUMENTACION', number> = {
+  EMS: 15000,
+  ENCOMIENDA: 10000,
+  PEQUENO_PAQUETE: 7500,
+  EMS_DOCUMENTACION: 8000,
+}
+
+const SHIPPING_SERVICE_TO_POSTAL: Record<'EMS' | 'ENCOMIENDA' | 'PEQUENO_PAQUETE' | 'EMS_DOCUMENTACION', string> = {
+  EMS: 'EMS_PAQUETERIA',
+  ENCOMIENDA: 'ENCOMIENDA_INTERNACIONAL',
+  PEQUENO_PAQUETE: 'PEQUENO_PAQUETE',
+  EMS_DOCUMENTACION: 'EMS_DOCUMENTACION',
+}
 
 const NON_COMMERCIAL_CATEGORIES: readonly SelectOption[] = [
   { value: 'REGALO', label: 'Regalo' },
@@ -51,22 +81,15 @@ const COMMERCIAL_CATEGORIES: readonly SelectOption[] = [
   { value: COMMERCIAL_CATEGORY_VALUE, label: 'Envío de mercadería' },
 ]
 
-const PHONE_CODE_OPTIONS: readonly SelectOption[] = [
-  { value: '+54',  label: '+54 (Argentina)' },
-  { value: '+1',   label: '+1 (EE.UU.)' },
-  { value: '+55',  label: '+55 (Brasil)' },
-  { value: '+56',  label: '+56 (Chile)' },
-  { value: '+598', label: '+598 (Uruguay)' },
-  { value: '+34',  label: '+34 (España)' },
-  { value: '+52',  label: '+52 (México)' },
-  { value: '+30',  label: '+30 (Grecia)' },
-  { value: '+7',   label: '+7 (Rusia)' },
-  { value: '+53',  label: '+53 (Cuba)' },
-]
 
 const PACKAGE_MAX_SIDE_CM = 90
 const PACKAGE_MAX_OVERSIZED_SIDES = 1
 const PACKAGE_MAX_WEIGHT_KG = 20
+
+interface PackageValidationErrors {
+  readonly measures?: 'incomplete' | 'oversized'
+  readonly weight?: string
+}
 
 function validatePackageStep(
   lengthCm: string,
@@ -74,42 +97,36 @@ function validatePackageStep(
   heightCm: string,
   packageWeightKg: string,
   declaredContentWeightKg: number,
-): string | null {
+): PackageValidationErrors {
+  const errors: { measures?: 'incomplete' | 'oversized'; weight?: string } = {}
+
   const length = Number(lengthCm.replace(',', '.'))
-  const width = Number(widthCm.replace(',', '.'))
+  const width  = Number(widthCm.replace(',', '.'))
   const height = Number(heightCm.replace(',', '.'))
 
   const hasValidMeasures =
-    lengthCm.trim() !== '' &&
-    widthCm.trim() !== '' &&
-    heightCm.trim() !== '' &&
+    lengthCm.trim() !== '' && widthCm.trim() !== '' && heightCm.trim() !== '' &&
     Number.isFinite(length) && Number.isFinite(width) && Number.isFinite(height) &&
     length > 0 && width > 0 && height > 0
 
   if (!hasValidMeasures) {
-    return 'Completá el largo, el ancho y el alto del paquete para continuar.'
-  }
-
-  const oversizedSides = [length, width, height].filter((side) => side > PACKAGE_MAX_SIDE_CM).length
-  if (oversizedSides > PACKAGE_MAX_OVERSIZED_SIDES) {
-    return `Al menos dos lados del paquete superan los ${PACKAGE_MAX_SIDE_CM} cm. Revisá las medidas para continuar.`
+    errors.measures = 'incomplete'
+  } else if ([length, width, height].some((side) => side > PACKAGE_MAX_SIDE_CM)) {
+    errors.measures = 'oversized'
   }
 
   const weight = Number(packageWeightKg.replace(',', '.'))
   const hasValidWeight = packageWeightKg.trim() !== '' && Number.isFinite(weight) && weight > 0
+
   if (!hasValidWeight) {
-    return 'Completá el peso del paquete para continuar.'
+    errors.weight = 'Completá el peso del paquete para continuar.'
+  } else if (weight < declaredContentWeightKg) {
+    errors.weight = 'El peso total del paquete incluye el contenido y el embalaje. No puede ser menor al peso total del contenido declarado.'
+  } else if (weight > PACKAGE_MAX_WEIGHT_KG) {
+    errors.weight = `El peso del paquete supera el máximo permitido (${PACKAGE_MAX_WEIGHT_KG} kg) para envíos internacionales.`
   }
 
-  if (weight < declaredContentWeightKg) {
-    return 'El peso total del paquete no puede ser menor al peso del contenido declarado.'
-  }
-
-  if (weight > PACKAGE_MAX_WEIGHT_KG) {
-    return `El peso del paquete supera el máximo permitido (${PACKAGE_MAX_WEIGHT_KG} kg) para envíos internacionales.`
-  }
-
-  return null
+  return errors
 }
 
 function validateDestinoFields(params: {
@@ -129,7 +146,11 @@ function validateDestinoFields(params: {
 }): ReadonlySet<string> {
   const errors = new Set<string>()
   if (!params.recipientName.trim()) errors.add('recipientName')
-  if (!params.recipientPhone.trim()) errors.add('recipientPhone')
+  if (!params.recipientPhone.trim()) {
+    errors.add('recipientPhone')
+  } else if (!/^\d+$/.test(params.recipientPhone.trim())) {
+    errors.add('recipientPhoneFormat')
+  }
   if (!params.recipientEmail.trim()) errors.add('recipientEmail')
   if (!params.recipientTaxId.trim()) errors.add('recipientTaxId')
   if (params.commercial && !params.facturaE.trim()) errors.add('facturaE')
@@ -209,8 +230,9 @@ export function InternationalShipmentPage() {
   const [category, setCategory] = useState('REGALO')
   const [declarationAccepted, setDeclarationAccepted] = useState(false)
   const [declarationError, setDeclarationError] = useState(false)
-  const [articles, setArticles] = useState<readonly DeclaredArticle[]>(DECLARED_ARTICLES_SEED)
+  const [articles, setArticles] = useState<readonly DeclaredArticle[]>([])
   const [isArticleModalOpen, setArticleModalOpen] = useState(false)
+  const [editingArticle, setEditingArticle] = useState<DeclaredArticle | null>(null)
 
   /* ── Paso 2: Paquete ─────────────────────────────────────────────── */
   const [frequentMeasureId, setFrequentMeasureId] = useState('-1')
@@ -218,7 +240,7 @@ export function InternationalShipmentPage() {
   const [widthCm, setWidthCm] = useState('')
   const [heightCm, setHeightCm] = useState('')
   const [packageWeightKg, setPackageWeightKg] = useState('')
-  const [packageError, setPackageError] = useState<string | null>(null)
+  const [packageErrors, setPackageErrors] = useState<PackageValidationErrors>({})
 
   /* ── Paso 3: Origen ──────────────────────────────────────────────── */
   const [remitenteCuit, setRemitenteCuit] = useState(REMITENTES_SEED[0]?.cuit ?? '')
@@ -228,8 +250,8 @@ export function InternationalShipmentPage() {
   /* ── Paso 4: Destino ─────────────────────────────────────────────── */
   const [recipientName, setRecipientName]               = useState('Juan Perez')
   const [recipientRazonSocial, setRecipientRazonSocial] = useState('Logística ecuatorial')
-  const [recipientPhoneCode, setRecipientPhoneCode]     = useState('+30')
-  const [recipientPhone, setRecipientPhone]             = useState('1234567B')
+  const [recipientPhoneCode, setRecipientPhoneCode]     = useState('+54')
+  const [recipientPhone, setRecipientPhone]             = useState('12345678')
   const [recipientEmail, setRecipientEmail]             = useState('ecuatorlogistic@eculogi.com')
   const [recipientTaxId, setRecipientTaxId]             = useState('123456789001213123')
   const [facturaE, setFacturaE]                         = useState('00001-00000108')
@@ -245,6 +267,44 @@ export function InternationalShipmentPage() {
   const [shippingService, setShippingService]           = useState<'EMS' | 'ENCOMIENDA' | 'PEQUENO_PAQUETE' | 'EMS_DOCUMENTACION' | null>('EMS')
   const [step4Errors, setStep4Errors]                   = useState<ReadonlySet<string>>(new Set())
 
+  /* ── Restaurar wizard desde store al volver del checkout ─────────── */
+  useEffect(() => {
+    const snap = wizardStore.get()
+    if (snap === null) return
+    setCountry(snap.country)
+    setCommercial(snap.commercial)
+    setCategory(snap.category)
+    setDeclarationAccepted(snap.declarationAccepted)
+    setArticles(snap.articles)
+    setFrequentMeasureId(snap.frequentMeasureId)
+    setLengthCm(snap.lengthCm)
+    setWidthCm(snap.widthCm)
+    setHeightCm(snap.heightCm)
+    setPackageWeightKg(snap.packageWeightKg)
+    setRemitenteCuit(snap.remitenteCuit)
+    setProvince(snap.province)
+    setBranchId(snap.branchId)
+    setRecipientName(snap.recipientName)
+    setRecipientRazonSocial(snap.recipientRazonSocial)
+    setRecipientPhoneCode(snap.recipientPhoneCode)
+    setRecipientPhone(snap.recipientPhone)
+    setRecipientEmail(snap.recipientEmail)
+    setRecipientTaxId(snap.recipientTaxId)
+    setFacturaE(snap.facturaE)
+    setDestinoState(snap.destinoState)
+    setDestinoCity(snap.destinoCity)
+    setDestinoPostalCode(snap.destinoPostalCode)
+    setDestinoAddressLines([...snap.destinoAddressLines])
+    setDestinoOrderNum(snap.destinoOrderNum)
+    setAduanaRepresentation(snap.aduanaRepresentation)
+    setRepresentanteName(snap.representanteName)
+    setRepresentanteCuil(snap.representanteCuil)
+    setShippingService(snap.shippingService)
+    if (snap.currentStep !== 'Declaración') goTo(snap.currentStep as Parameters<typeof goTo>[0])
+  // Solo al montar
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   /* ── Derivados ───────────────────────────────────────────────────── */
   const categoryOptions = commercial ? COMMERCIAL_CATEGORIES : NON_COMMERCIAL_CATEGORIES
 
@@ -252,6 +312,30 @@ export function InternationalShipmentPage() {
     setCommercial(next)
     setCategory(next ? COMMERCIAL_CATEGORY_VALUE : 'REGALO')
     // Los artículos se conservan en ambos modos; el seed se carga solo al montar
+  }
+
+  const handleCountryChange = (value: string) => {
+    setCountry(value)
+    if (value === '-1') { setArticles([]); return }
+    if (category === 'DOCUMENTO') {
+      setArticles(DECLARED_DOCUMENTS_SEED)
+    } else if (AUTO_SEED_COUNTRIES.has(value)) {
+      setArticles(DECLARED_ARTICLES_SEED)
+    } else {
+      setArticles([])
+    }
+  }
+
+  const handleCategoryChange = (value: string) => {
+    setCategory(value)
+    if (country === '-1') return
+    if (value === 'DOCUMENTO') {
+      setArticles(DECLARED_DOCUMENTS_SEED)
+    } else if (AUTO_SEED_COUNTRIES.has(country)) {
+      setArticles(DECLARED_ARTICLES_SEED)
+    } else {
+      setArticles([])
+    }
   }
 
   const selectedCountry = COUNTRIES.find((c) => c.value === country)
@@ -268,6 +352,7 @@ export function InternationalShipmentPage() {
       aduanaRepresentation, representanteName, representanteCuil,
     })
 
+  const articleKind: ArticleKind = category === 'DOCUMENTO' ? 'DOCUMENT' : 'ARTICLE'
   const canAddArticle = country !== '-1' && category !== '-1' && countryHasShipping
 
   const restrictedIds = useMemo(() => {
@@ -309,6 +394,17 @@ export function InternationalShipmentPage() {
     setBranchId('-1')
   }
 
+  const buildSnapshot = (): WizardSnapshot => ({
+    country, commercial, category, declarationAccepted, articles,
+    frequentMeasureId, lengthCm, widthCm, heightCm, packageWeightKg,
+    remitenteCuit, province, branchId,
+    recipientName, recipientRazonSocial, recipientPhoneCode, recipientPhone,
+    recipientEmail, recipientTaxId, facturaE,
+    destinoState, destinoCity, destinoPostalCode, destinoAddressLines, destinoOrderNum,
+    aduanaRepresentation, representanteName, representanteCuil, shippingService,
+    currentStep,
+  })
+
   const handleNext = () => {
     if (currentStep === 'Declaración') {
       if (!declarationAccepted) { setDeclarationError(true); return }
@@ -317,15 +413,28 @@ export function InternationalShipmentPage() {
     }
 
     if (currentStep === 'Paquete') {
-      const error = validatePackageStep(lengthCm, widthCm, heightCm, packageWeightKg, totalWeightKg)
-      setPackageError(error)
-      if (error !== null) return
+      const errs = validatePackageStep(lengthCm, widthCm, heightCm, packageWeightKg, totalWeightKg)
+      setPackageErrors(errs)
+      if (errs.measures !== undefined || errs.weight !== undefined) return
     }
 
     if (currentStep === 'Destino') {
       const errors = runDestinoValidation()
       if (errors.size > 0) { setStep4Errors(errors); return }
       setStep4Errors(new Set())
+      const snap = buildSnapshot()
+      shipmentsStore.add({
+        id: `S-${Date.now()}`,
+        integracion: 'MiCorreo',
+        nOrden: destinoOrderNum || '-',
+        origen: selectedRemitente?.razonSocial ?? 'Correo Argentino',
+        destinatario: recipientName,
+        destino: [destinoCity, selectedCountry?.label].filter(Boolean).join(', '),
+        detalles: `${packageWeightKg}kg – ${lengthCm}x${widthCm}x${heightCm}cm`,
+        usuario: 'Marco',
+        estado: 'Validado',
+      })
+      wizardStore.clear()
       navigate('/propuesta/mis-envios')
       return
     }
@@ -363,7 +472,7 @@ export function InternationalShipmentPage() {
                   label="País de destino"
                   options={COUNTRIES}
                   value={country}
-                  onChange={(event) => setCountry(event.currentTarget.value)}
+                  onChange={(event) => handleCountryChange(event.currentTarget.value)}
                 />
                 {country !== '-1' && !countryHasShipping && (
                   <Alert tone="danger">
@@ -392,7 +501,7 @@ export function InternationalShipmentPage() {
                     label="Categoría de envío"
                     options={categoryOptions}
                     value={category}
-                    onChange={(event) => setCategory(event.currentTarget.value)}
+                    onChange={(event) => handleCategoryChange(event.currentTarget.value)}
                     disabled={commercial}
                   />
 
@@ -403,18 +512,20 @@ export function InternationalShipmentPage() {
                     onClick={() => setArticleModalOpen(true)}
                   >
                     <PlusIcon />
-                    Agregar artículo
+                    {ARTICLE_KIND_TEXT[articleKind].addButtonLabel}
                   </button>
 
                   {articles.length === 0 ? (
-                    <EmptyState title="Acá vas a ver los artículos que agregues" iconSrc={packageOpenIcon} />
+                    <EmptyState title={ARTICLE_KIND_TEXT[articleKind].emptyStateTitle} iconSrc={packageOpenIcon} />
                   ) : (
                     <div className={styles.articleList}>
                       {articles.map((article, index) => (
                         <ArticleAccordionItem
                           key={article.id}
                           article={article}
+                          kind={articleKind}
                           onRemove={removeArticle}
+                          onEdit={(a) => { setEditingArticle(a); setArticleModalOpen(true) }}
                           defaultOpen={index === articles.length - 1}
                           invalid={restrictedIds.has(article.id)}
                         />
@@ -424,7 +535,7 @@ export function InternationalShipmentPage() {
 
                   <div className={styles.totals}>
                     <div className={styles.totalRow}>
-                      <span className={styles.totalLabel}>Cantidad de artículos</span>
+                      <span className={styles.totalLabel}>{ARTICLE_KIND_TEXT[articleKind].quantityTotalLabel}</span>
                       <span className={styles.totalValue}>{totalArticles}</span>
                     </div>
                     <div className={styles.totalRow}>
@@ -483,21 +594,24 @@ export function InternationalShipmentPage() {
                       label="Largo"
                       inputMode="decimal"
                       value={lengthCm}
-                      onChange={(event) => setLengthCm(event.currentTarget.value)}
+                      onChange={(event) => { setLengthCm(event.currentTarget.value); setPackageErrors({}) }}
+                      invalid={packageErrors.measures !== undefined}
                     />
                     <Input
                       id="package-width"
                       label="Ancho"
                       inputMode="decimal"
                       value={widthCm}
-                      onChange={(event) => setWidthCm(event.currentTarget.value)}
+                      onChange={(event) => { setWidthCm(event.currentTarget.value); setPackageErrors({}) }}
+                      invalid={packageErrors.measures !== undefined}
                     />
                     <Input
                       id="package-height"
                       label="Alto"
                       inputMode="decimal"
                       value={heightCm}
-                      onChange={(event) => setHeightCm(event.currentTarget.value)}
+                      onChange={(event) => { setHeightCm(event.currentTarget.value); setPackageErrors({}) }}
+                      invalid={packageErrors.measures !== undefined}
                     />
                   </div>
 
@@ -512,17 +626,33 @@ export function InternationalShipmentPage() {
                     <span className={styles.totalValue}>{formatWeightKg(totalWeightKg)}</span>
                   </div>
 
+                  {packageErrors.measures === 'incomplete' && (
+                    <Alert tone="danger">
+                      Completá el largo, el ancho y el alto del paquete para continuar.
+                    </Alert>
+                  )}
+                  {packageErrors.measures === 'oversized' && (
+                    <Alert
+                      tone="danger"
+                      title="El paquete supera las medidas máximas permitidas"
+                    >
+                      Uno o más lados superan los {PACKAGE_MAX_SIDE_CM} cm. Si excede estas medidas,
+                      Correo Argentino rechazará el paquete y no podrá ser enviado. Revisá las
+                      dimensiones ingresadas para continuar.
+                    </Alert>
+                  )}
+
                   <Input
                     id="package-weight"
                     label="Peso del paquete (kg)"
                     inputMode="decimal"
                     value={packageWeightKg}
-                    onChange={(event) => { setPackageWeightKg(event.currentTarget.value); setPackageError(null) }}
-                    invalid={packageError !== null}
+                    onChange={(event) => { setPackageWeightKg(event.currentTarget.value); setPackageErrors((e) => ({ ...e, weight: undefined })) }}
+                    invalid={packageErrors.weight !== undefined}
                   />
 
-                  {packageError !== null && (
-                    <Alert tone="danger">{packageError}</Alert>
+                  {packageErrors.weight !== undefined && (
+                    <Alert tone="danger">{packageErrors.weight}</Alert>
                   )}
                 </div>
               </section>
@@ -615,21 +745,29 @@ export function InternationalShipmentPage() {
                   </div>
 
                   <div className={styles.twoColRow}>
-                    <Select
+                    <PhoneCountryCodeSelect
                       id="recipient-phone-code"
                       label="Código de país"
-                      options={PHONE_CODE_OPTIONS}
+                      options={PHONE_COUNTRY_CODES}
                       value={recipientPhoneCode}
-                      onChange={(e) => setRecipientPhoneCode(e.currentTarget.value)}
+                      onChange={setRecipientPhoneCode}
                     />
                     <Input
                       id="recipient-phone"
                       label="Número de teléfono"
                       inputMode="tel"
                       value={recipientPhone}
-                      onChange={(e) => { setRecipientPhone(e.currentTarget.value); clearError('recipientPhone') }}
-                      invalid={step4Errors.has('recipientPhone')}
-                      hint={step4Errors.has('recipientPhone') ? 'Campo requerido' : undefined}
+                      onChange={(e) => {
+                        setRecipientPhone(e.currentTarget.value)
+                        clearError('recipientPhone')
+                        clearError('recipientPhoneFormat')
+                      }}
+                      invalid={step4Errors.has('recipientPhone') || step4Errors.has('recipientPhoneFormat')}
+                      hint={
+                        step4Errors.has('recipientPhone') ? 'Campo requerido' :
+                        step4Errors.has('recipientPhoneFormat') ? 'Solo se permiten números' :
+                        'Solo números, sin espacios ni guiones'
+                      }
                     />
                   </div>
 
@@ -875,10 +1013,31 @@ export function InternationalShipmentPage() {
                   countryLabel: destinoCountryLabel,
                   city: destinoCity || undefined,
                   address: destinoAddressLines[0] || undefined,
+                  shippingService: shippingService ? SHIPPING_SERVICE_LABELS[shippingService] : undefined,
                 }}
                 onPay={
                   currentStep === 'Destino' && runDestinoValidation().size === 0
-                    ? () => navigate('/checkout')
+                    ? () => {
+                        wizardStore.save(buildSnapshot())
+                        const priceArs = shippingService ? SHIPPING_SERVICE_PRICES_ARS[shippingService] : 15000
+                        navigate('/checkout', {
+                          state: {
+                            intl: {
+                              service: shippingService ? SHIPPING_SERVICE_TO_POSTAL[shippingService] : 'EMS_PAQUETERIA',
+                              servicePriceArs: priceArs,
+                              serviceLabel: shippingService ? SHIPPING_SERVICE_LABELS[shippingService] : 'EMS Paquetería',
+                              totalValueUsd,
+                              packageWeightKg: Number(packageWeightKg) || 0,
+                              lengthCm: Number(lengthCm) || 0,
+                              widthCm: Number(widthCm) || 0,
+                              heightCm: Number(heightCm) || 0,
+                              originLabel: selectedRemitente?.razonSocial ?? 'Correo Argentino',
+                              destinationLabel: [destinoCity, selectedCountry?.label].filter(Boolean).join(', '),
+                              orderNumber: destinoOrderNum || undefined,
+                            },
+                          },
+                        })
+                      }
                     : undefined
                 }
               />
@@ -926,10 +1085,19 @@ export function InternationalShipmentPage() {
 
       <AddArticleModal
         isOpen={isArticleModalOpen}
-        onClose={() => setArticleModalOpen(false)}
+        kind={articleKind}
+        onClose={() => { setArticleModalOpen(false); setEditingArticle(null) }}
+        initialValues={editingArticle ?? undefined}
         onSubmit={(input) => {
-          const article: DeclaredArticle = { ...input, id: crypto.randomUUID() }
-          setArticles((current) => [...current, article])
+          if (editingArticle !== null) {
+            setArticles((current) =>
+              current.map((a) => (a.id === editingArticle.id ? { ...input, id: editingArticle.id } : a)),
+            )
+            setEditingArticle(null)
+          } else {
+            const article: DeclaredArticle = { ...input, id: crypto.randomUUID() }
+            setArticles((current) => [...current, article])
+          }
         }}
       />
     </PageContainer>
