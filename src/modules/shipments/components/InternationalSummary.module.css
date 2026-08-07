@@ -15,6 +15,11 @@
   border-radius: 24px; /* Figma: radius 24 */
 }
 
+/* Espacio horizontal para el stepper y margen inferior para los labels absolutos. */
+.stepperWrap {
+  padding: var(--space-6) var(--space-10) 0;
+}
+
 .info {
   display: flex;
   flex-direction: column;
@@ -93,8 +98,8 @@
   align-items: flex-start;
   width: 100%;
   color: var(--text-muted);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
 }
 
 .rowLabel {

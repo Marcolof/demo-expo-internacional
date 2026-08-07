@@ -36,6 +36,7 @@
   --grey-600: #8a8a8a; /* texto deshabilitado / stepper inactivo */
   --grey-650: #79747e; /* footer / títulos de gráficos */
   --grey-700: #49454f; /* text-muted */
+  --grey-740: #474747; /* input-text-default (Figma: Inputs/Text/input-text-default) */
   --grey-800: #212529; /* <small> */
   --grey-900: #191919; /* color-correo-black */
   --white: #ffffff;
@@ -43,6 +44,7 @@
   /* --- Colores de estado ------------------------------------------------- */
   --red-100: #ffd0d0; /* fondo alert-danger / error-msg */
   --red-200: #f5c2c2; /* borde error-msg */
+  --red-500: #f03131; /* icon-color-icon-error (Figma) */
   --red-600: #d32f2f; /* texto error-msg */
   --red-700: #ed143d; /* help-block */
   --blue-focus: #2196f3; /* borde de input enfocado */
@@ -101,6 +103,7 @@
   --space-12: 3rem; /* 48px */
 
   /* --- Radios ----------------------------------------------------------- */
+  --radius-hairline: 1px; /* dropzone de carga masiva */
   --radius-xs: 5px; /* inputs, tab superior */
   --radius-sm: 6px; /* error-msg */
   --radius-md: 10px; /* filas de tabla */
@@ -170,11 +173,15 @@
   --border-strong: var(--correo-yellow);
   --border-focus: var(--blue-focus);
 
+  /* --- Iconos ----------------------------------------------------------- */
+  --icon-enabled: var(--text-muted);
+
   /* --- Estado: error ---------------------------------------------------- */
   --feedback-danger-bg: var(--red-100);
   --feedback-danger-text: var(--red-600);
   --feedback-danger-border: var(--red-200);
   --feedback-danger-strong: var(--red-700);
+  --feedback-danger-icon: var(--red-500);
 
   /* --- Estado: éxito ---------------------------------------------------- */
   --feedback-success-bg: var(--green-100);
@@ -253,15 +260,15 @@
   /* --- Campos de formulario (estilos-inputs.css) ------------------------ */
   --field-height: 38px;
   --field-padding: 10px;
-  --field-font-size: var(--font-size-sm);
+  --field-font-size: var(--font-size-md);
   --field-radius: var(--radius-xs);
-  --field-bg: var(--white);
+  --field-bg: var(--surface-raised);
   --field-border: var(--border-width-thin) solid var(--border-default);
   --field-border-focus: var(--border-width-thin) solid var(--border-focus);
   --field-text: var(--grey-900);
 
   /* Label flotante: reposa centrado y sube al enfocar / tener valor */
-  --field-label-color: var(--correo-grey-700);
+  --field-label-color: var(--grey-740);
   --field-label-color-active: var(--blue-focus);
   --field-label-font-size: var(--font-size-sm);
   --field-label-font-size-floated: var(--font-size-3xs);
@@ -316,6 +323,7 @@
   --modal-width-lg: 800px;
   --modal-width-xl: 600px;
   --modal-max-height-xl: 750px;
+  --modal-footer-actions-max-width: 480px;
 
   /* --- Dropdown --------------------------------------------------------- */
   --dropdown-min-width: 10rem;
@@ -329,6 +337,9 @@
   --badge-radius: var(--radius-pill);
   --badge-font-size: var(--font-size-xs);
   --badge-font-weight: var(--font-weight-semibold);
+
+  /* --- Alert (banner de feedback) ---------------------------------------- */
+  --alert-min-height: var(--space-12);
 
   /* --- Switch (Figma 8040:120132) ---------------------------------------- */
   --switch-color-on: var(--feedback-success-strong);

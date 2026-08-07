@@ -1,0 +1,65 @@
+/* Input numérico con controles spinner (chevrones arriba/abajo).
+ * Los chevrones permiten incrementar/decrementar, y también se puede escribir
+ * directamente. Oculta los spinners nativos como en Input.module.css. */
+
+.container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.input {
+  /* Oculta los controles nativos del navegador (igual que Input.module.css) */
+  appearance: textfield;
+  -moz-appearance: textfield;
+  width: 100%;
+  padding-right: calc(var(--field-padding) + 26px);
+}
+
+.input::-webkit-outer-spin-button,
+.input::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+/* Contenedor de botones spinner, posicionado sobre el input */
+.spinnerButtons {
+  position: absolute;
+  right: var(--field-padding);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  pointer-events: auto;
+}
+
+.spinButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 12px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 10px;
+  line-height: 1;
+  transition: color var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.spinButton:hover:not(:disabled) {
+  color: var(--text-primary);
+}
+
+.spinButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}

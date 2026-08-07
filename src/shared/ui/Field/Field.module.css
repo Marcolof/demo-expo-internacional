@@ -80,7 +80,9 @@
   color: var(--field-text);
   font-family: var(--font-family-base);
   font-size: var(--field-font-size);
-  line-height: var(--line-height-snug);
+  font-weight: var(--font-weight-regular);
+  line-height: 1;
+  letter-spacing: 0;
   outline: none;
   transition: border-color var(--transition-fast);
 }
@@ -115,9 +117,13 @@
   resize: none;
 }
 
-.controlInvalid,
-.controlInvalid:focus {
+/* `.group` sube la especificidad para ganar al shorthand `border` de `.control`.
+ * `box-shadow: inset` cubre Chrome/Windows donde `border-color` en `<select>`
+ * es ignorado por el renderizador nativo, incluso con `appearance: none`. */
+.group .controlInvalid,
+.group .controlInvalid:focus {
   border-color: var(--feedback-danger-strong);
+  box-shadow: inset 0 0 0 1px var(--feedback-danger-strong);
 }
 
 /* --- Mensajes ----------------------------------------------------------- */
