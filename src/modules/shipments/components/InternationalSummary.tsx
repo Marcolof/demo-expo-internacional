@@ -194,7 +194,7 @@ export function InternationalSummary({
   const unlockedIndices =
     unlockedSteps !== undefined
       ? new Set(
-          INTERNATIONAL_STEPS.map((_, i) => i).filter((i) =>
+        INTERNATIONAL_STEPS.map((_, i) => i).filter((i) =>
             unlockedSteps.has(INTERNATIONAL_STEPS[i]!),
           ),
         )
