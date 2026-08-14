@@ -8,6 +8,8 @@ type NativeInputProps = Omit<
   'className' | 'id' | 'aria-describedby'
 >
 
+export type FieldControlShape = 'default' | 'pill'
+
 export interface InputProps extends NativeInputProps {
   readonly id: string
   readonly label: string
@@ -21,6 +23,8 @@ export interface InputProps extends NativeInputProps {
   readonly invalid?: boolean
   /** Texto del tooltip (`data-bs-title` en el original). */
   readonly tooltip?: string
+  /** `pill` ≈ border-radius 24px (filtros Mis envíos / Figma). */
+  readonly shape?: FieldControlShape
   readonly className?: string
 }
 
@@ -38,6 +42,7 @@ export function Input({
   hint,
   invalid = false,
   tooltip,
+  shape = 'default',
   className,
   placeholder,
   ...rest
@@ -56,6 +61,7 @@ export function Input({
         aria-describedby={fieldDescribedBy(id, { hasHint, hasError })}
         className={cn(
           fieldControlClasses.control,
+          shape === 'pill' && fieldControlClasses.controlPill,
           styles.input,
           showInvalid && fieldControlClasses.controlInvalid,
         )}

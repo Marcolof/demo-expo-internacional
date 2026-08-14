@@ -48,6 +48,7 @@
   --red-600: #d32f2f; /* texto error-msg */
   --red-700: #ed143d; /* help-block */
   --blue-focus: #2196f3; /* borde de input enfocado */
+  --blue-link-accent: #2562ea; /* Text/Link/link-text-accent (Figma) */
   --green-700: #0f5132;
   --green-600: #2a8a54; /* Switch activado (Figma 8040:120132) */
   --green-100: #d1e7dd;
@@ -98,12 +99,14 @@
   --space-4: 1rem; /* 16px */
   --space-5: 1.25rem; /* 20px */
   --space-6: 1.5rem; /* 24px */
+  --space-7: 1.75rem; /* 28px — Figma spacing-7 */
   --space-8: 2rem; /* 32px */
   --space-10: 2.5rem; /* 40px */
   --space-12: 3rem; /* 48px */
 
   /* --- Radios ----------------------------------------------------------- */
   --radius-hairline: 1px; /* dropzone de carga masiva */
+  --radius-2xs: 2px; /* tooltip Figma */
   --radius-xs: 5px; /* inputs, tab superior */
   --radius-sm: 6px; /* error-msg */
   --radius-md: 10px; /* filas de tabla */
@@ -136,6 +139,28 @@
   }
 }
 
+  /*
+   * --- Viewports de QA (targets oficiales) --------------------------------
+   * Mobile  360×800  |  Tablet  768×1024  |  Desktop  1366×768
+   *
+   * Breakpoints de layout: mobile-first.
+   * CSS no permite `var()` dentro de `@media` — usar el número literal
+   * idéntico al token (p. ej. `min-width: 768px` ↔ `--bp-tablet`).
+   * Validar con: `npm run check:breakpoints`
+   */
+  --viewport-mobile-width: 360px;
+  --viewport-mobile-height: 800px;
+  --viewport-tablet-width: 768px;
+  --viewport-tablet-height: 1024px;
+  --viewport-desktop-width: 1366px;
+  --viewport-desktop-height: 768px;
+
+  --bp-mobile: 360px;
+  --bp-tablet: 768px;
+  --bp-desktop: 1366px;
+  --bp-mobile-max: 767.98px;
+  --bp-tablet-max: 1365.98px;
+
   /* --- Capas (z-index) -------------------------------------------------- */
   --z-base: 0;
   --z-sidebar-rail: 10;
@@ -144,6 +169,7 @@
   --z-modal-backdrop: 40;
   --z-modal: 50;
   --z-toast: 60;
+  --z-tooltip: 62;
   --z-chat-bubble: 65;
   --z-demo-toolbar: 70;
 
@@ -171,6 +197,7 @@
   --text-subtle: var(--grey-650);
   --text-disabled: var(--grey-600);
   --text-link: var(--correo-blue);
+  --text-link-accent: var(--blue-link-accent);
   --text-on-brand: var(--correo-blue);
   --text-inverse: var(--white);
 
@@ -269,6 +296,7 @@
   --field-padding: 10px;
   --field-font-size: var(--font-size-md);
   --field-radius: var(--radius-xs);
+  --field-radius-pill: var(--radius-xl); /* ~24px Figma filters Mis envíos */
   --field-bg: var(--surface-raised);
   --field-border: var(--border-width-thin) solid var(--border-default);
   --field-border-focus: var(--border-width-thin) solid var(--border-focus);
@@ -315,6 +343,9 @@
   --table-row-gap: 5px;
   --table-radius: var(--radius-md);
   --table-row-shadow: var(--shadow-row);
+  /* Sin spread: `filter: drop-shadow()` no acepta el 4º valor de box-shadow.
+   * Usar en filas `<tr>` para sombra continua (evita rayas entre celdas). */
+  --table-row-drop-shadow: drop-shadow(0 2px 2px rgba(195, 195, 195, 0.25));
   --table-row-hover-bg: var(--grey-200);
   --table-header-font-weight: var(--font-weight-semibold);
   --table-header-small-size: var(--font-size-xs);
@@ -331,6 +362,13 @@
   --modal-width-xl: 600px;
   --modal-max-height-xl: 750px;
   --modal-footer-actions-max-width: 480px;
+  --modal-top-stripe-height: var(--space-12); /* 48px */
+  --modal-content-padding-y-start: var(--space-4);
+  --modal-content-padding-x: var(--space-7);
+  --modal-content-padding-y-end: var(--space-6);
+  --modal-content-gap: var(--space-6);
+  --modal-confirm-btn-max-width: 21.25rem; /* 340px */
+  --modal-confirm-btn-height: 2.5rem; /* 40px */
 
   /* --- Dropdown --------------------------------------------------------- */
   --dropdown-min-width: 10rem;
@@ -356,4 +394,16 @@
   --summary-value-size: var(--font-size-sm);
   --summary-edit-size: var(--font-size-xs);
   --summary-padding: var(--space-8);
+
+  /* --- Tooltip ---------------------------------------------------------- */
+  --tooltip-max-width: 11.25rem; /* 180px Figma */
+  --tooltip-padding-y: 0.375rem; /* 6px */
+  --tooltip-padding-x: var(--space-2); /* 8px */
+  --tooltip-radius: var(--radius-2xs);
+  --tooltip-gap: 0.625rem; /* 10px */
+  --tooltip-bg: var(--grey-900);
+  --tooltip-text: var(--white);
+  --tooltip-font-size: var(--font-size-xs);
+  --tooltip-icon-size: var(--space-5); /* 20px trigger; info icon 24 in assets */
+  --tooltip-icon-color: var(--color-accent);
 }

@@ -7,6 +7,7 @@
 export { NewShipmentPage } from './pages/NewShipmentPage'
 export { InternationalShipmentPage } from './pages/InternationalShipmentPage'
 export { InternationalBulkShipmentPage } from './pages/InternationalBulkShipmentPage'
+export { FacturaEPage } from './pages/FacturaEPage'
 export { CheckoutPage } from './pages/CheckoutPage'
 export { PropuestaMisEnviosPage } from './pages/PropuestaMisEnviosPage'
 

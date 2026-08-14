@@ -6,6 +6,7 @@ export interface DeclaredArticle {
   readonly description: string
   readonly harmonizedCode: string
   readonly quantity: number
+  readonly unitOfMeasure: string
   readonly unitPriceUsd: number
   readonly unitWeightKg: number
 }

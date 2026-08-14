@@ -1,9 +1,10 @@
+import type { ReactNode } from 'react'
 import { cn } from '@/shared/lib/cn'
 import styles from './Checkbox.module.css'
 
 export interface CheckboxProps {
   readonly id: string
-  readonly label: string
+  readonly label: ReactNode
   readonly checked: boolean
   readonly onChange: (checked: boolean) => void
   readonly disabled?: boolean
