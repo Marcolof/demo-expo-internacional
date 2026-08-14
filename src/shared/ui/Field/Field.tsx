@@ -84,6 +84,7 @@ export function Field({
 /** Clases del control, para que Input/Select/Textarea compartan el mismo look. */
 export const fieldControlClasses = {
   control: styles.control,
+  controlPill: styles.controlPill,
   controlTextarea: styles.controlTextarea,
   controlInvalid: styles.controlInvalid,
 } as const

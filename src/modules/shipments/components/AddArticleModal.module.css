@@ -81,6 +81,30 @@
   margin-top: calc(var(--space-2) * -1);
 }
 
+.alertSlot {
+  margin-top: var(--space-2);
+}
+
+.alertWithTip {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.qtyRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+/* --bp-mobile-max (767.98px) */
+@media (max-width: 767.98px) {
+  .qtyRow {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* --- Totales calculados --------------------------------------------------- */
 
 .totals {
