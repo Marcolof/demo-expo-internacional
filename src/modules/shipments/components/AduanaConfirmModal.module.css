@@ -1,93 +1,50 @@
-/*
- * Modal de confirmación de Aduana — Figma 8069:124678.
- * Medidas exactas del spec:
- *   Franja superior:  600×48px, radius 25px arriba
- *   Sección texto:    padding 16px / 28px / 24px / 28px, gap 24px
- *   Sección botones:  padding 16px / 28px / 28px / 28px, gap 16px
- *   Botones:          234×40px c/u
- *
- * El Modal base tiene body padding: 16px 24px. El .wrapper usa márgenes
- * negativos para romper ese padding y tomar control total.
- */
-
-/* Rompe el padding del Modal.body (--space-4 vertical, --space-6 horizontal) */
-.wrapper {
-  margin: calc(-1 * var(--space-4)) calc(-1 * var(--space-6));
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* Franja superior: 48px, X de cierre alineada a la derecha */
-.topStripe {
-  height: 48px;
-  flex-shrink: 0;
-  border-radius: var(--modal-radius) var(--modal-radius) 0 0;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 0 16px;
-}
-
-/* Sección de título + cuerpo */
-.content {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  padding: 16px 28px 24px 28px;
-  text-align: center;
-}
-
-.title {
-  margin: 0;
-  font-family: var(--font-family-base);
-  font-size: 24px;
-  font-weight: var(--font-weight-bold);
-  color: var(--text-primary);
-  line-height: 1;
-  letter-spacing: 0;
-  text-align: center;
-}
-
 .body {
+  text-align: center;
+}
+
+.copy {
   margin: 0;
   font-size: var(--font-size-base);
-  line-height: 1.6;
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
   color: var(--text-secondary);
 }
 
-/* Botón de cierre: dentro de la franja superior, alineado a la derecha vía flex */
-.closeBtn {
-  width: 2rem;
-  height: 2rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-full);
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: var(--font-size-lg);
-  line-height: 1;
-  cursor: pointer;
+.footer {
+  padding-top: var(--space-2);
 }
 
-.closeBtn:hover {
-  background-color: var(--surface-sunken);
-  color: var(--text-primary);
-}
-
-/* Sección de botones */
 .buttons {
   display: flex;
   flex-direction: row;
-  gap: 16px;
-  padding: 16px 28px 28px 28px;
+  gap: var(--space-4);
+  width: 100%;
 }
 
-/* Cada botón ocupa el espacio disponible en partes iguales */
-.buttons > * {
+.buttonCol {
   flex: 1;
-  /* Altura fija del spec: 40px — sobreescribe el min-height del botón */
-  min-height: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.buttonCol > button {
+  width: 100%;
+  min-height: 2.5rem;
+}
+
+.supporting {
+  color: var(--text-subtle);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  text-align: center;
+}
+
+/* --bp-mobile-max (767.98px) */
+@media (max-width: 767.98px) {
+  .buttons {
+    flex-direction: column;
+  }
 }
