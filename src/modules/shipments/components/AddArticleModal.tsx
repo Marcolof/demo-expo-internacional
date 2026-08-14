@@ -15,6 +15,13 @@ import {
   VUCE_URL,
 } from '../constants/summary-detail.constants'
 import {
+  EXPORT_DUTIES_USD,
+  PACKAGE_MAX_WEIGHT_KG,
+  PACKAGE_MAX_WEIGHT_LABEL,
+  PACKAGE_MAX_WEIGHT_TOOLTIP,
+  VUCE_URL,
+} from '../constants/summary-detail.constants'
+import {
   DEFAULT_MEASURE_UNIT,
   MEASURE_UNIT_OPTIONS,
 } from '../constants/measure-units.constants'
@@ -254,6 +261,7 @@ export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', i
             aria-expanded={helpOpen}
             onClick={() => setHelpOpen((open) => !open)}
           >
+            <HelpInfoIcon />
             ¿Dónde encuentro este código?
             <DisclosureIcon open={helpOpen} />
           </button>
@@ -286,6 +294,7 @@ export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', i
             value={form.unitOfMeasure}
             onChange={(event) => setField('unitOfMeasure')(event.currentTarget.value)}
             invalid={showInvalidBorders && errors.unitOfMeasure !== undefined}
+            hint="Ej: Remeras = Metro cuadrado"
             hint="Ej: Remeras = Metro cuadrado"
           />
           <NumberInput
@@ -328,12 +337,23 @@ export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', i
             <span className={styles.totalValue}>{formatUsd(EXPORT_DUTIES_USD)}</span>
           </div>
           <div className={styles.totalRow}>
+            <span className={styles.totalLabel}>Derecho de Exportación</span>
+            <span className={styles.totalValue}>{formatUsd(EXPORT_DUTIES_USD)}</span>
+          </div>
+          <div className={styles.totalRow}>
             <span className={styles.totalLabel}>Precio total en USD</span>
             <span className={styles.totalValue}>{formatUsd(totalPriceUsd)}</span>
           </div>
           <div className={styles.totalRow}>
             <span className={styles.totalLabel}>Peso total</span>
             <span className={styles.totalValue}>{formatWeightKg(totalWeightKg)}</span>
+          </div>
+          <div className={styles.totalRow}>
+            <span className={styles.totalLabelWithTip}>
+              <InfoTooltip content={PACKAGE_MAX_WEIGHT_TOOLTIP} />
+              <span>{PACKAGE_MAX_WEIGHT_LABEL}</span>
+            </span>
+            <span className={styles.totalValue}>{PACKAGE_MAX_WEIGHT_KG}kg</span>
           </div>
           <div className={styles.totalRow}>
             <span className={styles.totalLabelWithTip}>
