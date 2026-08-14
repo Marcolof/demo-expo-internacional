@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PageContainer } from '@/shared/layout/PageContainer'
-import { formatUsd } from '@/shared/lib/formatCurrency'
-import { formatCuitMask } from '@/shared/lib/validators'
+import { useScrollToTop } from '@/shared/hooks/useScrollToTop'
+import { formatCuitMask, isMoneyAmount } from '@/shared/lib/validators'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
 import { COUNTRIES } from '@/shared/lib/countries'
@@ -31,12 +31,27 @@ const SHIPPING_SERVICE_LABELS: Record<string, string> = {
   EMS_DOCUMENTACION: 'EMS Documentación',
 }
 
+function sanitizeMoneyInput(raw: string): string {
+  const cleaned = raw.replace(/[^\d.,]/g, '')
+  const sep = cleaned.includes(',') ? ',' : cleaned.includes('.') ? '.' : null
+  if (sep === null) return cleaned
+  const [intPart, ...rest] = cleaned.split(sep)
+  const decimals = rest.join('').replace(/[^\d]/g, '').slice(0, 2)
+  return decimals.length > 0 ? `${intPart}${sep}${decimals}` : intPart + (cleaned.endsWith(sep) ? sep : '')
+}
+
+function parseMoneyInput(raw: string): number {
+  const n = Number(raw.replace(',', '.'))
+  return Number.isFinite(n) ? n : 0
+}
+
 /**
  * Paso intermedio Factura E (flujo comercial). Datos mock + filas agregadas
  * en memoria de sesión (sin persistencia).
  */
 export function FacturaEPage() {
   const navigate = useNavigate()
+  useScrollToTop()
   const snap = wizardStore.get()
   const [cuit, setCuit] = useState('30-12345678-0')
   const [rows, setRows] = useState<readonly FacturaERow[]>(() => {
@@ -58,16 +73,33 @@ export function FacturaEPage() {
     }
     return base
   })
+  const [montoDrafts, setMontoDrafts] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      (snap !== null
+        ? [
+            {
+              id: 'fe-current',
+              montoUsd:
+                snap.articles.reduce((sum, a) => sum + a.quantity * a.unitPriceUsd, 0) || 1500,
+            },
+            ...FACTURA_E_SEED,
+          ]
+        : FACTURA_E_SEED
+      ).map((row) => [row.id, row.montoUsd.toFixed(2).replace('.', ',')]),
+    ),
+  )
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null)
 
   const allFacturasComplete = rows.every((row) => row.facturaE.trim() !== '')
+  const allMontosValid = rows.every((row) => isMoneyAmount(montoDrafts[row.id] ?? '', false) === null)
 
   const addRow = () => {
     const nextIndex = rows.length + 1
+    const id = `fe-new-${Date.now()}`
     setRows((current) => [
       ...current,
       {
-        id: `fe-new-${Date.now()}`,
+        id,
         destinatario: `Nuevo destinatario ${nextIndex}`,
         destino: 'Pendiente',
         nOrden: `ORD-${String(10049 + nextIndex)}`,
@@ -75,14 +107,17 @@ export function FacturaEPage() {
         montoUsd: 0,
       },
     ])
+    setMontoDrafts((current) => ({ ...current, [id]: '0,00' }))
   }
 
   const goCheckout = () => {
-    if (!allFacturasComplete) return
+    if (!allFacturasComplete || !allMontosValid) return
     const service = snap?.shippingService ?? 'EMS'
     const priceArs = SHIPPING_SERVICE_PRICES_ARS[service] ?? 15000
-    const totalValueUsd =
-      snap?.articles.reduce((sum, a) => sum + a.quantity * a.unitPriceUsd, 0) ?? 1500
+    const totalValueUsd = rows.reduce((sum, row) => {
+      const draft = montoDrafts[row.id]
+      return sum + (draft !== undefined ? parseMoneyInput(draft) : row.montoUsd)
+    }, 0)
     const countryLabel = COUNTRIES.find((c) => c.value === snap?.country)?.label
 
     navigate('/checkout', {
@@ -123,6 +158,12 @@ export function FacturaEPage() {
           </div>
         </header>
 
+        <div className={styles.toolbar}>
+          <Button variant="secondary" onClick={addRow}>
+            Agregar ítem
+          </Button>
+        </div>
+
         <div className={styles.tableWrap}>
           <table className={styles.table}>
             <thead>
@@ -136,72 +177,98 @@ export function FacturaEPage() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => (
-                <tr
-                  key={row.id}
-                  className={`${styles.tableRow} ${menuOpenId === row.id ? styles.tableRowMenuOpen : ''}`}
-                >
-                  <td className={styles.tdMenu}>
-                    <div className={styles.menuWrap}>
-                      <button
-                        type="button"
-                        className={styles.kebab}
-                        aria-label={`Acciones ${row.destinatario}`}
-                        onClick={() =>
-                          setMenuOpenId((current) => (current === row.id ? null : row.id))
-                        }
-                      >
-                        ⋮
-                      </button>
-                      {menuOpenId === row.id && (
-                        <div className={styles.menu}>
-                          <button
-                            type="button"
-                            className={styles.menuItem}
-                            onClick={() => setMenuOpenId(null)}
-                          >
-                            Ver detalle
-                          </button>
-                          <button
-                            type="button"
-                            className={styles.menuItem}
-                            onClick={() => {
-                              setRows((current) => current.filter((item) => item.id !== row.id))
-                              setMenuOpenId(null)
-                            }}
-                          >
-                            Quitar
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                  <td>{row.destinatario}</td>
-                  <td>{row.destino}</td>
-                  <td>{row.nOrden}</td>
-                  <td>
-                    <input
-                      className={styles.facturaInput}
-                      aria-label={`Factura E ${row.destinatario}`}
-                      value={row.facturaE}
-                      onChange={(event) => {
-                        const value = event.currentTarget.value
-                        setRows((current) =>
-                          current.map((item) =>
-                            item.id === row.id ? { ...item, facturaE: value } : item,
-                          ),
-                        )
-                      }}
-                    />
-                  </td>
-                  <td>
-                    <span className={styles.monto}>
-                      <span className={styles.montoCurrency}>USD</span>
-                      <span>{formatUsd(row.montoUsd).replace(/^USD\s*/, '')}</span>
-                    </span>
-                  </td>
-                </tr>
-              ))}
+              {rows.map((row) => {
+                const montoRaw = montoDrafts[row.id] ?? String(row.montoUsd)
+                const montoError = isMoneyAmount(montoRaw, false)
+                return (
+                  <tr
+                    key={row.id}
+                    className={`${styles.tableRow} ${menuOpenId === row.id ? styles.tableRowMenuOpen : ''}`}
+                  >
+                    <td className={styles.tdMenu}>
+                      <div className={styles.menuWrap}>
+                        <button
+                          type="button"
+                          className={styles.kebab}
+                          aria-label={`Acciones ${row.destinatario}`}
+                          onClick={() =>
+                            setMenuOpenId((current) => (current === row.id ? null : row.id))
+                          }
+                        >
+                          ⋮
+                        </button>
+                        {menuOpenId === row.id && (
+                          <div className={styles.menu}>
+                            <button
+                              type="button"
+                              className={styles.menuItem}
+                              onClick={() => setMenuOpenId(null)}
+                            >
+                              Ver detalle
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.menuItem}
+                              onClick={() => {
+                                setRows((current) => current.filter((item) => item.id !== row.id))
+                                setMontoDrafts((current) => {
+                                  const next = { ...current }
+                                  delete next[row.id]
+                                  return next
+                                })
+                                setMenuOpenId(null)
+                              }}
+                            >
+                              Quitar
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td>{row.destinatario}</td>
+                    <td>{row.destino}</td>
+                    <td>{row.nOrden}</td>
+                    <td>
+                      <input
+                        className={styles.facturaInput}
+                        aria-label={`Factura E ${row.destinatario}`}
+                        value={row.facturaE}
+                        onChange={(event) => {
+                          const value = event.currentTarget.value
+                          setRows((current) =>
+                            current.map((item) =>
+                              item.id === row.id ? { ...item, facturaE: value } : item,
+                            ),
+                          )
+                        }}
+                      />
+                    </td>
+                    <td>
+                      <label className={styles.montoField}>
+                        <span className={styles.montoCurrency}>USD</span>
+                        <input
+                          className={`${styles.montoInput} ${montoError !== null ? styles.montoInvalid : ''}`}
+                          aria-label={`Monto USD ${row.destinatario}`}
+                          inputMode="decimal"
+                          value={montoRaw}
+                          onChange={(event) => {
+                            const value = sanitizeMoneyInput(event.currentTarget.value)
+                            setMontoDrafts((current) => ({ ...current, [row.id]: value }))
+                            if (isMoneyAmount(value, false) === null) {
+                              const parsed = parseMoneyInput(value)
+                              setRows((current) =>
+                                current.map((item) =>
+                                  item.id === row.id ? { ...item, montoUsd: parsed } : item,
+                                ),
+                              )
+                            }
+                          }}
+                        />
+                      </label>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
@@ -217,7 +284,11 @@ export function FacturaEPage() {
             <Button variant="secondary" disabled>
               Guardar
             </Button>
-            <Button variant="primary" disabled={!allFacturasComplete} onClick={goCheckout}>
+            <Button
+              variant="primary"
+              disabled={!allFacturasComplete || !allMontosValid}
+              onClick={goCheckout}
+            >
               Pagar
             </Button>
           </div>
