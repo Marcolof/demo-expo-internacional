@@ -15,6 +15,13 @@ import {
   VUCE_URL,
 } from '../constants/summary-detail.constants'
 import {
+  EXPORT_DUTIES_USD,
+  PACKAGE_MAX_WEIGHT_KG,
+  PACKAGE_MAX_WEIGHT_LABEL,
+  PACKAGE_MAX_WEIGHT_TOOLTIP,
+  VUCE_URL,
+} from '../constants/summary-detail.constants'
+import {
   DEFAULT_MEASURE_UNIT,
   MEASURE_UNIT_OPTIONS,
 } from '../constants/measure-units.constants'
@@ -114,19 +121,20 @@ function DisclosureIcon({ open }: { readonly open: boolean }) {
   )
 }
 
-function HelpInfoIcon() {
+/** Ícono de la leyenda informativa (izquierda del disclaimer), no tooltip. */
+function LegendInfoIcon() {
   return (
     <svg
-      className={styles.helpInfoIcon}
-      width="24"
-      height="28"
-      viewBox="0 0 24 28"
+      className={styles.legendIcon}
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
       fill="none"
       aria-hidden="true"
     >
-      <circle cx="12" cy="14" r="10" stroke="currentColor" strokeWidth="1.5" />
+      <circle cx="10" cy="10" r="9" stroke="currentColor" strokeWidth="1.5" />
       <path
-        d="M12 12.5v6M12 9.5h.01"
+        d="M10 9v5M10 6.5h.01"
         stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
@@ -270,13 +278,9 @@ export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', i
               <p>
                 Ejemplo: buscá &apos;remera&apos; → seleccioná «T-SHIRTS» Y CAMISETAS, DE PUNTO (61.09).
               </p>
-              <div className={styles.alertSlot}>
-                <Alert tone="info">
-                  <span className={styles.alertWithTip}>
-                    {CLASSIFICATION_DISCLAIMER}
-                    <InfoTooltip content={CLASSIFICATION_DISCLAIMER} />
-                  </span>
-                </Alert>
+              <div className={styles.legend} role="note">
+                <LegendInfoIcon />
+                <p className={styles.legendText}>{CLASSIFICATION_DISCLAIMER}</p>
               </div>
             </div>
           )}
@@ -290,6 +294,7 @@ export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', i
             value={form.unitOfMeasure}
             onChange={(event) => setField('unitOfMeasure')(event.currentTarget.value)}
             invalid={showInvalidBorders && errors.unitOfMeasure !== undefined}
+            hint="Ej: Remeras = Metro cuadrado"
             hint="Ej: Remeras = Metro cuadrado"
           />
           <NumberInput
@@ -332,12 +337,23 @@ export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', i
             <span className={styles.totalValue}>{formatUsd(EXPORT_DUTIES_USD)}</span>
           </div>
           <div className={styles.totalRow}>
+            <span className={styles.totalLabel}>Derecho de Exportación</span>
+            <span className={styles.totalValue}>{formatUsd(EXPORT_DUTIES_USD)}</span>
+          </div>
+          <div className={styles.totalRow}>
             <span className={styles.totalLabel}>Precio total en USD</span>
             <span className={styles.totalValue}>{formatUsd(totalPriceUsd)}</span>
           </div>
           <div className={styles.totalRow}>
             <span className={styles.totalLabel}>Peso total</span>
             <span className={styles.totalValue}>{formatWeightKg(totalWeightKg)}</span>
+          </div>
+          <div className={styles.totalRow}>
+            <span className={styles.totalLabelWithTip}>
+              <InfoTooltip content={PACKAGE_MAX_WEIGHT_TOOLTIP} />
+              <span>{PACKAGE_MAX_WEIGHT_LABEL}</span>
+            </span>
+            <span className={styles.totalValue}>{PACKAGE_MAX_WEIGHT_KG}kg</span>
           </div>
           <div className={styles.totalRow}>
             <span className={styles.totalLabelWithTip}>
