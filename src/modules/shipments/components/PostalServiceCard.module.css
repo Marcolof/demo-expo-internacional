@@ -43,7 +43,8 @@
 .body {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  align-items: flex-start;
+  gap: var(--space-1);
   flex: 1 1 auto;
   min-width: 0;
 }
@@ -65,9 +66,10 @@
   color: var(--feedback-danger-strong);
 }
 
+/* Tercera línea: precio debajo de título y descripción (no a la derecha). */
 .trailing {
-  flex-shrink: 0;
   color: var(--text-primary);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-snug);
 }

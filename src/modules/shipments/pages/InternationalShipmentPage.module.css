@@ -158,6 +158,15 @@
   font-weight: var(--font-weight-semibold);
 }
 
+/* Separación extra vs filas de totales (spacing-2): checkbox más abajo (Figma) */
+.declarationAccept {
+  margin-top: var(--space-3);
+}
+
+.declarationAccept > * {
+  gap: var(--space-3);
+}
+
 /* --- Paso Paquete: medidas ------------------------------------------------ */
 
 .measuresRow {
@@ -376,10 +385,9 @@
   gap: var(--space-3);
 }
 
-/* Precio de servicio postal. */
+/* Precio de servicio postal (tercera línea de la card). */
 .servicePrice {
   display: block;
-  margin-top: var(--space-1);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
@@ -393,7 +401,23 @@
 }
 
 .sinCosto {
-  color: var(--color-accent);
+  color: var(--text-primary);
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
+}
+
+.costoInline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+}
+
+.costoValue {
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
 }

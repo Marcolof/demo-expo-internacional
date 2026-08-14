@@ -41,15 +41,21 @@
 .disclosureTrigger {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: 10px;
   align-self: flex-start;
-  padding: 0;
+  padding: var(--space-2) var(--space-3);
   border: none;
-  background: none;
-  color: var(--text-link);
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  color: var(--field-label-color);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   cursor: pointer;
+}
+
+.helpInfoIcon {
+  flex-shrink: 0;
+  color: var(--color-brand-contrast);
 }
 
 .disclosureIcon {
@@ -57,13 +63,14 @@
   transition: transform var(--transition-base);
 }
 
-/* Texto plano sobre el fondo del modal, sin caja: la única jerarquía la dan
- * los saltos de párrafo (Figma 10116:13975, no lleva superficie propia). */
 .disclosurePanel {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  color: var(--text-muted);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  color: var(--field-label-color);
   font-size: var(--font-size-sm);
   line-height: var(--line-height-normal);
 }
@@ -128,6 +135,14 @@
 
 .totalLabel {
   flex: 1 1 0;
+  min-width: 0;
+}
+
+.totalLabelWithTip {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  gap: var(--space-2);
   min-width: 0;
 }
 
