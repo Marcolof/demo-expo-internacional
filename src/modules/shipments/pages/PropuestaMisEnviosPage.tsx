@@ -19,6 +19,8 @@ type EnvioScope = 'nacional' | 'internacional'
 interface EnvioRow {
   readonly id: string
   readonly scope: EnvioScope
+  /** Si false, no se lista (p. ej. seed oculto). Default true. */
+  readonly show?: boolean
   readonly integracion: string
   readonly nOrden: string
   readonly origen: string
@@ -75,6 +77,8 @@ const ENVIOS_PENDIENTES_SEED: readonly EnvioRow[] = [
     detalles: '2kg – 15x12x10cm',
     usuario: 'Santiago',
     estado: 'Validado',
+    commercial: true,
+    show: true,
   },
   {
     id: 'E-002',
@@ -87,6 +91,7 @@ const ENVIOS_PENDIENTES_SEED: readonly EnvioRow[] = [
     detalles: '2kg – 15x12x10cm',
     usuario: 'Santiago',
     estado: 'Validado',
+    show: true,
   },
   {
     id: 'E-003',
@@ -99,6 +104,7 @@ const ENVIOS_PENDIENTES_SEED: readonly EnvioRow[] = [
     detalles: '2kg – 15x12x10cm',
     usuario: 'Santiago',
     estado: 'Validado',
+    show: true,
   },
   {
     id: 'E-004',
@@ -111,6 +117,7 @@ const ENVIOS_PENDIENTES_SEED: readonly EnvioRow[] = [
     detalles: '2kg – 15x12x10cm',
     usuario: 'Santiago',
     estado: 'Validado',
+    show: true,
   },
 ]
 
@@ -130,6 +137,7 @@ const ENVIOS_PAGADOS_SEED: readonly EnvioRow[] = [
     fecha: '27/03/2026',
     seguimiento: '00005512558336L3812C601',
     direccion: 'Getreidegasse 55677',
+    show: true,
   },
   {
     id: 'P-002',
@@ -145,6 +153,7 @@ const ENVIOS_PAGADOS_SEED: readonly EnvioRow[] = [
     fecha: '26/03/2026',
     seguimiento: '00005512558336N99001',
     direccion: 'Av. Mitre 1200',
+    show: true,
   },
   {
     id: 'P-003',
@@ -160,6 +169,7 @@ const ENVIOS_PAGADOS_SEED: readonly EnvioRow[] = [
     fecha: '25/03/2026',
     seguimiento: '00005512558336I44002',
     direccion: 'Calle 18 de Julio 900',
+    show: true,
   },
 ]
 
@@ -230,6 +240,7 @@ function CopyIcon() {
 export function PropuestaMisEnviosPage() {
   const navigate = useNavigate()
   useLocation()
+  const [listScope, setListScope] = useState<EnvioScope>('internacional')
   const [activeTab, setActiveTab] = useState<EnvioTab>('pendientes')
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set())
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
@@ -254,17 +265,31 @@ export function PropuestaMisEnviosPage() {
   }, [])
 
   const pendientesRows = useMemo(
-    () => [...sessionRows, ...ENVIOS_PENDIENTES_SEED],
-    [sessionRows],
+    () =>
+      [...sessionRows, ...ENVIOS_PENDIENTES_SEED].filter(
+        (row) => row.show !== false && row.scope === listScope,
+      ),
+    [sessionRows, listScope],
   )
 
-  const [visiblePendientes, setVisiblePendientes] = useState<readonly EnvioRow[]>(() => [
-    ...shipmentsStore.get().map(sessionToRow),
-    ...ENVIOS_PENDIENTES_SEED,
-  ])
-  const [visiblePagados, setVisiblePagados] = useState<readonly EnvioRow[]>(ENVIOS_PAGADOS_SEED)
+  const [visiblePendientes, setVisiblePendientes] = useState<readonly EnvioRow[]>(() =>
+    [...shipmentsStore.get().map(sessionToRow), ...ENVIOS_PENDIENTES_SEED].filter(
+      (row) => row.show !== false && row.scope === 'internacional',
+    ),
+  )
+  const [visiblePagados, setVisiblePagados] = useState<readonly EnvioRow[]>(() =>
+    ENVIOS_PAGADOS_SEED.filter((row) => row.show !== false && row.scope === 'internacional'),
+  )
 
   const visibleRows = activeTab === 'pagados' ? visiblePagados : visiblePendientes
+
+  useEffect(() => {
+    const filterByScope = (rows: readonly EnvioRow[]) =>
+      rows.filter((row) => row.show !== false && row.scope === listScope)
+    setVisiblePendientes(filterByScope([...sessionRows, ...ENVIOS_PENDIENTES_SEED]))
+    setVisiblePagados(filterByScope(ENVIOS_PAGADOS_SEED))
+    setSelectedIds(new Set())
+  }, [listScope, sessionRows])
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -322,9 +347,9 @@ export function PropuestaMisEnviosPage() {
           <h1 className={styles.pageTitle}>Mis envíos</h1>
           <div className={styles.scopeSwitchWrap}>
             <ScopeSwitch
-              value="internacional"
+              value={listScope}
               onChange={(scope) => {
-                if (scope === 'nacional') navigate('/')
+                setListScope(scope)
               }}
             />
           </div>
