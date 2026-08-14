@@ -1,0 +1,217 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+  min-height: 100%;
+  padding: var(--space-6) var(--space-8);
+  box-sizing: border-box;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-width: 36rem;
+}
+
+.title {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+}
+
+.hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+
+.cuitField {
+  max-width: 16rem;
+  margin-top: var(--space-2);
+  --field-label-backdrop: var(--field-label-backdrop-on-page);
+}
+
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-2);
+}
+
+.tableWrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 var(--table-row-gap);
+  font-size: var(--font-size-sm);
+}
+
+.table th {
+  padding: var(--space-2) var(--space-3);
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--table-header-font-weight);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.thMenu {
+  width: 2.5rem;
+}
+
+.tableRow {
+  filter: var(--table-row-drop-shadow);
+}
+
+.tableRow td {
+  background-color: var(--surface-raised);
+  padding: var(--space-3);
+  color: var(--text-primary);
+  text-align: center;
+  vertical-align: middle;
+  border: none;
+}
+
+.tableRow td:first-child {
+  border-radius: var(--table-radius) 0 0 var(--table-radius);
+}
+
+.tableRow td:last-child {
+  border-radius: 0 var(--table-radius) var(--table-radius) 0;
+}
+
+.tableRowMenuOpen {
+  position: relative;
+  z-index: var(--z-header);
+}
+
+.tdMenu {
+  width: 2.5rem;
+  position: relative;
+}
+
+.menuWrap {
+  position: relative;
+  display: inline-flex;
+  justify-content: center;
+}
+
+.kebab {
+  width: var(--space-8);
+  height: var(--space-8);
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--font-size-lg);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.menu {
+  position: absolute;
+  z-index: var(--z-header);
+  top: 100%;
+  left: 0;
+  min-width: 10rem;
+  padding: var(--dropdown-padding-y);
+  background: var(--surface-raised);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--dropdown-shadow);
+  text-align: left;
+}
+
+.menuItem {
+  display: block;
+  width: 100%;
+  padding: var(--dropdown-item-padding);
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: var(--dropdown-item-font-size);
+  text-align: left;
+  cursor: pointer;
+}
+
+.menuItem:hover {
+  background: var(--surface-sunken);
+}
+
+/* Input compacto en celda — sin Field/label flotante (evita doble título + notch blanco) */
+.facturaInput {
+  width: 100%;
+  max-width: 12rem;
+  height: var(--field-height);
+  padding: var(--field-padding);
+  border: var(--field-border);
+  border-radius: var(--field-radius);
+  background: var(--field-bg);
+  color: var(--field-text);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
+.facturaInput:focus {
+  border: var(--field-border-focus);
+  outline: none;
+}
+
+.monto {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.montoCurrency {
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: var(--border-width-thin) solid var(--border-subtle);
+}
+
+.footerEnd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+/* --bp-mobile-max (767.98px) */
+@media (max-width: 767.98px) {
+  .page {
+    padding: var(--space-4);
+  }
+
+  .footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .footerEnd {
+    flex-direction: column;
+  }
+}
