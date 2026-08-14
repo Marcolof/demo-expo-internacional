@@ -1,38 +1,49 @@
 /**
- * Ítems simulados del checkout. Reproducen la referencia de diseño: un envío
- * internacional (con servicio postal y tributos) mezclado con varios envíos
- * nacionales, para poder mostrar que el panel "Detalle" NO es el mismo en los
- * dos casos.
+ * Ítems simulados del checkout.
+ * `CHECKOUT_ITEMS` conserva el seed mixto histórico.
+ * `CHECKOUT_ITEMS_INTERNATIONAL` es el carrito del flujo internacional
+ * (5 destinos distintos + ítem dinámico del usuario).
  */
 
 import type { Money } from '@/core/types/common'
-import type { CheckoutItem, CheckoutPriceBreakdown } from '../types/checkout.types'
+import type { CheckoutItem, CheckoutPriceBreakdown, InternationalCheckoutItem } from '../types/checkout.types'
 
 const ars = (amount: number): Money => ({ amount, currency: 'ARS' })
 
-/** Costo de pickup simulado (fila "Pickup" del panel de totales). */
-export const CHECKOUT_PICKUP_FEE: Money = ars(2500)
+/** Costo de pickup simulado (histórico; el panel intl Figma no lo muestra). */
+export const CHECKOUT_PICKUP_FEE: Money = ars(0)
 
 const round2 = (value: number) => Math.round(value * 100) / 100
 
-/**
- * Desglose derivado del precio final para que los números cierren: IVA del
- * 21% contenido en el precio, descuento del 15% (ya aplicado) y el neto
- * repartido entre servicio de entrega y de almacén.
- */
-function breakdownFromPrice(price: number): CheckoutPriceBreakdown {
+/** Descuento mock: 0 o múltiplo de 500 (negativo = ya aplicado). */
+function discountMultipleOf500(seed: number): Money {
+  const steps = [0, -500, -1000, -1500, -2000, -2500]
+  return ars(steps[seed % steps.length] ?? 0)
+}
+
+function breakdownFromPrice(price: number, discountSeed = 0): CheckoutPriceBreakdown {
   const includedVat = round2(price - price / 1.21)
   const net = round2(price - includedVat)
   const delivery = round2(net / 2)
+  const discount = discountMultipleOf500(discountSeed)
 
   return {
     deliveryService: ars(delivery),
     warehouseService: ars(round2(net - delivery)),
-    discount: ars(-round2(price * 0.15)),
+    discount,
     includedVat: ars(includedVat),
+    postalService: ars(10000),
+    nationalTaxes: ars(5000),
+    foreignTaxes: ars(5000),
+    representationCost: ars(10000),
   }
 }
 
+/**
+ * Seed mixto histórico (nacional + 1 intl). Se mantiene para no romper demos
+ * que aún lo referencien; el checkout del flujo intl usa
+ * `CHECKOUT_ITEMS_INTERNATIONAL`.
+ */
 export const CHECKOUT_ITEMS: readonly CheckoutItem[] = [
   {
     id: 'chk-001',
@@ -47,13 +58,15 @@ export const CHECKOUT_ITEMS: readonly CheckoutItem[] = [
     priceWithDiscount: ars(28000),
     service: 'EMS_PAQUETERIA',
     estimatedTaxes: ars(25500),
-    /* Importes tomados literalmente de la referencia de diseño (no derivados
-     * del precio): es el único desglose que la referencia muestra abierto. */
     breakdown: {
       deliveryService: ars(9900.5),
       warehouseService: ars(9900.5),
       discount: ars(-5000),
       includedVat: ars(5000),
+      postalService: ars(10000),
+      nationalTaxes: ars(5000),
+      foreignTaxes: ars(5000),
+      representationCost: ars(10000),
     },
   },
   {
@@ -67,7 +80,7 @@ export const CHECKOUT_ITEMS: readonly CheckoutItem[] = [
     volumetricWeightKg: 10,
     measures: { lengthCm: 1, widthCm: 1, heightCm: 2 },
     priceWithDiscount: ars(16500),
-    breakdown: breakdownFromPrice(16500),
+    breakdown: breakdownFromPrice(16500, 1),
   },
   {
     id: 'chk-003',
@@ -80,7 +93,7 @@ export const CHECKOUT_ITEMS: readonly CheckoutItem[] = [
     volumetricWeightKg: 15,
     measures: { lengthCm: 10, widthCm: 10, heightCm: 10 },
     priceWithDiscount: ars(32000),
-    breakdown: breakdownFromPrice(32000),
+    breakdown: breakdownFromPrice(32000, 2),
   },
   {
     id: 'chk-004',
@@ -93,7 +106,7 @@ export const CHECKOUT_ITEMS: readonly CheckoutItem[] = [
     volumetricWeightKg: 5,
     measures: { lengthCm: 5, widthCm: 5, heightCm: 5 },
     priceWithDiscount: ars(12000),
-    breakdown: breakdownFromPrice(12000),
+    breakdown: breakdownFromPrice(12000, 3),
   },
   {
     id: 'chk-005',
@@ -106,7 +119,7 @@ export const CHECKOUT_ITEMS: readonly CheckoutItem[] = [
     volumetricWeightKg: 12,
     measures: { lengthCm: 12, widthCm: 12, heightCm: 12 },
     priceWithDiscount: ars(40000),
-    breakdown: breakdownFromPrice(40000),
+    breakdown: breakdownFromPrice(40000, 4),
   },
   {
     id: 'chk-006',
@@ -119,6 +132,94 @@ export const CHECKOUT_ITEMS: readonly CheckoutItem[] = [
     volumetricWeightKg: 20,
     measures: { lengthCm: 15, widthCm: 15, heightCm: 15 },
     priceWithDiscount: ars(50000),
-    breakdown: breakdownFromPrice(50000),
+    breakdown: breakdownFromPrice(50000, 5),
+  },
+]
+
+/** Cinco envíos internacionales (país/ciudad distintos) para el carrito intl. */
+export const CHECKOUT_ITEMS_INTERNATIONAL: readonly InternationalCheckoutItem[] = [
+  {
+    id: 'chk-intl-001',
+    scope: 'INTERNACIONAL',
+    integration: 'MiCorreo',
+    orderNumber: 'ORD-INT-1001',
+    originLabel: 'Suc. Retiro',
+    destinationLabel: 'Salzburgo - Austria',
+    reportedWeightKg: 2,
+    volumetricWeightKg: 1.5,
+    measures: { lengthCm: 15, widthCm: 12, heightCm: 10 },
+    priceWithDiscount: ars(28000),
+    service: 'EMS_PAQUETERIA',
+    estimatedTaxes: ars(10000),
+    breakdown: {
+      deliveryService: ars(10000),
+      warehouseService: ars(0),
+      discount: ars(-500),
+      includedVat: ars(4000),
+      postalService: ars(10000),
+      nationalTaxes: ars(5000),
+      foreignTaxes: ars(5000),
+      representationCost: ars(10000),
+    },
+  },
+  {
+    id: 'chk-intl-002',
+    scope: 'INTERNACIONAL',
+    integration: 'MiCorreo',
+    orderNumber: 'ORD-INT-1002',
+    originLabel: 'Suc. Banfield',
+    destinationLabel: 'Montevideo - Uruguay',
+    reportedWeightKg: 3,
+    volumetricWeightKg: 2,
+    measures: { lengthCm: 20, widthCm: 15, heightCm: 12 },
+    priceWithDiscount: ars(22000),
+    service: 'ENCOMIENDA_INTERNACIONAL',
+    estimatedTaxes: ars(8000),
+    breakdown: breakdownFromPrice(22000, 1),
+  },
+  {
+    id: 'chk-intl-003',
+    scope: 'INTERNACIONAL',
+    integration: 'MiCorreo',
+    orderNumber: 'ORD-INT-1003',
+    originLabel: 'Suc. CABA Sur',
+    destinationLabel: 'Santiago - Chile',
+    reportedWeightKg: 1.5,
+    volumetricWeightKg: 1.2,
+    measures: { lengthCm: 12, widthCm: 10, heightCm: 8 },
+    priceWithDiscount: ars(18000),
+    service: 'PEQUENO_PAQUETE',
+    estimatedTaxes: ars(6000),
+    breakdown: breakdownFromPrice(18000, 2),
+  },
+  {
+    id: 'chk-intl-004',
+    scope: 'INTERNACIONAL',
+    integration: 'Correo',
+    orderNumber: 'ORD-INT-1004',
+    originLabel: 'Almacén Tortuguitas',
+    destinationLabel: 'Miami - Estados Unidos',
+    reportedWeightKg: 4,
+    volumetricWeightKg: 3.5,
+    measures: { lengthCm: 30, widthCm: 20, heightCm: 15 },
+    priceWithDiscount: ars(35000),
+    service: 'EMS_PAQUETERIA',
+    estimatedTaxes: ars(12000),
+    breakdown: breakdownFromPrice(35000, 0),
+  },
+  {
+    id: 'chk-intl-005',
+    scope: 'INTERNACIONAL',
+    integration: 'MiCorreo',
+    orderNumber: 'ORD-INT-1005',
+    originLabel: 'Suc. Retiro',
+    destinationLabel: 'Madrid - España',
+    reportedWeightKg: 2.5,
+    volumetricWeightKg: 2,
+    measures: { lengthCm: 18, widthCm: 14, heightCm: 10 },
+    priceWithDiscount: ars(30000),
+    service: 'EMS_DOCUMENTACION',
+    estimatedTaxes: ars(7000),
+    breakdown: breakdownFromPrice(30000, 4),
   },
 ]

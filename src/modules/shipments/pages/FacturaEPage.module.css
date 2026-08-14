@@ -37,9 +37,13 @@
 }
 
 .cuitField {
-  max-width: 16rem;
+  width: 100%;
+  max-width: 33.625rem; /* 538px Figma */
   margin-top: var(--space-2);
   --field-label-backdrop: var(--field-label-backdrop-on-page);
+  --field-height: 3rem; /* 48px */
+  --field-radius: var(--radius-xs); /* spacing-1 */
+  --field-padding: 8px 10px;
 }
 
 .toolbar {
@@ -177,10 +181,41 @@
   gap: var(--space-2);
 }
 
+.montoField {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  max-width: 10rem;
+}
+
 .montoCurrency {
   color: var(--text-muted);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+}
+
+.montoInput {
+  width: 6.5rem;
+  height: var(--field-height);
+  padding: var(--field-padding);
+  border: var(--field-border);
+  border-radius: var(--field-radius);
+  background: var(--field-bg);
+  color: var(--field-text);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  text-align: right;
+}
+
+.montoInput:focus {
+  border: var(--field-border-focus);
+  outline: none;
+}
+
+.montoInvalid {
+  border-color: var(--feedback-danger-strong);
 }
 
 .footer {

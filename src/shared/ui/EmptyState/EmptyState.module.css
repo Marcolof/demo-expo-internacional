@@ -36,6 +36,10 @@
   line-height: var(--line-height-snug);
 }
 
+.titleBrand {
+  color: var(--color-brand-contrast);
+}
+
 .description {
   max-width: 42ch;
   color: var(--text-muted);
