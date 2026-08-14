@@ -123,12 +123,6 @@ export function FacturaEPage() {
           </div>
         </header>
 
-        <div className={styles.toolbar}>
-          <Button variant="secondary" onClick={addRow}>
-            Agregar ítem
-          </Button>
-        </div>
-
         <div className={styles.tableWrap}>
           <table className={styles.table}>
             <thead>
