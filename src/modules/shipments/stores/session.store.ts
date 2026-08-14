@@ -16,6 +16,8 @@ export interface SessionShipment {
   readonly detalles: string
   readonly usuario: string
   readonly estado: 'Validado' | 'Pendiente' | 'En camino'
+  /** Si true, el pago debe pasar por Factura E. */
+  readonly commercial?: boolean
 }
 
 let _shipments: readonly SessionShipment[] = []
@@ -42,6 +44,8 @@ export interface WizardSnapshot {
   readonly heightCm: string
   readonly packageWeightKg: string
   readonly remitenteCuit: string
+  /** Nombre libre del paso Origen; si vacío, el resumen usa el Remitente. */
+  readonly origenDisplayName: string
   readonly province: string
   readonly branchId: string
   readonly recipientName: string
@@ -57,6 +61,8 @@ export interface WizardSnapshot {
   readonly destinoAddressLines: readonly string[]
   readonly destinoOrderNum: string
   readonly aduanaRepresentation: boolean
+  /** Si true, asiste el usuario; si false, designa representante. */
+  readonly asistireYo: boolean
   readonly representanteName: string
   readonly representanteCuil: string
   readonly shippingService: 'EMS' | 'ENCOMIENDA' | 'PEQUENO_PAQUETE' | 'EMS_DOCUMENTACION' | null
