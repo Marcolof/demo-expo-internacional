@@ -1,7 +1,9 @@
-/* Modal info — medidas Figma: 600×723 max, body padding 4/7/6/7, Entendido 340×40. */
+/* Modal info — alto Figma 723px, pero nunca más alto que el viewport.
+ * El scroll queda en `.body` del Modal compartido. */
 
 .dialog {
-  max-height: 45.1875rem; /* 723px */
+  max-height: min(45.1875rem, calc(100vh - var(--space-8)));
+  max-height: min(45.1875rem, calc(100dvh - var(--space-8)));
 }
 
 .body {
