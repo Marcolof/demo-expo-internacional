@@ -114,19 +114,20 @@ function DisclosureIcon({ open }: { readonly open: boolean }) {
   )
 }
 
-function HelpInfoIcon() {
+/** Ícono de la leyenda informativa (izquierda del disclaimer), no tooltip. */
+function LegendInfoIcon() {
   return (
     <svg
-      className={styles.helpInfoIcon}
-      width="24"
-      height="28"
-      viewBox="0 0 24 28"
+      className={styles.legendIcon}
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
       fill="none"
       aria-hidden="true"
     >
-      <circle cx="12" cy="14" r="10" stroke="currentColor" strokeWidth="1.5" />
+      <circle cx="10" cy="10" r="9" stroke="currentColor" strokeWidth="1.5" />
       <path
-        d="M12 12.5v6M12 9.5h.01"
+        d="M10 9v5M10 6.5h.01"
         stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
@@ -253,7 +254,6 @@ export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', i
             aria-expanded={helpOpen}
             onClick={() => setHelpOpen((open) => !open)}
           >
-            <HelpInfoIcon />
             ¿Dónde encuentro este código?
             <DisclosureIcon open={helpOpen} />
           </button>
@@ -270,13 +270,9 @@ export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', i
               <p>
                 Ejemplo: buscá &apos;remera&apos; → seleccioná «T-SHIRTS» Y CAMISETAS, DE PUNTO (61.09).
               </p>
-              <div className={styles.alertSlot}>
-                <Alert tone="info">
-                  <span className={styles.alertWithTip}>
-                    {CLASSIFICATION_DISCLAIMER}
-                    <InfoTooltip content={CLASSIFICATION_DISCLAIMER} />
-                  </span>
-                </Alert>
+              <div className={styles.legend} role="note">
+                <LegendInfoIcon />
+                <p className={styles.legendText}>{CLASSIFICATION_DISCLAIMER}</p>
               </div>
             </div>
           )}

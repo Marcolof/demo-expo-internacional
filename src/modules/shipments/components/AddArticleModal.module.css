@@ -41,21 +41,15 @@
 .disclosureTrigger {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2);
   align-self: flex-start;
-  padding: var(--space-2) var(--space-3);
+  padding: 0;
   border: none;
-  border-radius: var(--radius-sm);
-  background: var(--surface-sunken);
-  color: var(--field-label-color);
+  background: none;
+  color: var(--text-primary);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   cursor: pointer;
-}
-
-.helpInfoIcon {
-  flex-shrink: 0;
-  color: var(--color-brand-contrast);
 }
 
 .disclosureIcon {
@@ -63,14 +57,12 @@
   transition: transform var(--transition-base);
 }
 
+/* Texto plano bajo el trigger; la leyenda tiene su propia superficie. */
 .disclosurePanel {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  padding: var(--space-3);
-  border-radius: var(--radius-sm);
-  background: var(--surface-sunken);
-  color: var(--field-label-color);
+  color: var(--text-muted);
   font-size: var(--font-size-sm);
   line-height: var(--line-height-normal);
 }
@@ -88,14 +80,29 @@
   margin-top: calc(var(--space-2) * -1);
 }
 
-.alertSlot {
-  margin-top: var(--space-2);
+.legend {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  color: var(--text-primary);
 }
 
-.alertWithTip {
-  display: inline-flex;
-  align-items: flex-start;
-  gap: var(--space-2);
+.legendIcon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--color-brand-contrast);
+}
+
+.legendText {
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
 }
 
 .qtyRow {
