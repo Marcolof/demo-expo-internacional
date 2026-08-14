@@ -3,8 +3,6 @@
   min-height: 100%;
 }
 
-/* ── Encabezado ────────────────────────────────────────────────────── */
-
 .pageHeader {
   display: flex;
   align-items: center;
@@ -20,38 +18,30 @@
   color: var(--text-primary);
 }
 
-/* Wrapper para contener el ancho del ScopeSwitch — su track tiene width:100%
-   así que necesita un contenedor con dimensión fija. El valor coincide con el
-   ancho visual que tiene el switch en la vista de nuevo envío (~320px). */
 .scopeSwitchWrap {
   width: 320px;
   flex-shrink: 0;
 }
 
-/* ── Tabs ──────────────────────────────────────────────────────────── */
-
 .tabsRow {
   margin-bottom: var(--space-5);
 }
-
-/* ── Filtros ───────────────────────────────────────────────────────── */
 
 .filters {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
   margin-bottom: var(--space-4);
+  /* Label flotante sobre fondo de página (#fafafa), no notch blanco rectangular */
+  --field-label-backdrop: var(--field-label-backdrop-on-page);
 }
 
-/* Cuatro campos en una sola fila */
 .filtersGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: var(--space-3);
   align-items: start;
 }
-
-/* El Select de N° de orden ya ocupa 100% por ser directo hijo de .filters */
 
 .filtersActions {
   display: flex;
@@ -74,26 +64,6 @@
 .clearBtn:hover {
   text-decoration: underline;
 }
-
-.consultarBtn {
-  height: 36px;
-  padding: 0 var(--space-5);
-  border: none;
-  border-radius: 9999px;
-  background: var(--correo-yellow);
-  font-family: var(--font-family-base);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: opacity var(--transition-base);
-}
-
-.consultarBtn:hover {
-  opacity: 0.85;
-}
-
-/* ── Controles de tabla ────────────────────────────────────────────── */
 
 .tableControls {
   display: flex;
@@ -122,36 +92,34 @@
   height: 34px;
   padding: 0 var(--space-4);
   border: var(--border-width-thin) solid var(--border-default);
-  border-radius: 9999px;
+  border-radius: var(--radius-pill);
   background: var(--surface-raised);
   font-family: var(--font-family-base);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   color: var(--text-primary);
   cursor: pointer;
-  transition: border-color var(--transition-base);
 }
 
 .filtrarBtn:hover {
-  border-color: var(--correo-blue);
+  border-color: var(--color-accent);
 }
 
 .cotizarBtn {
   height: 34px;
   padding: 0 var(--space-4);
   border: var(--border-width-thin) solid var(--border-default);
-  border-radius: 9999px;
+  border-radius: var(--radius-pill);
   background: var(--surface-raised);
   font-family: var(--font-family-base);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   color: var(--text-muted);
   cursor: pointer;
-  transition: all var(--transition-base);
 }
 
 .cotizarBtn:not(:disabled):hover {
-  border-color: var(--correo-blue);
+  border-color: var(--color-accent);
   color: var(--text-primary);
 }
 
@@ -160,153 +128,153 @@
   cursor: not-allowed;
 }
 
-/* ── Tabla ─────────────────────────────────────────────────────────── */
-
+/*
+ * Filas sólidas tipo checkout / .mcr-table:
+ * gap vertical entre filas; sin sombra por celda (evita rayas grises).
+ */
 .tableWrap {
   overflow-x: auto;
-  border: var(--border-width-thin) solid var(--border-default);
-  background: var(--surface-raised);
+  width: 100%;
 }
 
 .table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0 var(--table-row-gap);
   table-layout: auto;
   font-size: var(--font-size-sm);
 }
 
-.tableHead {
-  border-bottom: var(--border-width-thin) solid var(--border-default);
-  background: var(--surface-raised);
+.tableHead th {
+  background-color: transparent;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-xs);
+  font-weight: var(--table-header-font-weight);
+  color: var(--text-muted);
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: bottom;
 }
 
 .thCheck,
 .thMenu {
   width: 40px;
-  padding: var(--space-3) var(--space-2);
-  text-align: center;
-}
-
-.th {
-  padding: var(--space-3);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-muted);
-  text-align: left;
-  white-space: nowrap;
 }
 
 .thSub {
   display: block;
-  font-size: 10px;
+  font-size: var(--font-size-3xs);
   font-weight: var(--font-weight-regular);
   color: var(--text-muted);
-  margin-top: 2px;
+  margin-top: var(--space-1);
 }
 
+/*
+ * Sombra con filter (no box-shadow en tr/td): el spread de box-shadow en
+ * celdas deja rayas grises entre columnas. drop-shadow trata la fila como
+ * una silueta continua — mismo efecto sólido que las cards del checkout.
+ */
 .tableRow {
-  border-bottom: var(--border-width-thin) solid var(--border-default);
-  transition: background var(--transition-base);
+  filter: var(--table-row-drop-shadow);
 }
 
-.tableRow:last-child {
-  border-bottom: none;
-}
-
-.tableRow:hover {
-  background: var(--surface-sunken);
-}
-
-.tableRowSelected {
-  background: color-mix(in srgb, var(--correo-yellow) 8%, transparent);
-}
-
-.tableRowSelected:hover {
-  background: color-mix(in srgb, var(--correo-yellow) 12%, transparent);
-}
-
-.tdCheck {
-  width: 40px;
-  padding: var(--space-3) var(--space-2);
-  text-align: center;
-}
-
-.tdMenu {
-  width: 40px;
-  padding: var(--space-3) var(--space-2);
-  text-align: center;
-  position: relative;
-}
-
-.td {
+.tableRow td {
+  background-color: var(--surface-raised);
   padding: var(--space-3);
   color: var(--text-primary);
   vertical-align: middle;
-  max-width: 200px;
+  text-align: center;
+  max-width: 220px;
+  border: none;
 }
 
-/* ── Checkbox ─────────────────────────────────────────────────────── */
+.tableRow td:first-child {
+  border-radius: var(--table-radius) 0 0 var(--table-radius);
+}
+
+.tableRow td:last-child {
+  border-radius: 0 var(--table-radius) var(--table-radius) 0;
+}
+
+.tableRow:hover td {
+  background-color: var(--table-row-hover-bg);
+}
+
+.tableRowSelected td {
+  background: color-mix(in srgb, var(--color-brand) 8%, var(--surface-raised));
+}
+
+/* `filter` crea stacking context: elevar la fila con menú abierto */
+.tableRowMenuOpen {
+  position: relative;
+  z-index: var(--z-header);
+}
+
+.tdCheck,
+.tdMenu {
+  width: 40px;
+  position: relative;
+}
 
 .checkbox {
-  width: 16px;
-  height: 16px;
+  width: var(--space-4);
+  height: var(--space-4);
   cursor: pointer;
-  accent-color: var(--correo-yellow);
+  accent-color: var(--color-brand);
 }
-
-/* ── Ícono de producto ────────────────────────────────────────────── */
 
 .productoIcon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  background: #e8f0fe;
-  border-radius: 50%;
-  color: var(--correo-blue, #2563C5);
+  width: 2.25rem;
+  height: 2.25rem;
+  margin: 0 auto;
+  color: var(--color-accent);
 }
 
-/* ── Badge de estado ──────────────────────────────────────────────── */
+.productoIcon img {
+  display: block;
+  width: var(--space-5);
+  height: var(--space-5);
+}
 
-.badge {
-  display: inline-block;
-  padding: 3px var(--space-2);
-  border-radius: 9999px;
-  font-size: 11px;
-  font-weight: var(--font-weight-semibold);
+.estadoText {
+  color: var(--text-primary);
+  font-weight: var(--font-weight-medium);
   white-space: nowrap;
 }
 
-.badgeValidado {
-  background: #dcfce7;
-  color: #15803d;
+.seguimiento {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
 }
 
-.badgePendiente {
-  background: #fef9c3;
-  color: #854d0e;
+.copyBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-link-accent);
+  cursor: pointer;
 }
-
-.badgeEncamino {
-  background: #dbeafe;
-  color: #1d4ed8;
-}
-
-/* ── Menú contextual ──────────────────────────────────────────────── */
 
 .menuTrigger {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin: 0 auto;
   border: none;
   border-radius: var(--radius-sm);
   background: none;
   color: var(--text-muted);
   cursor: pointer;
-  transition: background var(--transition-base), color var(--transition-base);
 }
 
 .menuTrigger:hover {
@@ -316,15 +284,16 @@
 
 .contextMenu {
   position: absolute;
-  top: calc(100% + 4px);
+  top: calc(100% + var(--space-1));
   left: 0;
-  z-index: 100;
-  min-width: 140px;
+  z-index: var(--z-header);
+  min-width: 8.75rem;
   background: var(--surface-raised);
   border: var(--border-width-thin) solid var(--border-default);
   border-radius: var(--radius-sm);
-  box-shadow: 0 4px 16px rgb(0 0 0 / 0.12);
+  box-shadow: var(--dropdown-shadow);
   overflow: hidden;
+  text-align: left;
 }
 
 .contextMenuItem {
@@ -339,7 +308,6 @@
   color: var(--text-primary);
   text-align: left;
   cursor: pointer;
-  transition: background var(--transition-base);
 }
 
 .contextMenuItem:hover {
@@ -347,5 +315,27 @@
 }
 
 .contextMenuItemDanger {
-  color: var(--feedback-danger-strong, #dc2626);
+  color: var(--feedback-danger-strong);
+}
+
+.emptyTab {
+  margin: var(--space-8) 0;
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+}
+
+/* --bp-mobile-max (767.98px) */
+@media (max-width: 767.98px) {
+  .filtersGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .page {
+    padding: var(--space-4);
+  }
+
+  .scopeSwitchWrap {
+    width: 100%;
+    max-width: 320px;
+  }
 }
