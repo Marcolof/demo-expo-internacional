@@ -18,6 +18,13 @@ export { ConfirmDialog, type ConfirmDialogProps } from './ConfirmDialog'
 export { Alert, type AlertProps } from './Alert'
 export { Badge, type BadgeProps } from './Badge'
 export { Toast, useToast, type ToastProps } from './Toast'
+export {
+  Tooltip,
+  InfoTooltip,
+  type TooltipProps,
+  type InfoTooltipProps,
+  type TooltipPlacement,
+} from './Tooltip'
 
 // Componentes complejos
 export { DataTable, type DataTableProps, type DataTableColumn } from './DataTable'
