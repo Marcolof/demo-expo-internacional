@@ -108,19 +108,18 @@
 .cotizarBtn {
   height: 34px;
   padding: 0 var(--space-4);
-  border: var(--border-width-thin) solid var(--border-default);
+  border: none;
   border-radius: var(--radius-pill);
-  background: var(--surface-raised);
+  background: var(--color-brand);
   font-family: var(--font-family-base);
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  color: var(--text-muted);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-brand-contrast);
   cursor: pointer;
 }
 
 .cotizarBtn:not(:disabled):hover {
-  border-color: var(--color-accent);
-  color: var(--text-primary);
+  filter: brightness(0.97);
 }
 
 .cotizarBtn:disabled {

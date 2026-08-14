@@ -15,7 +15,7 @@ export interface PostalServiceCardProps {
   readonly disabled?: boolean
   /** Motivo de `disabled`, mostrado en vez de `description`. */
   readonly disabledReason?: string
-  /** Precio u otro dato a la derecha, cuando exista cotización. */
+  /** Precio u otro dato debajo de la descripción (tercera línea). */
   readonly trailing?: ReactNode
   readonly className?: string
 }
@@ -65,9 +65,8 @@ export function PostalServiceCard({
         {helperText !== undefined && helperText !== '' && (
           <span className={cn(styles.description, disabled && styles.descriptionDisabled)}>{helperText}</span>
         )}
+        {trailing !== undefined && <span className={styles.trailing}>{trailing}</span>}
       </span>
-
-      {trailing !== undefined && <span className={styles.trailing}>{trailing}</span>}
     </label>
   )
 }

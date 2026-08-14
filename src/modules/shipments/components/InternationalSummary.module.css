@@ -97,9 +97,11 @@
   gap: var(--space-3);
   align-items: flex-start;
   width: 100%;
-  color: var(--text-muted);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-regular);
+  color: var(--text-primary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1;
+  letter-spacing: 0;
 }
 
 .rowLabel {

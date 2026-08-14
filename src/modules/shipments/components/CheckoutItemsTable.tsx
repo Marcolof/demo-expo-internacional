@@ -144,19 +144,22 @@ function CheckoutRow({ item, defaultOpen }: CheckoutRowProps) {
               {isInternational && (
                 <DetailRow label="Servicio postal" value={POSTAL_SERVICE_LABELS[item.service]} />
               )}
-              <DetailRow
-                label="Servicio de entrega"
-                value={formatMoney(item.breakdown.deliveryService)}
-              />
-              <DetailRow
-                label="Servicio de almacén"
-                value={formatMoney(item.breakdown.warehouseService)}
-              />
-              <DetailRow label="Descuento" value={formatMoney(item.breakdown.discount)} />
-              <DetailRow label="IVA incluido" value={formatMoney(item.breakdown.includedVat)} />
-              {isInternational && (
-                <DetailRow label="Tributos estimados" value={formatMoney(item.estimatedTaxes)} />
+              {isInternational && item.breakdown.nationalTaxes !== undefined && (
+                <DetailRow label="Tributos nacionales" value={formatMoney(item.breakdown.nationalTaxes)} />
               )}
+              {isInternational && item.breakdown.foreignTaxes !== undefined && (
+                <DetailRow
+                  label="Tributos / gastos en el exterior"
+                  value={formatMoney(item.breakdown.foreignTaxes)}
+                />
+              )}
+              {item.breakdown.representationCost !== undefined && (
+                <DetailRow
+                  label="Costo de representación"
+                  value={formatMoney(item.breakdown.representationCost)}
+                />
+              )}
+              <DetailRow label="Descuento" value={formatMoney(item.breakdown.discount)} />
             </dl>
           </div>
         </div>
