@@ -74,6 +74,25 @@ export function isCuit(value: string): ValidationError {
   return Number(digits[10]) === expected ? null : 'El CUIT/CUIL ingresado no es válido.'
 }
 
+/** Formatea dígitos a máscara CUIT `XX-YYYYYYYY-Z`. */
+export function formatCuitMask(raw: string): string {
+  const digits = raw.replace(/\D/g, '').slice(0, 11)
+  if (digits.length <= 2) return digits
+  if (digits.length <= 10) return `${digits.slice(0, 2)}-${digits.slice(2)}`
+  return `${digits.slice(0, 2)}-${digits.slice(2, 10)}-${digits.slice(10)}`
+}
+
+/** Formatea dígitos a máscara CUIL/CUIT con puntos `XX.XXXXXXXX.X` (Figma stepper 4). */
+export function formatCuitDotsMask(raw: string): string {
+  const digits = raw.replace(/\D/g, '').slice(0, 11)
+  if (digits.length <= 2) return digits
+  if (digits.length <= 10) return `${digits.slice(0, 2)}.${digits.slice(2)}`
+  return `${digits.slice(0, 2)}.${digits.slice(2, 10)}.${digits.slice(10)}`
+}
+
+/** Placeholder de longitud de referencia para CUIL con puntos. */
+export const CUIT_DOTS_PLACEHOLDER = '20.31211156.3'
+
 /**
  * Identificación tributaria del destinatario en el país de destino (ej. CPF de
  * Brasil). Alfanumérico flexible: NO se valida como CUIT argentino.

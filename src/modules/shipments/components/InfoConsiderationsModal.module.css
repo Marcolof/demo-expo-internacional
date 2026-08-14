@@ -1,0 +1,63 @@
+/* Modal info — medidas Figma: 600×723 max, body padding 4/7/6/7, Entendido 340×40. */
+
+.dialog {
+  max-height: 45.1875rem; /* 723px */
+}
+
+.body {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  line-height: 1;
+}
+
+.body p {
+  margin: 0;
+  line-height: var(--line-height-normal);
+}
+
+.body a {
+  color: var(--text-link-accent);
+  word-break: break-word;
+}
+
+.lettered {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.lettered p {
+  margin: 0;
+  line-height: var(--line-height-normal);
+}
+
+.bullets {
+  margin: 0;
+  padding-left: 1.25em;
+  list-style-type: disc;
+  color: var(--text-primary);
+}
+
+.bullets li {
+  line-height: var(--line-height-normal);
+  color: var(--text-primary);
+}
+
+.bullets li::marker {
+  color: var(--text-primary);
+}
+
+.bullets li + li {
+  margin-top: var(--space-2);
+}
+
+.footer {
+  padding-top: var(--space-2);
+}
+
+.entendido {
+  width: 100%;
+  max-width: var(--modal-confirm-btn-max-width);
+  min-height: var(--modal-confirm-btn-height);
+  height: var(--modal-confirm-btn-height);
+}

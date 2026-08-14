@@ -4,24 +4,36 @@ import { cn } from '@/shared/lib/cn'
 import { COUNTRIES } from '@/shared/lib/countries'
 import type { SelectOption } from '@/core/types/common'
 import { PageContainer } from '@/shared/layout/PageContainer'
-import { formatDimensionsCm, formatUsd, formatWeightKg } from '@/shared/lib/formatCurrency'
+import { formatAmountOnly, formatDimensionsCm, formatUsd, formatWeightKg } from '@/shared/lib/formatCurrency'
+import { formatCuitDotsMask, CUIT_DOTS_PLACEHOLDER } from '@/shared/lib/validators'
 import { useStepFlow } from '@/shared/hooks/useStepFlow'
 import { Alert } from '@/shared/ui/Alert'
 import { Button } from '@/shared/ui/Button'
 import { Checkbox } from '@/shared/ui/Checkbox'
-import { RadioGroup } from '@/shared/ui/Checkbox/RadioGroup'
+import { ConfirmDialog } from '@/shared/ui/ConfirmDialog'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { Input } from '@/shared/ui/Input'
 import { Select } from '@/shared/ui/Select'
 import { Switch } from '@/shared/ui/Switch'
 import { Tabs } from '@/shared/ui/Tabs'
+import { InfoTooltip } from '@/shared/ui/Tooltip'
 import { ScopeSwitch } from '../components/ScopeSwitch'
 import { INTERNATIONAL_STEPS, InternationalSummary } from '../components/InternationalSummary'
 import { AddArticleModal } from '../components/AddArticleModal'
 import { ArticleAccordionItem } from '../components/ArticleAccordionItem'
 import { AduanaConfirmModal } from '../components/AduanaConfirmModal'
 import { BranchMap } from '../components/BranchMap'
+import { InfoConsiderationsModal } from '../components/InfoConsiderationsModal'
 import { PhoneCountryCodeSelect } from '../components/PhoneCountryCodeSelect'
+import { PostalServiceCard } from '../components/PostalServiceCard'
+import { getCountryGeographicRangeLabel } from '../constants/geographic-ranges'
+import {
+  ADUANA_WITHOUT_REPRESENTATION_COST_ARS,
+  EXPORT_DUTIES_USD,
+  PACKAGE_MAX_WEIGHT_KG,
+  PACKAGE_MAX_WEIGHT_LABEL,
+  PACKAGE_MAX_WEIGHT_TOOLTIP,
+} from '../constants/summary-detail.constants'
 import { articleTotalPriceUsd, articleTotalWeightKg, ARTICLE_KIND_TEXT } from '../types/article.types'
 import type { ArticleKind, DeclaredArticle } from '../types/article.types'
 import { DECLARED_ARTICLES_SEED, DECLARED_DOCUMENTS_SEED } from '../mocks/articles.mocks'
@@ -71,7 +83,6 @@ const SHIPPING_SERVICE_TO_POSTAL: Record<'EMS' | 'ENCOMIENDA' | 'PEQUENO_PAQUETE
 const NON_COMMERCIAL_CATEGORIES: readonly SelectOption[] = [
   { value: 'REGALO', label: 'Regalo' },
   { value: 'DOCUMENTO', label: 'Documento' },
-  { value: 'MUESTRA', label: 'Muestra comercial' },
   { value: 'AYUDA_FAMILIAR', label: 'Ayuda familiar' },
 ]
 
@@ -83,8 +94,6 @@ const COMMERCIAL_CATEGORIES: readonly SelectOption[] = [
 
 
 const PACKAGE_MAX_SIDE_CM = 90
-const PACKAGE_MAX_OVERSIZED_SIDES = 1
-const PACKAGE_MAX_WEIGHT_KG = 20
 
 interface PackageValidationErrors {
   readonly measures?: 'incomplete' | 'oversized'
@@ -134,13 +143,12 @@ function validateDestinoFields(params: {
   recipientPhone: string
   recipientEmail: string
   recipientTaxId: string
-  commercial: boolean
-  facturaE: string
   destinoState: string
   destinoCity: string
   destinoPostalCode: string
   destinoAddressLines: readonly string[]
   aduanaRepresentation: boolean
+  asistireYo: boolean
   representanteName: string
   representanteCuil: string
 }): ReadonlySet<string> {
@@ -150,16 +158,17 @@ function validateDestinoFields(params: {
     errors.add('recipientPhone')
   } else if (!/^\d+$/.test(params.recipientPhone.trim())) {
     errors.add('recipientPhoneFormat')
+  } else if (params.recipientPhone.trim().length < 8) {
+    errors.add('recipientPhoneMin')
   }
   if (!params.recipientEmail.trim()) errors.add('recipientEmail')
   if (!params.recipientTaxId.trim()) errors.add('recipientTaxId')
-  if (params.commercial && !params.facturaE.trim()) errors.add('facturaE')
   if (!params.destinoState.trim()) errors.add('destinoState')
   if (!params.destinoCity.trim()) errors.add('destinoCity')
   if (!params.destinoPostalCode.trim()) errors.add('destinoPostalCode')
   if (!(params.destinoAddressLines[0]?.trim())) errors.add('destinoAddress0')
-  if (!params.aduanaRepresentation && !params.representanteName.trim()) errors.add('representanteName')
-  if (!params.aduanaRepresentation && !params.representanteCuil.trim()) errors.add('representanteCuil')
+  if (!params.aduanaRepresentation && !params.asistireYo && !params.representanteName.trim()) errors.add('representanteName')
+  if (!params.aduanaRepresentation && !params.asistireYo && !params.representanteCuil.trim()) errors.add('representanteCuil')
   return errors
 }
 
@@ -207,7 +216,7 @@ function PlusCircleIcon() {
     >
       <path
         d="M21 12C21 7.02944 16.9706 3 12 3C7.02944 3 3 7.02944 3 12C3 16.9706 7.02944 21 12 21C16.9706 21 21 16.9706 21 12ZM11 16V13H8C7.44772 13 7 12.5523 7 12C7 11.4477 7.44772 11 8 11H11V8C11 7.44772 11.4477 7 12 7C12.5523 7 13 7.44772 13 8V11H16C16.5523 11 17 11.4477 17 12C17 12.5523 16.5523 13 16 13H13V16C13 16.5523 12.5523 17 12 17C11.4477 17 11 16.5523 11 16ZM23 12C23 18.0751 18.0751 23 12 23C5.92487 23 1 18.0751 1 12C1 5.92487 5.92487 1 12 1C18.0751 1 23 5.92487 23 12Z"
-        fill="var(--correo-yellow)"
+        fill="var(--color-accent)"
       />
     </svg>
   )
@@ -266,6 +275,10 @@ export function InternationalShipmentPage() {
   const [representanteCuil, setRepresentanteCuil]       = useState('20.31211156.3')
   const [shippingService, setShippingService]           = useState<'EMS' | 'ENCOMIENDA' | 'PEQUENO_PAQUETE' | 'EMS_DOCUMENTACION' | null>('EMS')
   const [step4Errors, setStep4Errors]                   = useState<ReadonlySet<string>>(new Set())
+  const [infoModalOpen, setInfoModalOpen] = useState(false)
+  const [pendingCategory, setPendingCategory] = useState<string | null>(null)
+  const [origenDisplayName, setOrigenDisplayName] = useState('')
+  const [asistireYo, setAsistireYo] = useState(true)
 
   /* ── Restaurar wizard desde store al volver del checkout ─────────── */
   useEffect(() => {
@@ -282,6 +295,7 @@ export function InternationalShipmentPage() {
     setHeightCm(snap.heightCm)
     setPackageWeightKg(snap.packageWeightKg)
     setRemitenteCuit(snap.remitenteCuit)
+    setOrigenDisplayName(snap.origenDisplayName ?? '')
     setProvince(snap.province)
     setBranchId(snap.branchId)
     setRecipientName(snap.recipientName)
@@ -297,6 +311,7 @@ export function InternationalShipmentPage() {
     setDestinoAddressLines([...snap.destinoAddressLines])
     setDestinoOrderNum(snap.destinoOrderNum)
     setAduanaRepresentation(snap.aduanaRepresentation)
+    setAsistireYo(snap.asistireYo ?? true)
     setRepresentanteName(snap.representanteName)
     setRepresentanteCuil(snap.representanteCuil)
     setShippingService(snap.shippingService)
@@ -326,16 +341,30 @@ export function InternationalShipmentPage() {
     }
   }
 
-  const handleCategoryChange = (value: string) => {
+  const requestCategoryChange = (value: string) => {
+    if (value === category) return
+    const shouldConfirm = articles.length > 0 && declarationAccepted
+    if (shouldConfirm) {
+      setPendingCategory(value)
+      return
+    }
+    applyCategoryChange(value)
+  }
+
+  const applyCategoryChange = (value: string) => {
+    const fromDoc = category === 'DOCUMENTO'
+    const toDoc = value === 'DOCUMENTO'
     setCategory(value)
-    if (country === '-1') return
-    if (value === 'DOCUMENTO') {
-      setArticles(DECLARED_DOCUMENTS_SEED)
-    } else if (AUTO_SEED_COUNTRIES.has(country)) {
-      setArticles(DECLARED_ARTICLES_SEED)
-    } else {
+    setDeclarationAccepted(false)
+    if (fromDoc || toDoc) {
       setArticles([])
     }
+  }
+
+  const confirmCategoryChange = () => {
+    if (pendingCategory === null) return
+    applyCategoryChange(pendingCategory)
+    setPendingCategory(null)
   }
 
   const selectedCountry = COUNTRIES.find((c) => c.value === country)
@@ -347,10 +376,15 @@ export function InternationalShipmentPage() {
   const runDestinoValidation = () =>
     validateDestinoFields({
       recipientName, recipientPhone, recipientEmail, recipientTaxId,
-      commercial, facturaE,
       destinoState, destinoCity, destinoPostalCode, destinoAddressLines,
-      aduanaRepresentation, representanteName, representanteCuil,
+      aduanaRepresentation, asistireYo, representanteName, representanteCuil,
     })
+
+  useEffect(() => {
+    if (shippingService === 'EMS_DOCUMENTACION' && category !== 'DOCUMENTO') {
+      setShippingService('EMS')
+    }
+  }, [category, shippingService])
 
   const articleKind: ArticleKind = category === 'DOCUMENTO' ? 'DOCUMENT' : 'ARTICLE'
   const canAddArticle = country !== '-1' && category !== '-1' && countryHasShipping
@@ -397,11 +431,11 @@ export function InternationalShipmentPage() {
   const buildSnapshot = (): WizardSnapshot => ({
     country, commercial, category, declarationAccepted, articles,
     frequentMeasureId, lengthCm, widthCm, heightCm, packageWeightKg,
-    remitenteCuit, province, branchId,
+    remitenteCuit, origenDisplayName, province, branchId,
     recipientName, recipientRazonSocial, recipientPhoneCode, recipientPhone,
     recipientEmail, recipientTaxId, facturaE,
     destinoState, destinoCity, destinoPostalCode, destinoAddressLines, destinoOrderNum,
-    aduanaRepresentation, representanteName, representanteCuil, shippingService,
+    aduanaRepresentation, asistireYo, representanteName, representanteCuil, shippingService,
     currentStep,
   })
 
@@ -423,18 +457,25 @@ export function InternationalShipmentPage() {
       if (errors.size > 0) { setStep4Errors(errors); return }
       setStep4Errors(new Set())
       const snap = buildSnapshot()
+      const orderNumber =
+        destinoOrderNum.trim() !== ''
+          ? destinoOrderNum.trim()
+          : `ORD-${10049 + shipmentsStore.get().length}`
       shipmentsStore.add({
         id: `S-${Date.now()}`,
         integracion: 'MiCorreo',
-        nOrden: destinoOrderNum || '-',
-        origen: selectedRemitente?.razonSocial ?? 'Correo Argentino',
+        nOrden: orderNumber,
+        origen: origenDisplayName.trim() || selectedRemitente?.razonSocial || 'Correo Argentino',
         destinatario: recipientName,
         destino: [destinoCity, selectedCountry?.label].filter(Boolean).join(', '),
         detalles: `${packageWeightKg}kg – ${lengthCm}x${widthCm}x${heightCm}cm`,
         usuario: 'Marco',
         estado: 'Validado',
+        commercial,
       })
-      wizardStore.clear()
+      // Comercial: conservar wizard para el paso Factura E desde pendientes.
+      if (commercial) wizardStore.save({ ...snap, destinoOrderNum: orderNumber })
+      else wizardStore.clear()
       navigate('/propuesta/mis-envios')
       return
     }
@@ -466,7 +507,10 @@ export function InternationalShipmentPage() {
           {currentStep === 'Declaración' && (
             <div className={styles.form}>
               <section className={styles.section}>
-                <h4 className={styles.sectionTitle}>Seleccioná el país de destino</h4>
+                <h4 className={styles.sectionTitleRow}>
+                  <span>Seleccioná el país de destino</span>
+                  <InfoTooltip content="Seleccioná el país de destino. Verificá los requisitos de ingreso del país de destino por vía postal para evitar devoluciones." />
+                </h4>
                 <Select
                   id="destination-country"
                   label="País de destino"
@@ -474,6 +518,9 @@ export function InternationalShipmentPage() {
                   value={country}
                   onChange={(event) => handleCountryChange(event.currentTarget.value)}
                 />
+                {country !== '-1' && countryHasShipping && (
+                  <p className={styles.supportingRange}>{getCountryGeographicRangeLabel(country)}</p>
+                )}
                 {country !== '-1' && !countryHasShipping && (
                   <Alert tone="danger">
                     El país seleccionado no está disponible para envíos internacionales.
@@ -494,6 +541,13 @@ export function InternationalShipmentPage() {
                     labelPosition="left"
                   />
 
+                  <button type="button" className={styles.infoLink} onClick={() => setInfoModalOpen(true)}>
+                    Información a tener en cuenta
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                      <path d="m7.5 5 5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+
                   <p className={styles.hint}>Detallá la categoría del envío y el contenido del paquete.</p>
 
                   <Select
@@ -501,7 +555,7 @@ export function InternationalShipmentPage() {
                     label="Categoría de envío"
                     options={categoryOptions}
                     value={category}
-                    onChange={(event) => handleCategoryChange(event.currentTarget.value)}
+                    onChange={(event) => requestCategoryChange(event.currentTarget.value)}
                     disabled={commercial}
                   />
 
@@ -543,8 +597,19 @@ export function InternationalShipmentPage() {
                       <span className={styles.totalValue}>{formatUsd(totalValueUsd)}</span>
                     </div>
                     <div className={styles.totalRow}>
+                      <span className={styles.totalLabel}>Derechos de exportación</span>
+                      <span className={styles.totalValue}>{formatUsd(EXPORT_DUTIES_USD)}</span>
+                    </div>
+                    <div className={styles.totalRow}>
                       <span className={styles.totalLabel}>Peso total declarado</span>
                       <span className={styles.totalValue}>{formatWeightKg(totalWeightKg)}</span>
+                    </div>
+                    <div className={styles.totalRow}>
+                      <span className={styles.totalLabelWithTip}>
+                        <InfoTooltip content={PACKAGE_MAX_WEIGHT_TOOLTIP} />
+                        <span>{PACKAGE_MAX_WEIGHT_LABEL}</span>
+                      </span>
+                      <span className={styles.totalValue}>{PACKAGE_MAX_WEIGHT_KG}kg</span>
                     </div>
                   </div>
 
@@ -558,7 +623,15 @@ export function InternationalShipmentPage() {
 
                   <Checkbox
                     id="declaration-accepted"
-                    label="Confirmo que la información ingresada en esta declaración jurada es correcta y completa."
+                    label={
+                      <>
+                        Los datos ingresados serán utilizados para la{' '}
+                        <strong className={styles.djEmphasis}>Declaración de Exportación Simplificada Postal</strong>
+                        {' '}ante ARCA/DGA y deben ser exactos y veraces siendo el expedidor responsable según la Resolución General ARCA 5886/2026 punto E.
+                        <br /><br />
+                        Correo Argentino no es responsable de su exactitud o veracidad.
+                      </>
+                    }
                     checked={declarationAccepted}
                     onChange={(v) => { setDeclarationAccepted(v); if (v) setDeclarationError(false) }}
                   />
@@ -651,6 +724,14 @@ export function InternationalShipmentPage() {
                     invalid={packageErrors.weight !== undefined}
                   />
 
+                  <div className={styles.totalRow}>
+                    <span className={styles.totalLabelWithTip}>
+                      <InfoTooltip content={PACKAGE_MAX_WEIGHT_TOOLTIP} />
+                      <span>{PACKAGE_MAX_WEIGHT_LABEL}</span>
+                    </span>
+                    <span className={styles.totalValue}>{PACKAGE_MAX_WEIGHT_KG}kg</span>
+                  </div>
+
                   {packageErrors.weight !== undefined && (
                     <Alert tone="danger">{packageErrors.weight}</Alert>
                   )}
@@ -667,6 +748,12 @@ export function InternationalShipmentPage() {
                   <h4 className={styles.sectionTitle}>Origen</h4>
 
                   <div className={styles.fields}>
+                    <Input
+                      id="origen-display-name"
+                      label="Nombre y apellido / Razón social"
+                      value={origenDisplayName}
+                      onChange={(event) => setOrigenDisplayName(event.currentTarget.value)}
+                    />
                     <div className={styles.subsection}>
                       <p className={styles.subsectionTitle}>Remitente</p>
                       <p className={styles.fieldNote}>
@@ -726,6 +813,16 @@ export function InternationalShipmentPage() {
               <section className={styles.section}>
                 <h4 className={styles.sectionTitle}>Destinatario</h4>
 
+                <div className={styles.orderChipWrap}>
+                  <input
+                    className={styles.orderChipInput}
+                    placeholder="N° de orden (opcional)"
+                    value={destinoOrderNum}
+                    onChange={(event) => setDestinoOrderNum(event.currentTarget.value)}
+                    aria-label="N° de orden (opcional)"
+                  />
+                </div>
+
                 <div className={styles.fields}>
                   <div className={styles.twoColRow}>
                     <Input
@@ -761,11 +858,13 @@ export function InternationalShipmentPage() {
                         setRecipientPhone(e.currentTarget.value)
                         clearError('recipientPhone')
                         clearError('recipientPhoneFormat')
+                        clearError('recipientPhoneMin')
                       }}
-                      invalid={step4Errors.has('recipientPhone') || step4Errors.has('recipientPhoneFormat')}
+                      invalid={step4Errors.has('recipientPhone') || step4Errors.has('recipientPhoneFormat') || step4Errors.has('recipientPhoneMin')}
                       hint={
                         step4Errors.has('recipientPhone') ? 'Campo requerido' :
                         step4Errors.has('recipientPhoneFormat') ? 'Solo se permiten números' :
+                        step4Errors.has('recipientPhoneMin') ? 'Ingresá al menos 8 números' :
                         'Solo números, sin espacios ni guiones'
                       }
                     />
@@ -790,16 +889,6 @@ export function InternationalShipmentPage() {
                     hint={step4Errors.has('recipientTaxId') ? 'Campo requerido' : 'Ingresá el número fiscal del destinatario'}
                   />
 
-                  {commercial && (
-                    <Input
-                      id="factura-e"
-                      label="Factura E"
-                      value={facturaE}
-                      onChange={(e) => { setFacturaE(e.currentTarget.value); clearError('facturaE') }}
-                      invalid={step4Errors.has('facturaE')}
-                      hint={step4Errors.has('facturaE') ? 'Campo requerido' : 'La factura debe corresponder al envío completo.'}
-                    />
-                  )}
                 </div>
               </section>
 
@@ -897,12 +986,33 @@ export function InternationalShipmentPage() {
                     )}
                   </div>
 
-                  <Input
-                    id="destino-order"
-                    label="N° de orden (opcional)"
-                    value={destinoOrderNum}
-                    onChange={(e) => setDestinoOrderNum(e.currentTarget.value)}
-                  />
+                </div>
+              </section>
+
+              <section className={styles.section}>
+                <h4 className={styles.sectionTitle}>Servicio Postal</h4>
+                <p className={styles.fieldNote}>Disponible según destino y peso declarado</p>
+
+                <div className={styles.postalCards}>
+                  {([
+                    { value: 'EMS', label: 'EMS Paquetería', description: 'Entrega estimada entre 2 y 8 días hábiles, según el destino.', price: '$15.000,00' },
+                    { value: 'ENCOMIENDA', label: 'Encomienda Internacional', description: 'Entrega estimada entre 7 y 21 días hábiles, según el destino.', price: '$10.000,00' },
+                    { value: 'PEQUENO_PAQUETE', label: 'Pequeño Paquete', description: 'Entrega estimada entre 10 y 30 días hábiles, según el destino.', price: '$7.500,00' },
+                    { value: 'EMS_DOCUMENTACION', label: 'EMS Documentación', description: 'Solo para documentos. Entrega estimada entre 2 y 8 días hábiles.', price: '$8.000,00' },
+                  ] as const).map((svc) => (
+                    <PostalServiceCard
+                      key={svc.value}
+                      name="shipping-service"
+                      value={svc.value}
+                      label={svc.label}
+                      description={svc.description}
+                      selected={shippingService === svc.value}
+                      onSelect={(value) => setShippingService(value as typeof shippingService)}
+                      disabled={svc.value === 'EMS_DOCUMENTACION' && category !== 'DOCUMENTO'}
+                      disabledReason={svc.value === 'EMS_DOCUMENTACION' && category !== 'DOCUMENTO' ? 'Solo disponible para la categoría Documentos.' : undefined}
+                      trailing={<span className={styles.servicePrice}>{svc.price}</span>}
+                    />
+                  ))}
                 </div>
               </section>
 
@@ -913,78 +1023,60 @@ export function InternationalShipmentPage() {
                   description="Acepto que en caso de ser necesario, Correo Argentino me representa ante Aduana para la gestión de este envío."
                   checked={aduanaRepresentation}
                   onChange={(next) => {
-                    if (!next) {
-                      setAduanaModalOpen(true)
-                    } else {
-                      setAduanaRepresentation(true)
-                    }
+                    if (!next) setAduanaModalOpen(true)
+                    else setAduanaRepresentation(true)
                   }}
                   labelPosition="left"
                 />
-
-                {!aduanaRepresentation && (
-                  <div className={styles.subsection}>
-                    <p className={styles.subsectionTitle}>Designá un representante</p>
-                    <p className={styles.fieldNote}>
-                      Como la representación de Correo Argentino ante aduana está deshabilitada,
-                      es necesario tener un representante en su lugar introduciendo su nombre,
-                      apellido y CUIL/CUIT:
-                    </p>
-                    <Input
-                      id="representante-name"
-                      label="Nombre y apellido del representante"
-                      value={representanteName}
-                      onChange={(e) => { setRepresentanteName(e.currentTarget.value); clearError('representanteName') }}
-                      invalid={step4Errors.has('representanteName')}
-                      hint={step4Errors.has('representanteName') ? 'Campo requerido' : undefined}
-                    />
-                    <Input
-                      id="representante-cuil"
-                      label="CUIL/CUIT representante"
-                      value={representanteCuil}
-                      onChange={(e) => { setRepresentanteCuil(e.currentTarget.value); clearError('representanteCuil') }}
-                      invalid={step4Errors.has('representanteCuil')}
-                      hint={step4Errors.has('representanteCuil') ? 'Campo requerido' : undefined}
-                    />
-                  </div>
+                {aduanaRepresentation && (
+                  <p className={styles.sinCostoRow}>
+                    <span className={styles.sinCosto}>Sin Costo</span>
+                    <InfoTooltip content="La representación ante Aduana no tiene costo adicional." />
+                  </p>
                 )}
-              </section>
-
-              <section className={styles.section}>
-                <h4 className={styles.sectionTitle}>Servicio Postal</h4>
-                <p className={styles.fieldNote}>Disponible según destino y peso declarado</p>
-
-                <RadioGroup
-                  name="shipping-service"
-                  value={shippingService}
-                  onChange={setShippingService}
-                  options={[
-                    {
-                      value: 'EMS' as const,
-                      label: 'EMS Paquetería',
-                      description: 'Entrega estimada entre 2 y 8 días hábiles, según el destino.',
-                      trailing: <span className={styles.servicePrice}>$15.000,00</span>,
-                    },
-                    {
-                      value: 'ENCOMIENDA' as const,
-                      label: 'Encomienda Internacional',
-                      description: 'Entrega estimada entre 7 y 21 días hábiles, según el destino.',
-                      trailing: <span className={styles.servicePrice}>$10.000,00</span>,
-                    },
-                    {
-                      value: 'PEQUENO_PAQUETE' as const,
-                      label: 'Pequeño Paquete',
-                      description: 'Entrega estimada entre 10 y 30 días hábiles, según el destino.',
-                      trailing: <span className={styles.servicePrice}>$7.500,00</span>,
-                    },
-                    {
-                      value: 'EMS_DOCUMENTACION' as const,
-                      label: 'EMS Documentación',
-                      description: 'Solo para documentos. Entrega estimada entre 2 y 8 días hábiles.',
-                      trailing: <span className={styles.servicePrice}>$8.000,00</span>,
-                    },
-                  ]}
-                />
+                {!aduanaRepresentation && (
+                  <>
+                    <div className={styles.totalRow}>
+                      <span className={styles.totalLabelWithTip}>
+                        <span>Costo</span>
+                        <InfoTooltip content="Cargo adicional por gestionar sin representación de Correo Argentino." />
+                      </span>
+                      <span className={styles.totalValue}>${formatAmountOnly(ADUANA_WITHOUT_REPRESENTATION_COST_ARS)}</span>
+                    </div>
+                    <Switch
+                      id="asistire-yo"
+                      label="Asistiré yo"
+                      description="Si activás esta opción, asistirás vos. Si querés designar un tercero, desactivala e ingresá sus datos"
+                      checked={asistireYo}
+                      onChange={setAsistireYo}
+                      labelPosition="left"
+                    />
+                    {!asistireYo && (
+                      <>
+                        <Input
+                          id="representante-name"
+                          label="Nombre y apellido del representante"
+                          value={representanteName}
+                          onChange={(event) => { setRepresentanteName(event.currentTarget.value); clearError('representanteName') }}
+                          invalid={step4Errors.has('representanteName')}
+                          hint={step4Errors.has('representanteName') ? 'Campo requerido' : undefined}
+                        />
+                        <Input
+                          id="representante-cuil"
+                          label="CUIL/CUIT representante"
+                          placeholder={CUIT_DOTS_PLACEHOLDER}
+                          value={representanteCuil}
+                          onChange={(event) => {
+                            setRepresentanteCuil(formatCuitDotsMask(event.currentTarget.value))
+                            clearError('representanteCuil')
+                          }}
+                          invalid={step4Errors.has('representanteCuil')}
+                          hint={step4Errors.has('representanteCuil') ? 'Campo requerido' : undefined}
+                        />
+                      </>
+                    )}
+                  </>
+                )}
               </section>
             </div>
           )}
@@ -1006,9 +1098,9 @@ export function InternationalShipmentPage() {
                 currentStep={currentStep}
                 unlockedSteps={unlocked}
                 onStepClick={goTo}
-                declaracion={{ categoryLabel, totalArticles, totalValueUsd, totalWeightKg }}
+                declaracion={{ categoryLabel, totalArticles, totalValueUsd, totalWeightKg, exportDutiesUsd: EXPORT_DUTIES_USD }}
                 paquete={{ measuresLabel, weightLabel }}
-                origen={selectedRemitente}
+                origen={{ displayName: origenDisplayName, remitente: selectedRemitente }}
                 destino={{
                   countryLabel: destinoCountryLabel,
                   city: destinoCity || undefined,
@@ -1019,6 +1111,10 @@ export function InternationalShipmentPage() {
                   currentStep === 'Destino' && runDestinoValidation().size === 0
                     ? () => {
                         wizardStore.save(buildSnapshot())
+                        if (commercial) {
+                          navigate('/internacional/factura-e')
+                          return
+                        }
                         const priceArs = shippingService ? SHIPPING_SERVICE_PRICES_ARS[shippingService] : 15000
                         navigate('/checkout', {
                           state: {
@@ -1040,6 +1136,7 @@ export function InternationalShipmentPage() {
                       }
                     : undefined
                 }
+                payLabel={commercial ? 'Pagar' : 'Finalizar'}
               />
             </div>
           </div>
@@ -1081,6 +1178,21 @@ export function InternationalShipmentPage() {
           setAduanaRepresentation(false)
           setAduanaModalOpen(false)
         }}
+      />
+
+      <ConfirmDialog
+        isOpen={pendingCategory !== null}
+        onClose={() => setPendingCategory(null)}
+        onConfirm={confirmCategoryChange}
+        title="¿Querés cambiar la categoría?"
+        description="Recordá que esto es una declaración jurada. Verificá que el cambio de categoría sea el correcto para lo que querés enviar"
+        cancelLabel="Cancelar"
+        confirmLabel="Cambiar y eliminar"
+      />
+
+      <InfoConsiderationsModal
+        isOpen={infoModalOpen}
+        onClose={() => setInfoModalOpen(false)}
       />
 
       <AddArticleModal

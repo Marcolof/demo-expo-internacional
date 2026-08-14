@@ -22,6 +22,7 @@
   padding: 0;
 }
 
+/* --bp-tablet (768px) — literal requerido en @media */
 @media (min-width: 768px) {
   .content {
     padding: var(--space-6);
