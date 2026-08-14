@@ -1,17 +1,65 @@
 /*
- * Carga masiva del flujo internacional (Figma 5658:21808). El layout general
- * (grilla, tabs, alineación del switch) se reutiliza de
- * NewShipmentPage.module.css; acá viven sólo las secciones propias de esta
- * pantalla.
+ * Carga masiva internacional — empty state centrado a todo el ancho.
+ * No reutiliza la grilla 2 columnas de NewShipmentPage (doble-columna.png).
  */
 
-/* Switch Nacional/Internacional responsive — mismo criterio que
- * InternationalShipmentPage.module.css (duplicado acá porque son módulos
- * CSS distintos, sin selector cruzado posible). */
+.page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: calc(100vh - 12rem);
+  padding: 0 var(--space-12) var(--space-8);
+  box-sizing: border-box;
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.headerMain {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.title {
+  margin: var(--space-4) 0 var(--space-2);
+  font-size: 1.75rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.loadTabs {
+  width: 100%;
+  min-width: max-content;
+  margin-bottom: var(--space-5);
+}
+
+/* --bp-tablet (768px) */
+@media (min-width: 768px) {
+  .loadTabs {
+    width: 66.6667%;
+  }
+}
+
+/* --bp-desktop (1366px) */
+@media (min-width: 1366px) {
+  .loadTabs {
+    width: 33.3333%;
+  }
+}
+
 .scopeSwitchMobileOnly {
   margin-bottom: var(--space-5);
 }
 
+/* --bp-tablet (768px) */
 @media (min-width: 768px) {
   .scopeSwitchMobileOnly {
     display: none;
@@ -20,8 +68,11 @@
 
 .scopeSwitchDesktopOnly {
   display: none;
+  flex-shrink: 0;
+  margin-top: var(--space-4);
 }
 
+/* --bp-tablet (768px) */
 @media (min-width: 768px) {
   .scopeSwitchDesktopOnly {
     display: flex;
@@ -30,12 +81,14 @@
 
 .comingSoon {
   display: flex;
+  flex: 1 1 auto;
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 24rem;
   padding: var(--space-8) var(--space-4);
 }
+
+/* --- Estilos legacy del flujo CSV (reactivación futura) ----------------- */
 
 .content {
   display: flex;
@@ -45,17 +98,13 @@
   max-width: 600px;
 }
 
-/* Separación con la barra Cancelar/Guardar, que no trae padding vertical
- * propio (ver NewShipmentPage.module.css → .navActions). Va en el último
- * paso, no en su último campo, para que el espacio no cambie según si el
- * archivo/banner de éxito están visibles o no. */
 .content > .step:last-child {
   margin-bottom: var(--space-6);
 }
 
 .sectionTitle {
   color: var(--text-primary);
-  font-size: 1.125rem; /* 18px, igual que el resto de los títulos de sección */
+  font-size: 1.125rem;
   font-weight: var(--font-weight-semibold);
 }
 
@@ -70,8 +119,6 @@
   color: var(--text-primary);
   font-size: var(--font-size-base);
 }
-
-/* --- Paso 1: descargas -------------------------------------------------- */
 
 .downloadList {
   display: flex;
@@ -116,11 +163,6 @@
   font-size: var(--font-size-xs);
 }
 
-/* --- Paso 2: subir archivo (Figma 5658:33719) ----------------------------- */
-
-/* Fila: "Subir" a la izquierda, dropzone a la derecha ocupando el resto del
- * ancho. `align-items: stretch` (default de flex) hace que el dropzone tome
- * exactamente el alto real del botón — no un valor fijo adivinado. */
 .uploadRow {
   display: flex;
   flex-wrap: wrap;
@@ -128,8 +170,6 @@
   width: 100%;
 }
 
-/* "Subir": rellena el ancho disponible (fila angosta / mobile) pero nunca
- * pasa de 140px (Figma 5658:33719). */
 .uploadButton {
   flex: 1 1 140px;
   max-width: 140px;
@@ -138,7 +178,7 @@
 .dropzone {
   display: flex;
   flex: 1 1 240px;
-  max-width: 300px; /* Figma 5658:33719 */
+  max-width: 300px;
   align-items: center;
   justify-content: center;
   padding: var(--space-3) var(--space-6);
@@ -146,9 +186,6 @@
   color: var(--text-disabled);
   font-size: var(--font-size-base);
   text-align: center;
-  /* Borde punteado a mano (no `border-style:dashed`): el guión propio del
-   * navegador no permite fijar el largo del trazo ni el hueco entre guiones.
-   * Figma: trazo 6px, hueco 6px, repetidos en las 4 caras. */
   background-image: linear-gradient(
       to right,
       var(--border-default) 0 6px,
@@ -162,9 +199,6 @@
   background-size: 12px 1px, 12px 1px, 1px 12px, 1px 12px;
 }
 
-/* --- Archivo "importado" (mock) -------------------------------------------
- * No hay archivo real ni diálogo del sistema: "Subir" sólo muestra este
- * nombre fijo con la opción de sacarlo (vuelve al estado vacío). */
 .uploadedFile {
   display: flex;
   align-items: center;
@@ -191,4 +225,11 @@
 
 .removeFile:hover {
   color: var(--text-primary);
+}
+
+/* --bp-mobile-max (767.98px) */
+@media (max-width: 767.98px) {
+  .page {
+    padding: 0 var(--space-4) var(--space-6);
+  }
 }

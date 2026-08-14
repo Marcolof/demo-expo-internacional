@@ -7,7 +7,13 @@ import { NumberInput } from '@/shared/ui/NumberInput'
 import { Modal } from '@/shared/ui/Modal'
 import { Select } from '@/shared/ui/Select'
 import { InfoTooltip } from '@/shared/ui/Tooltip'
-import { VUCE_URL } from '../constants/summary-detail.constants'
+import {
+  EXPORT_DUTIES_USD,
+  PACKAGE_MAX_WEIGHT_KG,
+  PACKAGE_MAX_WEIGHT_LABEL,
+  PACKAGE_MAX_WEIGHT_TOOLTIP,
+  VUCE_URL,
+} from '../constants/summary-detail.constants'
 import {
   DEFAULT_MEASURE_UNIT,
   MEASURE_UNIT_OPTIONS,
@@ -104,6 +110,27 @@ function DisclosureIcon({ open }: { readonly open: boolean }) {
       style={{ transform: open ? 'rotate(180deg)' : undefined }}
     >
       <path d="M4 6l4 4 4-4" />
+    </svg>
+  )
+}
+
+function HelpInfoIcon() {
+  return (
+    <svg
+      className={styles.helpInfoIcon}
+      width="24"
+      height="28"
+      viewBox="0 0 24 28"
+      fill="none"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="14" r="10" stroke="currentColor" strokeWidth="1.5" />
+      <path
+        d="M12 12.5v6M12 9.5h.01"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
     </svg>
   )
 }
@@ -226,6 +253,7 @@ export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', i
             aria-expanded={helpOpen}
             onClick={() => setHelpOpen((open) => !open)}
           >
+            <HelpInfoIcon />
             ¿Dónde encuentro este código?
             <DisclosureIcon open={helpOpen} />
           </button>
@@ -262,6 +290,7 @@ export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', i
             value={form.unitOfMeasure}
             onChange={(event) => setField('unitOfMeasure')(event.currentTarget.value)}
             invalid={showInvalidBorders && errors.unitOfMeasure !== undefined}
+            hint="Ej: Remeras = Metro cuadrado"
           />
           <NumberInput
             id="article-quantity"
@@ -299,12 +328,23 @@ export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', i
 
         <div className={styles.totals}>
           <div className={styles.totalRow}>
+            <span className={styles.totalLabel}>Derecho de Exportación</span>
+            <span className={styles.totalValue}>{formatUsd(EXPORT_DUTIES_USD)}</span>
+          </div>
+          <div className={styles.totalRow}>
             <span className={styles.totalLabel}>Precio total en USD</span>
             <span className={styles.totalValue}>{formatUsd(totalPriceUsd)}</span>
           </div>
           <div className={styles.totalRow}>
             <span className={styles.totalLabel}>Peso total</span>
             <span className={styles.totalValue}>{formatWeightKg(totalWeightKg)}</span>
+          </div>
+          <div className={styles.totalRow}>
+            <span className={styles.totalLabelWithTip}>
+              <InfoTooltip content={PACKAGE_MAX_WEIGHT_TOOLTIP} />
+              <span>{PACKAGE_MAX_WEIGHT_LABEL}</span>
+            </span>
+            <span className={styles.totalValue}>{PACKAGE_MAX_WEIGHT_KG}kg</span>
           </div>
         </div>
       </div>

@@ -74,6 +74,18 @@ export function isCuit(value: string): ValidationError {
   return Number(digits[10]) === expected ? null : 'El CUIT/CUIL ingresado no es válido.'
 }
 
+/** Número decimal no negativo con hasta 2 decimales (montos). Acepta coma o punto. */
+export function isMoneyAmount(value: string, allowEmpty = true): ValidationError {
+  if (value.trim() === '') return allowEmpty ? null : '* Campo obligatorio'
+  const normalized = value.replace(',', '.')
+  if (!/^\d+(\.\d{1,2})?$/.test(normalized)) {
+    return 'Ingresá un monto con hasta 2 decimales.'
+  }
+  const parsed = Number(normalized)
+  if (Number.isNaN(parsed) || parsed < 0) return 'Ingresá un monto válido.'
+  return null
+}
+
 /** Formatea dígitos a máscara CUIT `XX-YYYYYYYY-Z`. */
 export function formatCuitMask(raw: string): string {
   const digits = raw.replace(/\D/g, '').slice(0, 11)

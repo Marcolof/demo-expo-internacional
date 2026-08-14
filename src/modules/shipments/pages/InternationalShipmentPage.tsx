@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { cn } from '@/shared/lib/cn'
 import { COUNTRIES } from '@/shared/lib/countries'
 import type { SelectOption } from '@/core/types/common'
+import { useActiveUser } from '@/core/session/activeUser'
+import { userFullName } from '@/core/auth/currentUser'
 import { PageContainer } from '@/shared/layout/PageContainer'
 import { formatAmountOnly, formatDimensionsCm, formatUsd, formatWeightKg } from '@/shared/lib/formatCurrency'
-import { formatCuitDotsMask, CUIT_DOTS_PLACEHOLDER } from '@/shared/lib/validators'
+import { formatCuitMask } from '@/shared/lib/validators'
 import { useStepFlow } from '@/shared/hooks/useStepFlow'
 import { Alert } from '@/shared/ui/Alert'
 import { Button } from '@/shared/ui/Button'
@@ -47,9 +49,6 @@ import packageOpenIcon from '@/assets/icons/package-open.svg'
 import layout from './NewShipmentPage.module.css'
 import styles from './InternationalShipmentPage.module.css'
 
-/** Doc funcional §7.2: con más de 2 kg declarados, sólo sucursales con asiento aduanero. */
-const CUSTOMS_OFFICE_REQUIRED_OVER_KG = 2
-
 /** Países sin servicio de envío internacional disponible (maqueta). */
 const COUNTRIES_WITHOUT_SHIPPING: ReadonlySet<string> = new Set(['RU', 'CU', 'KP'])
 
@@ -89,7 +88,7 @@ const NON_COMMERCIAL_CATEGORIES: readonly SelectOption[] = [
 const COMMERCIAL_CATEGORY_VALUE = 'MERCADERIA'
 
 const COMMERCIAL_CATEGORIES: readonly SelectOption[] = [
-  { value: COMMERCIAL_CATEGORY_VALUE, label: 'Envío de mercadería' },
+  { value: COMMERCIAL_CATEGORY_VALUE, label: 'Venta de mercadería' },
 ]
 
 
@@ -272,13 +271,17 @@ export function InternationalShipmentPage() {
   const [aduanaRepresentation, setAduanaRepresentation] = useState(true)
   const [aduanaModalOpen, setAduanaModalOpen]           = useState(false)
   const [representanteName, setRepresentanteName]       = useState('Juan Perez')
-  const [representanteCuil, setRepresentanteCuil]       = useState('20.31211156.3')
+  const [representanteCuil, setRepresentanteCuil]       = useState('20-31211156-3')
   const [shippingService, setShippingService]           = useState<'EMS' | 'ENCOMIENDA' | 'PEQUENO_PAQUETE' | 'EMS_DOCUMENTACION' | null>('EMS')
   const [step4Errors, setStep4Errors]                   = useState<ReadonlySet<string>>(new Set())
   const [infoModalOpen, setInfoModalOpen] = useState(false)
   const [pendingCategory, setPendingCategory] = useState<string | null>(null)
   const [origenDisplayName, setOrigenDisplayName] = useState('')
   const [asistireYo, setAsistireYo] = useState(true)
+
+  const { user: activeUser } = useActiveUser()
+  const selfRepresentanteName = userFullName(activeUser)
+  const selfRepresentanteCuil = formatCuitMask(activeUser.cuit)
 
   /* ── Restaurar wizard desde store al volver del checkout ─────────── */
   useEffect(() => {
@@ -381,7 +384,11 @@ export function InternationalShipmentPage() {
     })
 
   useEffect(() => {
-    if (shippingService === 'EMS_DOCUMENTACION' && category !== 'DOCUMENTO') {
+    if (category === 'DOCUMENTO') {
+      setShippingService('EMS_DOCUMENTACION')
+      return
+    }
+    if (shippingService === 'EMS_DOCUMENTACION') {
       setShippingService('EMS')
     }
   }, [category, shippingService])
@@ -393,6 +400,21 @@ export function InternationalShipmentPage() {
     const ids = COUNTRY_CONTENT_RESTRICTIONS[country] ?? []
     return new Set(ids)
   }, [country])
+
+  const hasRestrictedArticles = articles.some((a) => restrictedIds.has(a.id))
+
+  const postalServiceOptions = useMemo(() => {
+    const all = [
+      { value: 'EMS' as const, label: 'EMS Paquetería', description: 'Entrega estimada entre 2 y 8 días hábiles, según el destino.', price: '$15.000,00' },
+      { value: 'ENCOMIENDA' as const, label: 'Encomienda Internacional', description: 'Entrega estimada entre 7 y 21 días hábiles, según el destino.', price: '$10.000,00' },
+      { value: 'PEQUENO_PAQUETE' as const, label: 'Pequeño Paquete', description: 'Entrega estimada entre 10 y 30 días hábiles, según el destino.', price: '$7.500,00' },
+      { value: 'EMS_DOCUMENTACION' as const, label: 'EMS Documentación', description: 'Solo para documentos. Entrega estimada entre 2 y 8 días hábiles.', price: '$8.000,00' },
+    ]
+    if (category === 'DOCUMENTO') {
+      return all.filter((svc) => svc.value === 'EMS_DOCUMENTACION')
+    }
+    return all.filter((svc) => svc.value !== 'EMS_DOCUMENTACION')
+  }, [category])
 
   const totalArticles = articles.length
   const totalValueUsd = articles.reduce((sum, a) => sum + articleTotalPriceUsd(a), 0)
@@ -443,6 +465,7 @@ export function InternationalShipmentPage() {
     if (currentStep === 'Declaración') {
       if (!declarationAccepted) { setDeclarationError(true); return }
       if (!countryHasShipping) return
+      if (hasRestrictedArticles) return
       setDeclarationError(false)
     }
 
@@ -519,7 +542,9 @@ export function InternationalShipmentPage() {
                   onChange={(event) => handleCountryChange(event.currentTarget.value)}
                 />
                 {country !== '-1' && countryHasShipping && (
-                  <p className={styles.supportingRange}>{getCountryGeographicRangeLabel(country)}</p>
+                  <p className={styles.supportingRange}>
+                    Rango geográfico: {getCountryGeographicRangeLabel(country)}
+                  </p>
                 )}
                 {country !== '-1' && !countryHasShipping && (
                   <Alert tone="danger">
@@ -621,7 +646,8 @@ export function InternationalShipmentPage() {
                     </Alert>
                   )}
 
-                  <Checkbox
+                  <div className={styles.declarationAccept}>
+                    <Checkbox
                     id="declaration-accepted"
                     label={
                       <>
@@ -635,6 +661,7 @@ export function InternationalShipmentPage() {
                     checked={declarationAccepted}
                     onChange={(v) => { setDeclarationAccepted(v); if (v) setDeclarationError(false) }}
                   />
+                  </div>
 
                   {declarationError && (
                     <Alert tone="danger">
@@ -771,10 +798,6 @@ export function InternationalShipmentPage() {
 
                     <div className={styles.subsection}>
                       <p className={styles.subsectionTitle}>Sucursal de origen</p>
-                      <p className={styles.fieldNote}>
-                        Para envíos con fines comerciales o con más de {CUSTOMS_OFFICE_REQUIRED_OVER_KG} kg declarados
-                        solo se mostrarán sucursales con asiento aduanero.
-                      </p>
                       <Select
                         id="province"
                         label="Provincia"
@@ -994,12 +1017,7 @@ export function InternationalShipmentPage() {
                 <p className={styles.fieldNote}>Disponible según destino y peso declarado</p>
 
                 <div className={styles.postalCards}>
-                  {([
-                    { value: 'EMS', label: 'EMS Paquetería', description: 'Entrega estimada entre 2 y 8 días hábiles, según el destino.', price: '$15.000,00' },
-                    { value: 'ENCOMIENDA', label: 'Encomienda Internacional', description: 'Entrega estimada entre 7 y 21 días hábiles, según el destino.', price: '$10.000,00' },
-                    { value: 'PEQUENO_PAQUETE', label: 'Pequeño Paquete', description: 'Entrega estimada entre 10 y 30 días hábiles, según el destino.', price: '$7.500,00' },
-                    { value: 'EMS_DOCUMENTACION', label: 'EMS Documentación', description: 'Solo para documentos. Entrega estimada entre 2 y 8 días hábiles.', price: '$8.000,00' },
-                  ] as const).map((svc) => (
+                  {postalServiceOptions.map((svc) => (
                     <PostalServiceCard
                       key={svc.value}
                       name="shipping-service"
@@ -1008,8 +1026,6 @@ export function InternationalShipmentPage() {
                       description={svc.description}
                       selected={shippingService === svc.value}
                       onSelect={(value) => setShippingService(value as typeof shippingService)}
-                      disabled={svc.value === 'EMS_DOCUMENTACION' && category !== 'DOCUMENTO'}
-                      disabledReason={svc.value === 'EMS_DOCUMENTACION' && category !== 'DOCUMENTO' ? 'Solo disponible para la categoría Documentos.' : undefined}
                       trailing={<span className={styles.servicePrice}>{svc.price}</span>}
                     />
                   ))}
@@ -1030,19 +1046,19 @@ export function InternationalShipmentPage() {
                 />
                 {aduanaRepresentation && (
                   <p className={styles.sinCostoRow}>
-                    <span className={styles.sinCosto}>Sin Costo</span>
+                    <span className={styles.sinCosto}>Sin costo</span>
                     <InfoTooltip content="La representación ante Aduana no tiene costo adicional." />
                   </p>
                 )}
                 {!aduanaRepresentation && (
                   <>
-                    <div className={styles.totalRow}>
-                      <span className={styles.totalLabelWithTip}>
-                        <span>Costo</span>
-                        <InfoTooltip content="Cargo adicional por gestionar sin representación de Correo Argentino." />
+                    <p className={styles.costoInline}>
+                      <span>Costo</span>
+                      <span className={styles.costoValue}>
+                        ${formatAmountOnly(ADUANA_WITHOUT_REPRESENTATION_COST_ARS)}
                       </span>
-                      <span className={styles.totalValue}>${formatAmountOnly(ADUANA_WITHOUT_REPRESENTATION_COST_ARS)}</span>
-                    </div>
+                      <InfoTooltip content="Cargo adicional por gestionar sin representación de Correo Argentino." />
+                    </p>
                     <Switch
                       id="asistire-yo"
                       label="Asistiré yo"
@@ -1051,7 +1067,24 @@ export function InternationalShipmentPage() {
                       onChange={setAsistireYo}
                       labelPosition="left"
                     />
-                    {!asistireYo && (
+                    {asistireYo ? (
+                      <>
+                        <Input
+                          id="representante-name-self"
+                          label="Nombre y apellido del representante"
+                          value={selfRepresentanteName}
+                          onChange={() => {}}
+                          disabled
+                        />
+                        <Input
+                          id="representante-cuil-self"
+                          label="CUIL/CUIT representante"
+                          value={selfRepresentanteCuil}
+                          onChange={() => {}}
+                          disabled
+                        />
+                      </>
+                    ) : (
                       <>
                         <Input
                           id="representante-name"
@@ -1064,10 +1097,10 @@ export function InternationalShipmentPage() {
                         <Input
                           id="representante-cuil"
                           label="CUIL/CUIT representante"
-                          placeholder={CUIT_DOTS_PLACEHOLDER}
+                          placeholder="XX-XXXXXXXX-X"
                           value={representanteCuil}
                           onChange={(event) => {
-                            setRepresentanteCuil(formatCuitDotsMask(event.currentTarget.value))
+                            setRepresentanteCuil(formatCuitMask(event.currentTarget.value))
                             clearError('representanteCuil')
                           }}
                           invalid={step4Errors.has('representanteCuil')}
@@ -1136,7 +1169,7 @@ export function InternationalShipmentPage() {
                       }
                     : undefined
                 }
-                payLabel={commercial ? 'Pagar' : 'Finalizar'}
+                payLabel="Finalizar"
               />
             </div>
           </div>
