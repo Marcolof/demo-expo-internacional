@@ -2,7 +2,11 @@ import { useState } from 'react'
 import { Button } from '@/shared/ui/Button'
 import { Stepper } from '@/shared/ui/Stepper'
 import { cn } from '@/shared/lib/cn'
-import { formatUsd, formatWeightKg } from '@/shared/lib/formatCurrency'
+import { formatAmountOnly, formatUsd, formatWeightKg } from '@/shared/lib/formatCurrency'
+import {
+  EXPORT_DUTIES_USD,
+  SUMMARY_DETAIL_ROWS,
+} from '../constants/summary-detail.constants'
 import type { Remitente } from '../types/remitente.types'
 import styles from './InternationalSummary.module.css'
 
@@ -25,6 +29,7 @@ export interface DeclaracionSummaryData {
   readonly totalArticles: number
   readonly totalValueUsd: number
   readonly totalWeightKg: number
+  readonly exportDutiesUsd?: number
 }
 
 function declaracionRows(data?: DeclaracionSummaryData): readonly SummaryRow[] {
@@ -33,16 +38,27 @@ function declaracionRows(data?: DeclaracionSummaryData): readonly SummaryRow[] {
       { label: 'Categoría de envío', value: EMPTY },
       { label: 'Cantidad de artículos', value: EMPTY },
       { label: 'Valor total declarado', value: EMPTY },
+      { label: 'Derechos de Exportación', value: EMPTY },
       { label: 'Peso total declarado', value: EMPTY },
     ]
   }
+
+  const duties = data.exportDutiesUsd ?? EXPORT_DUTIES_USD
 
   return [
     { label: 'Categoría de envío', value: data.categoryLabel ?? EMPTY },
     { label: 'Cantidad de artículos', value: String(data.totalArticles) },
     { label: 'Valor total declarado', value: formatUsd(data.totalValueUsd) },
+    { label: 'Derechos de Exportación', value: formatUsd(duties) },
     { label: 'Peso total declarado', value: formatWeightKg(data.totalWeightKg) },
   ]
+}
+
+function detalleRows(): readonly SummaryRow[] {
+  return SUMMARY_DETAIL_ROWS.map((row) => ({
+    label: row.label,
+    value: `$${formatAmountOnly(row.amountArs)}`,
+  }))
 }
 
 /** Datos en curso del paso Paquete, para reflejarlos en el resumen. */
@@ -60,13 +76,27 @@ function paqueteRows(data?: PaqueteSummaryData): readonly SummaryRow[] | undefin
   ]
 }
 
-function origenRows(remitente?: Remitente): readonly SummaryRow[] | undefined {
-  if (remitente === undefined) return undefined
+export interface OrigenSummaryData {
+  readonly displayName?: string
+  readonly remitente?: Remitente
+}
+
+function origenRows(data?: OrigenSummaryData | Remitente): readonly SummaryRow[] | undefined {
+  if (data === undefined) return undefined
+
+  // Compat: aceptar Remitente directo (API previa) u objeto OrigenSummaryData.
+  const isRemitente = 'razonSocial' in data && 'cuit' in data
+  const remitente = isRemitente ? (data as Remitente) : (data as OrigenSummaryData).remitente
+  const displayName = isRemitente
+    ? (data as Remitente).razonSocial
+    : ((data as OrigenSummaryData).displayName?.trim() || remitente?.razonSocial)
+
+  if (remitente === undefined && (displayName === undefined || displayName === '')) return undefined
 
   return [
-    { label: 'Nombre y apellido / Razón social', value: remitente.razonSocial },
-    { label: 'Dirección', value: remitente.direccionFiscal },
-    { label: 'Remitente', value: remitente.direccionRemitente },
+    { label: 'Nombre y apellido / Razón social', value: displayName ?? EMPTY },
+    { label: 'Dirección', value: remitente?.direccionFiscal ?? EMPTY },
+    { label: 'Remitente', value: remitente?.direccionRemitente ?? EMPTY },
   ]
 }
 
@@ -150,19 +180,21 @@ export interface InternationalSummaryProps {
   /** Medidas y peso del paso Paquete. Sin esto, la sección queda sin filas. */
   readonly paquete?: PaqueteSummaryData
   /**
-   * Remitente para la sección Origen. Se elige en el paso 3 vía Select.
+   * Remitente / nombre libre para la sección Origen.
+   * Acepta Remitente (compat) u OrigenSummaryData.
    */
-  readonly origen?: Remitente
+  readonly origen?: OrigenSummaryData | Remitente
   /** Datos del paso Destino. Sin esto la sección muestra "-". */
   readonly destino?: DestinoSummaryData
   /** Callback del botón "Pagar". Sin definir, el botón queda deshabilitado. */
   readonly onPay?: () => void
+  /** Label del CTA de pago (Pagar / Finalizar). */
+  readonly payLabel?: string
 }
 
 /**
  * Panel Resumen del flujo internacional (Figma 7323:94782): stepper + secciones
- * colapsables (Declaración / Paquete / Origen / Destino) + botón Pagar.
- * Estado inicial de la maqueta: sólo Declaración abierta, valores en "-".
+ * colapsables (Declaración / Paquete / Origen / Destino / Detalle) + botón Pagar.
  */
 export function InternationalSummary({
   currentStep = 'Declaración',
@@ -174,6 +206,7 @@ export function InternationalSummary({
   origen,
   destino,
   onPay,
+  payLabel = 'Pagar',
 }: InternationalSummaryProps) {
   const origenSectionRows = origenRows(origen)
   const destinoSectionRows = destinoRows(destino)
@@ -243,10 +276,16 @@ export function InternationalSummary({
           onToggle={() => toggle('Destino')}
           rows={destinoSectionRows}
         />
+        <Section
+          title="Detalle"
+          open={open.has('Detalle')}
+          onToggle={() => toggle('Detalle')}
+          rows={detalleRows()}
+        />
       </div>
 
       <Button variant="primary" shape="square" fullWidth disabled={onPay === undefined} onClick={onPay}>
-        Pagar
+        {payLabel}
       </Button>
     </div>
   )

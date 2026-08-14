@@ -8,7 +8,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc -b --noEmit"
+    "typecheck": "tsc -b --noEmit",
+    "check:breakpoints": "node scripts/check-breakpoints.mjs",
+    "check:ui": "npm run check:breakpoints && npm run typecheck"
   },
   "dependencies": {
     "country-flag-icons": "^1.6.20",

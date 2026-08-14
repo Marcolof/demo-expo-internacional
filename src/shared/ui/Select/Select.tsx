@@ -19,6 +19,8 @@ export interface SelectProps extends NativeSelectProps {
   /** Marca el marco en rojo sin mostrar texto de apoyo (ver `Input`). */
   readonly invalid?: boolean
   readonly tooltip?: string
+  /** `pill` ≈ border-radius 24px (filtros Mis envíos / Figma). */
+  readonly shape?: 'default' | 'pill'
   readonly className?: string
   /**
    * Texto de la opción vacía. El original usa `"-"` con value `"-1"`.
@@ -44,6 +46,7 @@ export function Select({
   hint,
   invalid = false,
   tooltip,
+  shape = 'default',
   className,
   placeholderOption = '-',
   placeholderOptionValue = '-1',
@@ -73,6 +76,7 @@ export function Select({
         aria-describedby={fieldDescribedBy(id, { hasHint, hasError })}
         className={cn(
           fieldControlClasses.control,
+          shape === 'pill' && fieldControlClasses.controlPill,
           styles.select,
           showInvalid && fieldControlClasses.controlInvalid,
         )}

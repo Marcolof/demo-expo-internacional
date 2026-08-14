@@ -2,11 +2,9 @@
  * Artículos y documentos declarados de ejemplo (paso Declaración, envío
  * internacional). Nada de esto sale de VUCE ni de un backend real: son datos
  * fijos para poblar la maqueta con la vista "FILLED".
- *
- * El código armonizado sigue el formato de ejemplo acordado con el equipo:
- * dos letras + 9 dígitos + "AR" (ej. RR123456789AR).
  */
 
+import { DEFAULT_MEASURE_UNIT } from '../constants/measure-units.constants'
 import type { DeclaredArticle } from '../types/article.types'
 
 export const DECLARED_ARTICLES_SEED: readonly DeclaredArticle[] = [
@@ -15,6 +13,7 @@ export const DECLARED_ARTICLES_SEED: readonly DeclaredArticle[] = [
     description: 'Remera de algodón',
     harmonizedCode: 'RR123456789AR',
     quantity: 12,
+    unitOfMeasure: DEFAULT_MEASURE_UNIT,
     unitPriceUsd: 8.5,
     unitWeightKg: 0.2,
   },
@@ -23,6 +22,7 @@ export const DECLARED_ARTICLES_SEED: readonly DeclaredArticle[] = [
     description: 'Zapatillas urbanas',
     harmonizedCode: 'RR234567891AR',
     quantity: 6,
+    unitOfMeasure: 'PAR',
     unitPriceUsd: 22,
     unitWeightKg: 0.9,
   },
@@ -31,6 +31,7 @@ export const DECLARED_ARTICLES_SEED: readonly DeclaredArticle[] = [
     description: 'Mochila de nylon',
     harmonizedCode: 'RR345678912AR',
     quantity: 3,
+    unitOfMeasure: DEFAULT_MEASURE_UNIT,
     unitPriceUsd: 15,
     unitWeightKg: 0.6,
   },
@@ -43,6 +44,7 @@ export const DECLARED_DOCUMENTS_SEED: readonly DeclaredArticle[] = [
     description: 'Sucesión herencia',
     harmonizedCode: 'RR123456789AR',
     quantity: 10,
+    unitOfMeasure: DEFAULT_MEASURE_UNIT,
     unitPriceUsd: 30,
     unitWeightKg: 0.1,
   },
@@ -51,6 +53,7 @@ export const DECLARED_DOCUMENTS_SEED: readonly DeclaredArticle[] = [
     description: 'Contrato de compraventa',
     harmonizedCode: 'RR234567891AR',
     quantity: 3,
+    unitOfMeasure: DEFAULT_MEASURE_UNIT,
     unitPriceUsd: 50,
     unitWeightKg: 0.1,
   },
@@ -59,6 +62,7 @@ export const DECLARED_DOCUMENTS_SEED: readonly DeclaredArticle[] = [
     description: 'Certificado de origen',
     harmonizedCode: 'RR345678912AR',
     quantity: 1,
+    unitOfMeasure: DEFAULT_MEASURE_UNIT,
     unitPriceUsd: 15,
     unitWeightKg: 0.05,
   },

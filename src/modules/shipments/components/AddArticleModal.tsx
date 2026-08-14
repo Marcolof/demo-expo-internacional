@@ -5,6 +5,13 @@ import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
 import { NumberInput } from '@/shared/ui/NumberInput'
 import { Modal } from '@/shared/ui/Modal'
+import { Select } from '@/shared/ui/Select'
+import { InfoTooltip } from '@/shared/ui/Tooltip'
+import { VUCE_URL } from '../constants/summary-detail.constants'
+import {
+  DEFAULT_MEASURE_UNIT,
+  MEASURE_UNIT_OPTIONS,
+} from '../constants/measure-units.constants'
 import { ARTICLE_KIND_TEXT } from '../types/article.types'
 import type { ArticleKind, DeclaredArticleInput } from '../types/article.types'
 import styles from './AddArticleModal.module.css'
@@ -24,6 +31,7 @@ interface FormState {
   readonly description: string
   readonly harmonizedCode: string
   readonly quantity: string
+  readonly unitOfMeasure: string
   readonly unitPriceUsd: string
   readonly unitWeightKg: string
 }
@@ -32,6 +40,7 @@ const EMPTY_FORM: FormState = {
   description: '',
   harmonizedCode: '',
   quantity: '',
+  unitOfMeasure: DEFAULT_MEASURE_UNIT,
   unitPriceUsd: '',
   unitWeightKg: '',
 }
@@ -40,11 +49,15 @@ interface FormErrors {
   readonly description?: string
   readonly harmonizedCode?: string
   readonly quantity?: string
+  readonly unitOfMeasure?: string
   readonly unitPriceUsd?: string
   readonly unitWeightKg?: string
 }
 
 const REQUIRED_MESSAGE = 'Este campo es obligatorio.'
+
+const CLASSIFICATION_DISCLAIMER =
+  'La clasificación obtenida es únicamente orientativa. El expedidor es responsable de verificar y declarar la posición arancelaria para el correcto tratamiento del envío. Correo Argentino y VUCE no responden por errores en la posición arancelaria declarada.'
 
 function requiredOrPositive(raw: string, isValid: (value: number) => boolean, invalidMessage: string): string | undefined {
   if (raw.trim() === '') return REQUIRED_MESSAGE
@@ -61,6 +74,7 @@ function validate(form: FormState): FormErrors {
       (value) => Number.isInteger(value) && value >= 1,
       'Ingresá un número entero mayor a 0.',
     ),
+    unitOfMeasure: form.unitOfMeasure.trim() === '' ? REQUIRED_MESSAGE : undefined,
     unitPriceUsd: requiredOrPositive(
       form.unitPriceUsd,
       (value) => Number.isFinite(value) && value > 0,
@@ -96,9 +110,6 @@ function DisclosureIcon({ open }: { readonly open: boolean }) {
 
 /**
  * Modal "Agregar artículo" del paso Declaración (Figma node 10116:13975).
- * Todos los campos son obligatorios. Si al confirmar falta o sobra formato,
- * el modal no cierra: marca los campos inválidos y muestra un aviso arriba
- * de los botones (Figma node de referencia del banner de error).
  */
 export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', initialValues }: AddArticleModalProps) {
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
@@ -114,6 +125,7 @@ export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', i
               description: initialValues.description,
               harmonizedCode: initialValues.harmonizedCode,
               quantity: String(initialValues.quantity),
+              unitOfMeasure: initialValues.unitOfMeasure || DEFAULT_MEASURE_UNIT,
               unitPriceUsd: String(initialValues.unitPriceUsd),
               unitWeightKg: String(initialValues.unitWeightKg),
             }
@@ -125,7 +137,6 @@ export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', i
 
   const errors = validate(form)
   const hasErrors = Object.values(errors).some((message) => message !== undefined)
-  /** Marco rojo tras un intento fallido: el motivo va sólo en el banner. */
   const showInvalidBorders = submitted
 
   const quantity = Number(form.quantity)
@@ -146,6 +157,7 @@ export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', i
       description: form.description.trim(),
       harmonizedCode: form.harmonizedCode.trim(),
       quantity,
+      unitOfMeasure: form.unitOfMeasure,
       unitPriceUsd: unitPrice,
       unitWeightKg: unitWeight,
     })
@@ -189,15 +201,20 @@ export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', i
         />
 
         <div className={styles.codeSection}>
-          <h5 className={styles.codeTitle}>Código armonizado</h5>
+          <h5 className={styles.codeTitle}>Posición arancelaria</h5>
           <p className={styles.codeHint}>
-            Consultalo en <span className={styles.codeLink}>VUCE</span> y copiá el código correspondiente al
-            producto que declarás.
+            Consultalo en{' '}
+            <a className={styles.codeLink} href={VUCE_URL} target="_blank" rel="noreferrer">
+              VUCE
+            </a>{' '}
+            y copiá el código correspondiente al producto que declarás.
           </p>
 
           <Input
             id="article-harmonized-code"
-            label="Código de armonización"
+            label="Código de posición arancelaria"
+            placeholder="Código de posición arancelaria"
+            hint="Ej: 61.09 (T-SHIRTS Y CAMISETAS, DE PUNTO)."
             value={form.harmonizedCode}
             onChange={(event) => setField('harmonizedCode')(event.currentTarget.value)}
             invalid={showInvalidBorders && errors.harmonizedCode !== undefined}
@@ -222,24 +239,44 @@ export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', i
                 <li>Copiá el código correspondiente.</li>
                 <li>Pegalo en este campo.</li>
               </ol>
-              <p>Ejemplo: Remera de algodón → buscá &quot;remera algodón&quot;.</p>
+              <p>
+                Ejemplo: buscá &apos;remera&apos; → seleccioná «T-SHIRTS» Y CAMISETAS, DE PUNTO (61.09).
+              </p>
+              <div className={styles.alertSlot}>
+                <Alert tone="info">
+                  <span className={styles.alertWithTip}>
+                    {CLASSIFICATION_DISCLAIMER}
+                    <InfoTooltip content={CLASSIFICATION_DISCLAIMER} />
+                  </span>
+                </Alert>
+              </div>
             </div>
           )}
         </div>
 
-        <NumberInput
-          id="article-quantity"
-          label="Cantidad"
-          min={1}
-          step={1}
-          value={form.quantity}
-          onChange={(event) => setField('quantity')(event.currentTarget.value)}
-          invalid={showInvalidBorders && errors.quantity !== undefined}
-        />
+        <div className={styles.qtyRow}>
+          <Select
+            id="article-unit-of-measure"
+            label="Unidad de medida"
+            options={MEASURE_UNIT_OPTIONS}
+            value={form.unitOfMeasure}
+            onChange={(event) => setField('unitOfMeasure')(event.currentTarget.value)}
+            invalid={showInvalidBorders && errors.unitOfMeasure !== undefined}
+          />
+          <NumberInput
+            id="article-quantity"
+            label="Cantidad"
+            min={1}
+            step={1}
+            value={form.quantity}
+            onChange={(event) => setField('quantity')(event.currentTarget.value)}
+            invalid={showInvalidBorders && errors.quantity !== undefined}
+          />
+        </div>
 
         <Input
           id="article-unit-price"
-          label="Precio unitario en dólares"
+          label="Precio unitario en USD"
           type="number"
           min={0}
           step={0.01}
@@ -262,7 +299,7 @@ export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', i
 
         <div className={styles.totals}>
           <div className={styles.totalRow}>
-            <span className={styles.totalLabel}>Precio total en dólares</span>
+            <span className={styles.totalLabel}>Precio total en USD</span>
             <span className={styles.totalValue}>{formatUsd(totalPriceUsd)}</span>
           </div>
           <div className={styles.totalRow}>
