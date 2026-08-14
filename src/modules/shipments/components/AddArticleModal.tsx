@@ -114,28 +114,6 @@ function DisclosureIcon({ open }: { readonly open: boolean }) {
   )
 }
 
-/** Ícono de la leyenda informativa (izquierda del disclaimer), no tooltip. */
-function LegendInfoIcon() {
-  return (
-    <svg
-      className={styles.legendIcon}
-      width="20"
-      height="20"
-      viewBox="0 0 20 20"
-      fill="none"
-      aria-hidden="true"
-    >
-      <circle cx="10" cy="10" r="9" stroke="currentColor" strokeWidth="1.5" />
-      <path
-        d="M10 9v5M10 6.5h.01"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  )
-}
-
 /**
  * Modal "Agregar artículo" del paso Declaración (Figma node 10116:13975).
  */
@@ -271,7 +249,7 @@ export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', i
                 Ejemplo: buscá &apos;remera&apos; → seleccioná «T-SHIRTS» Y CAMISETAS, DE PUNTO (61.09).
               </p>
               <div className={styles.legend} role="note">
-                <LegendInfoIcon />
+                <InfoTooltip content={CLASSIFICATION_DISCLAIMER} />
                 <p className={styles.legendText}>{CLASSIFICATION_DISCLAIMER}</p>
               </div>
             </div>
@@ -328,23 +306,12 @@ export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', i
             <span className={styles.totalValue}>{formatUsd(EXPORT_DUTIES_USD)}</span>
           </div>
           <div className={styles.totalRow}>
-            <span className={styles.totalLabel}>Derecho de Exportación</span>
-            <span className={styles.totalValue}>{formatUsd(EXPORT_DUTIES_USD)}</span>
-          </div>
-          <div className={styles.totalRow}>
             <span className={styles.totalLabel}>Precio total en USD</span>
             <span className={styles.totalValue}>{formatUsd(totalPriceUsd)}</span>
           </div>
           <div className={styles.totalRow}>
             <span className={styles.totalLabel}>Peso total</span>
             <span className={styles.totalValue}>{formatWeightKg(totalWeightKg)}</span>
-          </div>
-          <div className={styles.totalRow}>
-            <span className={styles.totalLabelWithTip}>
-              <InfoTooltip content={PACKAGE_MAX_WEIGHT_TOOLTIP} />
-              <span>{PACKAGE_MAX_WEIGHT_LABEL}</span>
-            </span>
-            <span className={styles.totalValue}>{PACKAGE_MAX_WEIGHT_KG}kg</span>
           </div>
           <div className={styles.totalRow}>
             <span className={styles.totalLabelWithTip}>
