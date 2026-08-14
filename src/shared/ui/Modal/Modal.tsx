@@ -17,6 +17,10 @@ export interface ModalProps {
   readonly closable?: boolean
   readonly centered?: boolean
   readonly labelledById?: string
+  /** Clase extra sobre el diálogo (p. ej. alto Figma). */
+  readonly className?: string
+  readonly bodyClassName?: string
+  readonly footerClassName?: string
 }
 
 const SIZE_CLASS: Record<ModalSize, string | undefined> = {
@@ -26,13 +30,20 @@ const SIZE_CLASS: Record<ModalSize, string | undefined> = {
   xl: styles.sizeXl,
 }
 
+function CloseIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path
+        d="M1.293 1.293a1 1 0 0 1 1.414 0L8 6.586l5.293-5.293a1 1 0 1 1 1.414 1.414L9.414 8l5.293 5.293a1 1 0 0 1-1.414 1.414L8 9.414l-5.293 5.293a1 1 0 0 1-1.414-1.414L6.586 8 1.293 2.707a1 1 0 0 1 0-1.414Z"
+        fill="currentColor"
+      />
+    </svg>
+  )
+}
+
 /**
- * Modal genérico, renderizado en un portal sobre `document.body`.
- *
- * DECISIÓN DE ARQUITECTURA
- * Este componente sólo sabe abrir, cerrar y encuadrar. Qué se pregunta y qué
- * pasa al confirmar es responsabilidad de los modales de cada módulo
- * (`modules/[dominio]/modals/*`), que lo envuelven.
+ * Modal genérico con franja superior (48px) + X de cierre a la derecha —
+ * patrón Figma MiCorreo (ejemplovistamodal / modalejemplocontainersuperior).
  */
 export function Modal({
   isOpen,
@@ -44,10 +55,12 @@ export function Modal({
   closable = true,
   centered = false,
   labelledById,
+  className,
+  bodyClassName,
+  footerClassName,
 }: ModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null)
 
-  // Escape cierra, y el scroll del fondo se bloquea mientras está abierto.
   useEffect(() => {
     if (!isOpen) return
 
@@ -65,7 +78,6 @@ export function Modal({
     }
   }, [isOpen, closable, onClose])
 
-  // El foco entra al diálogo para que el lector de pantalla lo anuncie.
   useEffect(() => {
     if (isOpen) dialogRef.current?.focus()
   }, [isOpen])
@@ -87,31 +99,33 @@ export function Modal({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className={cn(styles.dialog, SIZE_CLASS[size])}
+        className={cn(styles.dialog, SIZE_CLASS[size], className)}
       >
-        {(title !== undefined || closable) && (
-          <div className={cn(styles.header, title === undefined && styles.headerBare)}>
-            {title !== undefined && (
-              <h5 id={titleId} className={styles.title}>
-                {title}
-              </h5>
-            )}
-            {closable && (
-              <button
-                type="button"
-                className={styles.close}
-                onClick={onClose}
-                aria-label="Cerrar"
-              >
-                &times;
-              </button>
-            )}
+        {closable && (
+          <div className={styles.topStripe}>
+            <button
+              type="button"
+              className={styles.close}
+              onClick={onClose}
+              aria-label="Cerrar"
+            >
+              <CloseIcon />
+            </button>
           </div>
         )}
 
-        <div className={cn(styles.body, centered && styles.bodyCentered)}>{children}</div>
+        <div className={cn(styles.body, centered && styles.bodyCentered, bodyClassName)}>
+          {title !== undefined && (
+            <h5 id={titleId} className={styles.title}>
+              {title}
+            </h5>
+          )}
+          {children}
+        </div>
 
-        {footer !== undefined && <div className={styles.footer}>{footer}</div>}
+        {footer !== undefined && (
+          <div className={cn(styles.footer, footerClassName)}>{footer}</div>
+        )}
       </div>
     </div>,
     document.body,
