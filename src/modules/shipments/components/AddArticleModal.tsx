@@ -15,13 +15,6 @@ import {
   VUCE_URL,
 } from '../constants/summary-detail.constants'
 import {
-  EXPORT_DUTIES_USD,
-  PACKAGE_MAX_WEIGHT_KG,
-  PACKAGE_MAX_WEIGHT_LABEL,
-  PACKAGE_MAX_WEIGHT_TOOLTIP,
-  VUCE_URL,
-} from '../constants/summary-detail.constants'
-import {
   DEFAULT_MEASURE_UNIT,
   MEASURE_UNIT_OPTIONS,
 } from '../constants/measure-units.constants'
@@ -261,7 +254,6 @@ export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', i
             aria-expanded={helpOpen}
             onClick={() => setHelpOpen((open) => !open)}
           >
-            <HelpInfoIcon />
             ¿Dónde encuentro este código?
             <DisclosureIcon open={helpOpen} />
           </button>
@@ -294,7 +286,6 @@ export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', i
             value={form.unitOfMeasure}
             onChange={(event) => setField('unitOfMeasure')(event.currentTarget.value)}
             invalid={showInvalidBorders && errors.unitOfMeasure !== undefined}
-            hint="Ej: Remeras = Metro cuadrado"
             hint="Ej: Remeras = Metro cuadrado"
           />
           <NumberInput
