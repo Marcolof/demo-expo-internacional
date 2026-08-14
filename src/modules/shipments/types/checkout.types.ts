@@ -23,6 +23,11 @@ export interface CheckoutPriceBreakdown {
   readonly discount: Money
   /** IVA contenido en `priceWithDiscount`, no un cargo aparte. */
   readonly includedVat: Money
+  /** Filas de detalle intl / desglose de totales (mod-01). */
+  readonly postalService?: Money
+  readonly nationalTaxes?: Money
+  readonly foreignTaxes?: Money
+  readonly representationCost?: Money
 }
 
 interface CheckoutItemBase {
@@ -85,6 +90,13 @@ export interface CheckoutTotals {
   /** Suma de los descuentos. Informativo: ya está dentro del subtotal. */
   readonly totalDiscountWithoutVat: Money
   readonly total: Money
+  /** Filas del desglose del panel (Figma resumen-valores). */
+  readonly breakdownLines: {
+    readonly postalService: Money
+    readonly deliveryService: Money
+    readonly representationCost: Money
+    readonly taxesIncluded: Money
+  }
 }
 
 /**
@@ -98,10 +110,25 @@ export function checkoutTotals(items: readonly CheckoutItem[], pickup: Money): C
   const subtotal = items.reduce((sum, item) => sum + item.priceWithDiscount.amount, 0)
   const discount = items.reduce((sum, item) => sum + item.breakdown.discount.amount, 0)
 
+  const sumLine = (pick: (b: CheckoutPriceBreakdown) => Money | undefined, fallback: number) =>
+    items.reduce((sum, item) => sum + (pick(item.breakdown)?.amount ?? fallback), 0)
+
+  const postal = sumLine((b) => b.postalService, 10000)
+  const delivery = sumLine((b) => b.deliveryService, 0)
+  const representation = sumLine((b) => b.representationCost, 0)
+  const taxes =
+    sumLine((b) => b.nationalTaxes, 0) + sumLine((b) => b.foreignTaxes, 0)
+
   return {
     subtotal: { amount: subtotal, currency: pickup.currency },
     pickup,
     totalDiscountWithoutVat: { amount: discount, currency: pickup.currency },
     total: { amount: subtotal + pickup.amount, currency: pickup.currency },
+    breakdownLines: {
+      postalService: { amount: postal, currency: pickup.currency },
+      deliveryService: { amount: delivery, currency: pickup.currency },
+      representationCost: { amount: representation, currency: pickup.currency },
+      taxesIncluded: { amount: taxes, currency: pickup.currency },
+    },
   }
 }
