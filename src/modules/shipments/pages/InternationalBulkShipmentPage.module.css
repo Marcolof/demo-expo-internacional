@@ -28,6 +28,15 @@
   }
 }
 
+.comingSoon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 24rem;
+  padding: var(--space-8) var(--space-4);
+}
+
 .content {
   display: flex;
   flex-direction: column;
