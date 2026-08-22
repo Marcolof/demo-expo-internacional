@@ -54,11 +54,19 @@ function declaracionRows(data?: DeclaracionSummaryData): readonly SummaryRow[] {
   ]
 }
 
-function detalleRows(): readonly SummaryRow[] {
-  return SUMMARY_DETAIL_ROWS.map((row) => ({
-    label: row.label,
-    value: `$${formatAmountOnly(row.amountArs)}`,
-  }))
+function detalleRows(representationCostArs: number): readonly SummaryRow[] {
+  return SUMMARY_DETAIL_ROWS.map((row) => {
+    if (row.label === 'Costos de representación') {
+      return {
+        label: row.label,
+        value: `$${formatAmountOnly(representationCostArs)}`,
+      }
+    }
+    return {
+      label: row.label,
+      value: `$${formatAmountOnly(row.amountArs)}`,
+    }
+  })
 }
 
 /** Datos en curso del paso Paquete, para reflejarlos en el resumen. */
@@ -186,7 +194,9 @@ export interface InternationalSummaryProps {
   readonly origen?: OrigenSummaryData | Remitente
   /** Datos del paso Destino. Sin esto la sección muestra "-". */
   readonly destino?: DestinoSummaryData
-  /** Callback del botón "Pagar". Sin definir, el botón queda deshabilitado. */
+  /** Costo de representación (0 si no comercial o con representación). */
+  readonly representationCostArs?: number
+  /** Callback del botón "Pagar". Sin definir, el botón no se muestra (flujo Guardar). */
   readonly onPay?: () => void
   /** Label del CTA de pago (Pagar / Finalizar). */
   readonly payLabel?: string
@@ -205,6 +215,7 @@ export function InternationalSummary({
   paquete,
   origen,
   destino,
+  representationCostArs = 0,
   onPay,
   payLabel = 'Pagar',
 }: InternationalSummaryProps) {
@@ -280,13 +291,15 @@ export function InternationalSummary({
           title="Detalle"
           open={open.has('Detalle')}
           onToggle={() => toggle('Detalle')}
-          rows={detalleRows()}
+          rows={detalleRows(representationCostArs)}
         />
       </div>
 
-      <Button variant="primary" shape="square" fullWidth disabled={onPay === undefined} onClick={onPay}>
-        {payLabel}
-      </Button>
+      {onPay !== undefined && (
+        <Button variant="primary" shape="square" fullWidth onClick={onPay}>
+          {payLabel}
+        </Button>
+      )}
     </div>
   )
 }
