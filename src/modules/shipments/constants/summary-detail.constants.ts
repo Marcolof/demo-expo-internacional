@@ -12,7 +12,16 @@ export const SUMMARY_DETAIL_ROWS: readonly SummaryDetailRow[] = [
   { label: 'Total', amountArs: 10000 },
 ]
 
-/** Derechos de exportación (declaración / resumen) — hardcode MVP1. */
+/** Derechos de exportación (declaración / resumen). */
+/** Mock demo: tasa % sobre valor declarado hasta regla real de aduana. */
+export const EXPORT_DUTIES_RATE = 0.05
+
+export function computeExportDutiesUsd(totalValueUsd: number): number {
+  if (!Number.isFinite(totalValueUsd) || totalValueUsd <= 0) return 0
+  return Math.round(totalValueUsd * EXPORT_DUTIES_RATE * 100) / 100
+}
+
+/** @deprecated Preferí computeExportDutiesUsd; se mantiene en 0 para callers legacy. */
 export const EXPORT_DUTIES_USD = 0
 
 /** Peso máximo de paquete (kg) documentado en UI. */

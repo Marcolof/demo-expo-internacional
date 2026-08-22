@@ -1,5 +1,5 @@
-import { useRef, useState } from 'react'
-import type { InputHTMLAttributes } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { ChangeEvent, InputHTMLAttributes } from 'react'
 import { cn } from '@/shared/lib/cn'
 import { Field, fieldControlClasses, fieldDescribedBy } from '@/shared/ui/Field'
 import styles from './NumberInput.module.css'
@@ -20,6 +20,13 @@ export interface NumberInputProps extends NativeNumberInputProps {
   readonly min?: number
   readonly max?: number
   readonly step?: number
+}
+
+function toChangeEvent(value: string): ChangeEvent<HTMLInputElement> {
+  return {
+    target: { value } as EventTarget & HTMLInputElement,
+    currentTarget: { value } as EventTarget & HTMLInputElement,
+  } as ChangeEvent<HTMLInputElement>
 }
 
 export function NumberInput({
@@ -43,48 +50,48 @@ export function NumberInput({
   const [currentValue, setCurrentValue] = useState(value ?? '')
   const [isFocused, setIsFocused] = useState(false)
 
+  useEffect(() => {
+    setCurrentValue(value ?? '')
+  }, [value])
+
   const hasError = error !== undefined && error !== null && error !== ''
   const showInvalid = hasError || invalid
   const hasHint = hint !== undefined && hint !== ''
 
-  const handleChange = (newValue: string | number) => {
-    let numValue = typeof newValue === 'string' ? parseFloat(newValue) : newValue
+  const commitValue = (raw: string | number) => {
+    let numValue = typeof raw === 'string' ? parseFloat(raw) : raw
 
-    if (isNaN(numValue)) {
+    if (Number.isNaN(numValue)) {
       setCurrentValue('')
+      onChange?.(toChangeEvent(''))
       return
     }
 
     if (min !== undefined && numValue < min) numValue = min
     if (max !== undefined && numValue > max) numValue = max
 
-    setCurrentValue(numValue)
-
-    if (inputRef.current) {
-      inputRef.current.value = String(numValue)
-      const nativeEvent = new Event('change', { bubbles: true })
-      inputRef.current.dispatchEvent(nativeEvent)
-    }
-
-    onChange?.({ target: { value: String(numValue) } } as any)
+    const next = String(numValue)
+    setCurrentValue(next)
+    if (inputRef.current) inputRef.current.value = next
+    onChange?.(toChangeEvent(next))
   }
 
   const handleIncrement = () => {
-    const current = currentValue === '' ? min ?? 0 : Number(currentValue)
-    handleChange(current + step)
+    const current = currentValue === '' ? (min ?? 0) : Number(currentValue)
+    commitValue(current + step)
   }
 
   const handleDecrement = () => {
-    const current = currentValue === '' ? min ?? 0 : Number(currentValue)
+    const current = currentValue === '' ? (min ?? 0) : Number(currentValue)
     const next = current - step
     if (min === undefined || next >= min) {
-      handleChange(next)
+      commitValue(next)
     }
   }
 
   const numValue = currentValue === '' ? NaN : Number(currentValue)
-  const canDecrement = isNaN(numValue) || (min === undefined || numValue > min)
-  const canIncrement = isNaN(numValue) || (max === undefined || numValue < max)
+  const canDecrement = Number.isNaN(numValue) || min === undefined || numValue > min
+  const canIncrement = Number.isNaN(numValue) || max === undefined || numValue < max
 
   return (
     <Field

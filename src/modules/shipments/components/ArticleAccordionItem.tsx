@@ -104,7 +104,7 @@ export function ArticleAccordionItem({
         <>
           <div className={styles.rows}>
             <div className={styles.row}>
-              <span className={styles.rowLabel}>Código armonizado</span>
+              <span className={styles.rowLabel}>Posición arancelaria</span>
               <span className={styles.rowValue}>{article.harmonizedCode}</span>
             </div>
             <div className={styles.row}>
