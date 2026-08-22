@@ -8,7 +8,7 @@ import { Modal } from '@/shared/ui/Modal'
 import { Select } from '@/shared/ui/Select'
 import { InfoTooltip } from '@/shared/ui/Tooltip'
 import {
-  EXPORT_DUTIES_USD,
+  computeExportDutiesUsd,
   PACKAGE_MAX_WEIGHT_KG,
   PACKAGE_MAX_WEIGHT_LABEL,
   PACKAGE_MAX_WEIGHT_TOOLTIP,
@@ -17,6 +17,7 @@ import {
 import {
   DEFAULT_MEASURE_UNIT,
   MEASURE_UNIT_OPTIONS,
+  measureUnitRequiresInteger,
 } from '../constants/measure-units.constants'
 import { ARTICLE_KIND_TEXT } from '../types/article.types'
 import type { ArticleKind, DeclaredArticleInput } from '../types/article.types'
@@ -72,13 +73,19 @@ function requiredOrPositive(raw: string, isValid: (value: number) => boolean, in
 }
 
 function validate(form: FormState): FormErrors {
+  const requiresInteger = measureUnitRequiresInteger(form.unitOfMeasure)
   return {
     description: form.description.trim() === '' ? REQUIRED_MESSAGE : undefined,
     harmonizedCode: form.harmonizedCode.trim() === '' ? REQUIRED_MESSAGE : undefined,
     quantity: requiredOrPositive(
       form.quantity,
-      (value) => Number.isInteger(value) && value >= 1,
-      'Ingresá un número entero mayor a 0.',
+      (value) =>
+        Number.isFinite(value) &&
+        value > 0 &&
+        (requiresInteger ? Number.isInteger(value) : true),
+      requiresInteger
+        ? 'Ingresá un número entero mayor a 0.'
+        : 'Ingresá un valor mayor a 0.',
     ),
     unitOfMeasure: form.unitOfMeasure.trim() === '' ? REQUIRED_MESSAGE : undefined,
     unitPriceUsd: requiredOrPositive(
@@ -152,6 +159,9 @@ export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', i
     Number.isFinite(quantity) && quantity > 0 && Number.isFinite(unitPrice) && Number.isFinite(unitWeight)
   const totalPriceUsd = canComputeTotals ? quantity * unitPrice : 0
   const totalWeightKg = canComputeTotals ? quantity * unitWeight : 0
+  const exportDutiesUsd = computeExportDutiesUsd(totalPriceUsd)
+  const quantityStep = measureUnitRequiresInteger(form.unitOfMeasure) ? 1 : 0.01
+  const quantityMin = measureUnitRequiresInteger(form.unitOfMeasure) ? 1 : 0.01
 
   const setField = (field: keyof FormState) => (value: string) => setForm((current) => ({ ...current, [field]: value }))
 
@@ -250,6 +260,7 @@ export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', i
               </p>
               <div className={styles.legend} role="note">
                 <InfoTooltip content={CLASSIFICATION_DISCLAIMER} />
+                <InfoTooltip content={CLASSIFICATION_DISCLAIMER} />
                 <p className={styles.legendText}>{CLASSIFICATION_DISCLAIMER}</p>
               </div>
             </div>
@@ -269,8 +280,8 @@ export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', i
           <NumberInput
             id="article-quantity"
             label="Cantidad"
-            min={1}
-            step={1}
+            min={quantityMin}
+            step={quantityStep}
             value={form.quantity}
             onChange={(event) => setField('quantity')(event.currentTarget.value)}
             invalid={showInvalidBorders && errors.quantity !== undefined}
@@ -303,7 +314,7 @@ export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', i
         <div className={styles.totals}>
           <div className={styles.totalRow}>
             <span className={styles.totalLabel}>Derecho de Exportación</span>
-            <span className={styles.totalValue}>{formatUsd(EXPORT_DUTIES_USD)}</span>
+            <span className={styles.totalValue}>{formatUsd(exportDutiesUsd)}</span>
           </div>
           <div className={styles.totalRow}>
             <span className={styles.totalLabel}>Precio total en USD</span>

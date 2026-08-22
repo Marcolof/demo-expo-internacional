@@ -31,7 +31,7 @@ import { PostalServiceCard } from '../components/PostalServiceCard'
 import { getCountryGeographicRangeLabel } from '../constants/geographic-ranges'
 import {
   ADUANA_WITHOUT_REPRESENTATION_COST_ARS,
-  EXPORT_DUTIES_USD,
+  computeExportDutiesUsd,
   PACKAGE_MAX_WEIGHT_KG,
   PACKAGE_MAX_WEIGHT_LABEL,
   PACKAGE_MAX_WEIGHT_TOOLTIP,
@@ -63,20 +63,6 @@ const SHIPPING_SERVICE_LABELS: Record<'EMS' | 'ENCOMIENDA' | 'PEQUENO_PAQUETE' |
   ENCOMIENDA: 'Encomienda Internacional',
   PEQUENO_PAQUETE: 'Pequeño Paquete',
   EMS_DOCUMENTACION: 'EMS Documentación',
-}
-
-const SHIPPING_SERVICE_PRICES_ARS: Record<'EMS' | 'ENCOMIENDA' | 'PEQUENO_PAQUETE' | 'EMS_DOCUMENTACION', number> = {
-  EMS: 15000,
-  ENCOMIENDA: 10000,
-  PEQUENO_PAQUETE: 7500,
-  EMS_DOCUMENTACION: 8000,
-}
-
-const SHIPPING_SERVICE_TO_POSTAL: Record<'EMS' | 'ENCOMIENDA' | 'PEQUENO_PAQUETE' | 'EMS_DOCUMENTACION', string> = {
-  EMS: 'EMS_PAQUETERIA',
-  ENCOMIENDA: 'ENCOMIENDA_INTERNACIONAL',
-  PEQUENO_PAQUETE: 'PEQUENO_PAQUETE',
-  EMS_DOCUMENTACION: 'EMS_DOCUMENTACION',
 }
 
 const NON_COMMERCIAL_CATEGORIES: readonly SelectOption[] = [
@@ -146,6 +132,7 @@ function validateDestinoFields(params: {
   destinoCity: string
   destinoPostalCode: string
   destinoAddressLines: readonly string[]
+  commercial: boolean
   aduanaRepresentation: boolean
   asistireYo: boolean
   representanteName: string
@@ -166,10 +153,18 @@ function validateDestinoFields(params: {
   if (!params.destinoCity.trim()) errors.add('destinoCity')
   if (!params.destinoPostalCode.trim()) errors.add('destinoPostalCode')
   if (!(params.destinoAddressLines[0]?.trim())) errors.add('destinoAddress0')
-  if (!params.aduanaRepresentation && !params.asistireYo && !params.representanteName.trim()) errors.add('representanteName')
-  if (!params.aduanaRepresentation && !params.asistireYo && !params.representanteCuil.trim()) errors.add('representanteCuil')
+  if (params.commercial) {
+    if (!params.aduanaRepresentation && !params.asistireYo && !params.representanteName.trim()) {
+      errors.add('representanteName')
+    }
+    if (!params.aduanaRepresentation && !params.asistireYo && !params.representanteCuil.trim()) {
+      errors.add('representanteCuil')
+    }
+  }
   return errors
 }
+
+const PEQUENO_PAQUETE_MAX_WEIGHT_KG = 2
 
 const REMITENTE_OPTIONS: readonly SelectOption[] = REMITENTES_SEED.map((r) => ({
   value: r.cuit,
@@ -238,6 +233,7 @@ export function InternationalShipmentPage() {
   const [category, setCategory] = useState('REGALO')
   const [declarationAccepted, setDeclarationAccepted] = useState(false)
   const [declarationError, setDeclarationError] = useState(false)
+  const [declarationWeightError, setDeclarationWeightError] = useState(false)
   const [articles, setArticles] = useState<readonly DeclaredArticle[]>([])
   const [isArticleModalOpen, setArticleModalOpen] = useState(false)
   const [editingArticle, setEditingArticle] = useState<DeclaredArticle | null>(null)
@@ -380,18 +376,28 @@ export function InternationalShipmentPage() {
     validateDestinoFields({
       recipientName, recipientPhone, recipientEmail, recipientTaxId,
       destinoState, destinoCity, destinoPostalCode, destinoAddressLines,
-      aduanaRepresentation, asistireYo, representanteName, representanteCuil,
+      commercial, aduanaRepresentation, asistireYo, representanteName, representanteCuil,
     })
 
+  const packageWeightNum = Number(packageWeightKg.replace(',', '.')) || 0
+  const pequenoPaqueteDisabled =
+    packageWeightKg.trim() !== '' &&
+    Number.isFinite(packageWeightNum) &&
+    packageWeightNum > PEQUENO_PAQUETE_MAX_WEIGHT_KG
+
   useEffect(() => {
-    if (category === 'DOCUMENTO') {
+    if (!commercial) {
       setShippingService('EMS_DOCUMENTACION')
       return
     }
     if (shippingService === 'EMS_DOCUMENTACION') {
       setShippingService('EMS')
+      return
     }
-  }, [category, shippingService])
+    if (shippingService === 'PEQUENO_PAQUETE' && pequenoPaqueteDisabled) {
+      setShippingService('EMS')
+    }
+  }, [commercial, shippingService, pequenoPaqueteDisabled])
 
   const articleKind: ArticleKind = category === 'DOCUMENTO' ? 'DOCUMENT' : 'ARTICLE'
   const canAddArticle = country !== '-1' && category !== '-1' && countryHasShipping
@@ -405,21 +411,46 @@ export function InternationalShipmentPage() {
 
   const postalServiceOptions = useMemo(() => {
     const all = [
-      { value: 'EMS' as const, label: 'EMS Paquetería', description: 'Entrega estimada entre 2 y 8 días hábiles, según el destino.', price: '$15.000,00' },
-      { value: 'ENCOMIENDA' as const, label: 'Encomienda Internacional', description: 'Entrega estimada entre 7 y 21 días hábiles, según el destino.', price: '$10.000,00' },
-      { value: 'PEQUENO_PAQUETE' as const, label: 'Pequeño Paquete', description: 'Entrega estimada entre 10 y 30 días hábiles, según el destino.', price: '$7.500,00' },
-      { value: 'EMS_DOCUMENTACION' as const, label: 'EMS Documentación', description: 'Solo para documentos. Entrega estimada entre 2 y 8 días hábiles.', price: '$8.000,00' },
+      {
+        value: 'EMS' as const,
+        label: 'EMS Paquetería',
+        description: 'Entrega estimada entre 2 y 8 días hábiles, según el destino.',
+        price: '$15.000,00',
+      },
+      {
+        value: 'ENCOMIENDA' as const,
+        label: 'Encomienda Internacional',
+        description: 'Entrega estimada entre 7 y 21 días hábiles, según el destino.',
+        price: '$10.000,00',
+      },
+      {
+        value: 'PEQUENO_PAQUETE' as const,
+        label: 'Pequeño Paquete',
+        description: 'Entrega estimada entre 10 y 30 días hábiles, según el destino.',
+        price: '$7.500,00',
+        disabled: pequenoPaqueteDisabled,
+        disabledReason: `El peso del embalaje supera ${PEQUENO_PAQUETE_MAX_WEIGHT_KG} kg.`,
+      },
+      {
+        value: 'EMS_DOCUMENTACION' as const,
+        label: 'EMS Documentación',
+        description: 'Solo para envíos sin fines comerciales. Entrega estimada entre 2 y 8 días hábiles.',
+        price: '$8.000,00',
+      },
     ]
-    if (category === 'DOCUMENTO') {
+    if (!commercial) {
       return all.filter((svc) => svc.value === 'EMS_DOCUMENTACION')
     }
     return all.filter((svc) => svc.value !== 'EMS_DOCUMENTACION')
-  }, [category])
+  }, [commercial, pequenoPaqueteDisabled])
 
   const totalArticles = articles.length
   const totalValueUsd = articles.reduce((sum, a) => sum + articleTotalPriceUsd(a), 0)
   const totalWeightKg = articles.reduce((sum, a) => sum + articleTotalWeightKg(a), 0)
+  const exportDutiesUsd = computeExportDutiesUsd(totalValueUsd)
   const categoryLabel = categoryOptions.find((o) => o.value === category)?.label
+  const representationCostArs =
+    !commercial || aduanaRepresentation ? 0 : ADUANA_WITHOUT_REPRESENTATION_COST_ARS
 
   const removeArticle = (article: DeclaredArticle) => {
     setArticles((current) => current.filter((item) => item.id !== article.id))
@@ -466,6 +497,11 @@ export function InternationalShipmentPage() {
       if (!declarationAccepted) { setDeclarationError(true); return }
       if (!countryHasShipping) return
       if (hasRestrictedArticles) return
+      if (totalWeightKg > PACKAGE_MAX_WEIGHT_KG) {
+        setDeclarationWeightError(true)
+        return
+      }
+      setDeclarationWeightError(false)
       setDeclarationError(false)
     }
 
@@ -473,6 +509,9 @@ export function InternationalShipmentPage() {
       const errs = validatePackageStep(lengthCm, widthCm, heightCm, packageWeightKg, totalWeightKg)
       setPackageErrors(errs)
       if (errs.measures !== undefined || errs.weight !== undefined) return
+      if (shippingService === 'PEQUENO_PAQUETE' && packageWeightNum > PEQUENO_PAQUETE_MAX_WEIGHT_KG) {
+        return
+      }
     }
 
     if (currentStep === 'Destino') {
@@ -546,11 +585,6 @@ export function InternationalShipmentPage() {
                     Rango geográfico: {getCountryGeographicRangeLabel(country)}
                   </p>
                 )}
-                {country !== '-1' && !countryHasShipping && (
-                  <Alert tone="danger">
-                    El país seleccionado no está disponible para envíos internacionales.
-                  </Alert>
-                )}
               </section>
 
               <section className={styles.section}>
@@ -566,12 +600,14 @@ export function InternationalShipmentPage() {
                     labelPosition="left"
                   />
 
-                  <button type="button" className={styles.infoLink} onClick={() => setInfoModalOpen(true)}>
-                    Información a tener en cuenta
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                      <path d="m7.5 5 5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </button>
+                  {commercial && (
+                    <button type="button" className={styles.infoLink} onClick={() => setInfoModalOpen(true)}>
+                      Información a tener en cuenta
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <path d="m7.5 5 5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+                  )}
 
                   <p className={styles.hint}>Detallá la categoría del envío y el contenido del paquete.</p>
 
@@ -623,7 +659,7 @@ export function InternationalShipmentPage() {
                     </div>
                     <div className={styles.totalRow}>
                       <span className={styles.totalLabel}>Derechos de exportación</span>
-                      <span className={styles.totalValue}>{formatUsd(EXPORT_DUTIES_USD)}</span>
+                      <span className={styles.totalValue}>{formatUsd(exportDutiesUsd)}</span>
                     </div>
                     <div className={styles.totalRow}>
                       <span className={styles.totalLabel}>Peso total declarado</span>
@@ -666,6 +702,19 @@ export function InternationalShipmentPage() {
                   {declarationError && (
                     <Alert tone="danger">
                       Debés aceptar la Declaración Jurada para continuar.
+                    </Alert>
+                  )}
+
+                  {declarationWeightError && (
+                    <Alert tone="danger">
+                      El peso total declarado supera el máximo permitido ({PACKAGE_MAX_WEIGHT_KG} kg).
+                      Reducí el contenido antes de continuar.
+                    </Alert>
+                  )}
+
+                  {country !== '-1' && !countryHasShipping && (
+                    <Alert tone="danger">
+                      El país seleccionado no está disponible para envíos internacionales.
                     </Alert>
                   )}
                 </div>
@@ -836,16 +885,6 @@ export function InternationalShipmentPage() {
               <section className={styles.section}>
                 <h4 className={styles.sectionTitle}>Destinatario</h4>
 
-                <div className={styles.orderChipWrap}>
-                  <input
-                    className={styles.orderChipInput}
-                    placeholder="N° de orden (opcional)"
-                    value={destinoOrderNum}
-                    onChange={(event) => setDestinoOrderNum(event.currentTarget.value)}
-                    aria-label="N° de orden (opcional)"
-                  />
-                </div>
-
                 <div className={styles.fields}>
                   <div className={styles.twoColRow}>
                     <Input
@@ -919,14 +958,6 @@ export function InternationalShipmentPage() {
                 <h4 className={styles.sectionTitle}>Destino</h4>
 
                 <div className={styles.fields}>
-                  <Input
-                    id="destino-country-display"
-                    label="País de destino seleccionado"
-                    value={destinoCountryLabel ?? ''}
-                    onChange={() => {}}
-                    disabled
-                  />
-
                   <Input
                     id="destino-state"
                     label="Provincia / estado"
@@ -1025,6 +1056,12 @@ export function InternationalShipmentPage() {
                       label={svc.label}
                       description={svc.description}
                       selected={shippingService === svc.value}
+                      disabled={'disabled' in svc ? Boolean(svc.disabled) : false}
+                      disabledReason={
+                        'disabledReason' in svc && typeof svc.disabledReason === 'string'
+                          ? svc.disabledReason
+                          : undefined
+                      }
                       onSelect={(value) => setShippingService(value as typeof shippingService)}
                       trailing={<span className={styles.servicePrice}>{svc.price}</span>}
                     />
@@ -1032,6 +1069,7 @@ export function InternationalShipmentPage() {
                 </div>
               </section>
 
+              {commercial && (
               <section className={styles.section}>
                 <Switch
                   id="aduana-representation"
@@ -1111,6 +1149,7 @@ export function InternationalShipmentPage() {
                   </>
                 )}
               </section>
+              )}
             </div>
           )}
         </div>
@@ -1131,7 +1170,7 @@ export function InternationalShipmentPage() {
                 currentStep={currentStep}
                 unlockedSteps={unlocked}
                 onStepClick={goTo}
-                declaracion={{ categoryLabel, totalArticles, totalValueUsd, totalWeightKg, exportDutiesUsd: EXPORT_DUTIES_USD }}
+                declaracion={{ categoryLabel, totalArticles, totalValueUsd, totalWeightKg, exportDutiesUsd }}
                 paquete={{ measuresLabel, weightLabel }}
                 origen={{ displayName: origenDisplayName, remitente: selectedRemitente }}
                 destino={{
@@ -1140,36 +1179,7 @@ export function InternationalShipmentPage() {
                   address: destinoAddressLines[0] || undefined,
                   shippingService: shippingService ? SHIPPING_SERVICE_LABELS[shippingService] : undefined,
                 }}
-                onPay={
-                  currentStep === 'Destino' && runDestinoValidation().size === 0
-                    ? () => {
-                        wizardStore.save(buildSnapshot())
-                        if (commercial) {
-                          navigate('/internacional/factura-e')
-                          return
-                        }
-                        const priceArs = shippingService ? SHIPPING_SERVICE_PRICES_ARS[shippingService] : 15000
-                        navigate('/checkout', {
-                          state: {
-                            intl: {
-                              service: shippingService ? SHIPPING_SERVICE_TO_POSTAL[shippingService] : 'EMS_PAQUETERIA',
-                              servicePriceArs: priceArs,
-                              serviceLabel: shippingService ? SHIPPING_SERVICE_LABELS[shippingService] : 'EMS Paquetería',
-                              totalValueUsd,
-                              packageWeightKg: Number(packageWeightKg) || 0,
-                              lengthCm: Number(lengthCm) || 0,
-                              widthCm: Number(widthCm) || 0,
-                              heightCm: Number(heightCm) || 0,
-                              originLabel: selectedRemitente?.razonSocial ?? 'Correo Argentino',
-                              destinationLabel: [destinoCity, selectedCountry?.label].filter(Boolean).join(', '),
-                              orderNumber: destinoOrderNum || undefined,
-                            },
-                          },
-                        })
-                      }
-                    : undefined
-                }
-                payLabel="Finalizar"
+                representationCostArs={representationCostArs}
               />
             </div>
           </div>

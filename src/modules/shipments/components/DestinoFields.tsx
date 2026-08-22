@@ -1,18 +1,17 @@
 import circleMinusIcon from '@/assets/icons/circle-minus.svg'
 import circlePlusIcon from '@/assets/icons/circle-plus.svg'
 import { Input } from '@/shared/ui/Input'
-import formLayout from '../forms/ShipmentForm.module.css'
 import styles from './DestinoFields.module.css'
 
 /** Doc funcional §8.5: hasta 3 líneas de dirección, 50 caracteres cada una. */
 export const MAX_ADDRESS_LINES = 3
 export const ADDRESS_LINE_MAX_LENGTH = 50
 
+/**
+ * Domicilio de destino (Figma 5589:10467).
+ * N° de orden y “País de destino seleccionado” se removieron (revisión 2).
+ */
 export interface DestinoFieldsProps {
-  readonly orderNumber: string
-  readonly onOrderNumberChange: (value: string) => void
-  /** País elegido en Declaración: no editable acá (doc funcional §8.4). */
-  readonly destinationCountryLabel: string
   readonly province: string
   readonly onProvinceChange: (value: string) => void
   readonly city: string
@@ -25,16 +24,7 @@ export interface DestinoFieldsProps {
   readonly onRemoveAddressLine: (index: number) => void
 }
 
-/**
- * Domicilio de destino (Figma 5589:10467). El título "Destino" y el N° de
- * orden van en la misma fila — ese input es un "pseudo input" (línea inferior
- * sin caja, sin label, sólo placeholder), igual al que ya existía en el
- * flujo nacional (`ShipmentForm.module.css` → `.orderNumber`).
- */
 export function DestinoFields({
-  orderNumber,
-  onOrderNumberChange,
-  destinationCountryLabel,
   province,
   onProvinceChange,
   city,
@@ -50,21 +40,7 @@ export function DestinoFields({
 
   return (
     <div className={styles.fields}>
-      <div className={styles.header}>
-        <h4 className={styles.title}>Destino</h4>
-        <input
-          id="destination-order-number"
-          className={formLayout.orderNumber}
-          placeholder="N° de orden (opcional)"
-          title="Número de orden (opcional)"
-          value={orderNumber}
-          onChange={(event) => onOrderNumberChange(event.currentTarget.value)}
-        />
-      </div>
-
-      <p className={styles.countryRow}>
-        País de destino seleccionado: <span className={styles.countryValue}>{destinationCountryLabel}</span>
-      </p>
+      <h4 className={styles.title}>Destino</h4>
 
       <Input
         id="destination-province"

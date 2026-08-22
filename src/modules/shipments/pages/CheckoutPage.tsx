@@ -4,11 +4,13 @@ import { PageContainer } from '@/shared/layout/PageContainer'
 import { Button } from '@/shared/ui/Button'
 import { RadioGroup } from '@/shared/ui/Checkbox'
 import { useScrollToTop } from '@/shared/hooks/useScrollToTop'
+import { useToast } from '@/shared/ui/Toast'
 import { CheckoutItemsTable } from '../components/CheckoutItemsTable'
 import { CheckoutTotalsPanel } from '../components/CheckoutTotalsPanel'
 import { CHECKOUT_ITEMS_INTERNATIONAL, CHECKOUT_PICKUP_FEE } from '../mocks/checkout.mocks'
 import { CHECKOUT_PAYMENT_METHOD_LABELS, checkoutTotals } from '../types/checkout.types'
 import type { CheckoutPaymentMethod, CheckoutItem, InternationalCheckoutItem } from '../types/checkout.types'
+import { wizardStore } from '../stores/session.store'
 import styles from './CheckoutPage.module.css'
 
 interface IntlCheckoutState {
@@ -23,6 +25,7 @@ interface IntlCheckoutState {
   readonly originLabel: string
   readonly destinationLabel: string
   readonly orderNumber?: string
+  readonly representationCostArs?: number
 }
 
 function buildIntlItem(s: IntlCheckoutState): InternationalCheckoutItem {
@@ -32,6 +35,7 @@ function buildIntlItem(s: IntlCheckoutState): InternationalCheckoutItem {
   const vatAmt = Math.round((priceWithDiscountAmt / 1.21) * 0.21)
   const net = priceWithDiscountAmt - vatAmt
   const vol = Math.round(((s.lengthCm * s.widthCm * s.heightCm) / 6000) * 100) / 100
+  const representationCost = s.representationCostArs ?? 0
 
   return {
     id: 'intl-current',
@@ -54,7 +58,7 @@ function buildIntlItem(s: IntlCheckoutState): InternationalCheckoutItem {
       postalService: { amount: priceArs, currency: 'ARS' },
       nationalTaxes: { amount: 5000, currency: 'ARS' },
       foreignTaxes: { amount: 5000, currency: 'ARS' },
-      representationCost: { amount: 10000, currency: 'ARS' },
+      representationCost: { amount: representationCost, currency: 'ARS' },
     },
   }
 }
@@ -69,12 +73,15 @@ const PAYMENT_METHODS: readonly CheckoutPaymentMethod[] = [
 /**
  * Checkout internacional: sólo ítems intl (seed de 5 destinos + el del usuario).
  * "Atrás" no limpia el wizard — conserva datos del envío no guardado.
+ * Pagar: mock success → Mis envíos (revisión 2 / supersede ADR-006).
  */
 export function CheckoutPage() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { showToast } = useToast()
   useScrollToTop()
   const [paymentMethod, setPaymentMethod] = useState<CheckoutPaymentMethod>('TARJETA_CREDITO')
+  const [paying, setPaying] = useState(false)
 
   const intlState = (location.state as { intl?: IntlCheckoutState } | null)?.intl
 
@@ -87,6 +94,17 @@ export function CheckoutPage() {
   }, [intlState])
 
   const totals = checkoutTotals(items, CHECKOUT_PICKUP_FEE)
+
+  const handlePay = () => {
+    if (paying) return
+    setPaying(true)
+    // Mock de pago: éxito determinístico para la maqueta.
+    window.setTimeout(() => {
+      wizardStore.clear()
+      showToast('Pago simulado con éxito.', 'success')
+      navigate('/propuesta/mis-envios', { state: { paymentResult: 'success' } })
+    }, 400)
+  }
 
   return (
     <PageContainer width="full">
@@ -122,8 +140,8 @@ export function CheckoutPage() {
             Atrás
           </Button>
 
-          <Button variant="primary" onClick={() => undefined}>
-            Pagar
+          <Button variant="primary" disabled={paying} onClick={handlePay}>
+            {paying ? 'Procesando…' : 'Pagar'}
           </Button>
         </div>
       </div>
