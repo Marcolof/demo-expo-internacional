@@ -2,11 +2,16 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PageContainer } from '@/shared/layout/PageContainer'
 import { useScrollToTop } from '@/shared/hooks/useScrollToTop'
+import { useActiveUser } from '@/core/session/activeUser'
 import { formatCuitMask, isMoneyAmount } from '@/shared/lib/validators'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
 import { COUNTRIES } from '@/shared/lib/countries'
-import { FACTURA_E_SEED, type FacturaERow } from '../mocks/factura-e.mocks'
+import {
+  FACTURA_E_CUIT_LEGEND,
+  FACTURA_E_SEED,
+  type FacturaERow,
+} from '../mocks/factura-e.mocks'
 import { wizardStore } from '../stores/session.store'
 import styles from './FacturaEPage.module.css'
 
@@ -45,73 +50,55 @@ function parseMoneyInput(raw: string): number {
   return Number.isFinite(n) ? n : 0
 }
 
+function buildInitialRows(snap: ReturnType<typeof wizardStore.get>): FacturaERow[] {
+  const base = [...FACTURA_E_SEED]
+  if (snap === null) return base
+  const countryLabel = COUNTRIES.find((c) => c.value === snap.country)?.label ?? snap.country
+  const totalUsd = snap.articles.reduce((sum, a) => sum + a.quantity * a.unitPriceUsd, 0)
+  base.unshift({
+    id: 'fe-current',
+    destinatario: snap.recipientName || snap.recipientRazonSocial || 'Envío actual',
+    destino: [snap.destinoCity, countryLabel].filter(Boolean).join(' - ') || countryLabel,
+    nOrden: snap.destinoOrderNum.trim() || 'ORD-10049',
+    facturaE: snap.facturaE || '00001-000000108',
+    montoUsd: totalUsd || 1500,
+    divisa: 'USD',
+    tipoCambio: '1',
+  })
+  return base
+}
+
 /**
- * Paso intermedio Factura E (flujo comercial). Datos mock + filas agregadas
- * en memoria de sesión (sin persistencia).
+ * Paso intermedio Factura E (flujo comercial).
  */
 export function FacturaEPage() {
   const navigate = useNavigate()
+  const { user } = useActiveUser()
   useScrollToTop()
   const snap = wizardStore.get()
-  const [cuit, setCuit] = useState('30-12345678-0')
-  const [rows, setRows] = useState<readonly FacturaERow[]>(() => {
-    const base = [...FACTURA_E_SEED]
-    if (snap !== null) {
-      const countryLabel = COUNTRIES.find((c) => c.value === snap.country)?.label ?? snap.country
-      const totalUsd = snap.articles.reduce(
-        (sum, a) => sum + a.quantity * a.unitPriceUsd,
-        0,
-      )
-      base.unshift({
-        id: 'fe-current',
-        destinatario: snap.recipientName || snap.recipientRazonSocial || 'Envío actual',
-        destino: [snap.destinoCity, countryLabel].filter(Boolean).join(' - ') || countryLabel,
-        nOrden: snap.destinoOrderNum.trim() || 'ORD-10049',
-        facturaE: snap.facturaE || '00001-000000108',
-        montoUsd: totalUsd || 1500,
-      })
-    }
-    return base
-  })
+  const [cuit, setCuit] = useState(() => formatCuitMask(user.cuit))
+  const [rows, setRows] = useState<readonly FacturaERow[]>(() => buildInitialRows(snap))
   const [montoDrafts, setMontoDrafts] = useState<Record<string, string>>(() =>
-    Object.fromEntries(
-      (snap !== null
-        ? [
-            {
-              id: 'fe-current',
-              montoUsd:
-                snap.articles.reduce((sum, a) => sum + a.quantity * a.unitPriceUsd, 0) || 1500,
-            },
-            ...FACTURA_E_SEED,
-          ]
-        : FACTURA_E_SEED
-      ).map((row) => [row.id, row.montoUsd.toFixed(2).replace('.', ',')]),
-    ),
+    Object.fromEntries(buildInitialRows(snap).map((row) => [row.id, row.montoUsd.toFixed(2).replace('.', ',')])),
   )
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null)
 
   const allFacturasComplete = rows.every((row) => row.facturaE.trim() !== '')
   const allMontosValid = rows.every((row) => isMoneyAmount(montoDrafts[row.id] ?? '', false) === null)
+  const allDivisasComplete = rows.every((row) => row.divisa.trim() !== '')
+  const allTipoCambioValid = rows.every((row) => {
+    const n = Number(row.tipoCambio.replace(',', '.'))
+    return row.tipoCambio.trim() !== '' && Number.isFinite(n) && n > 0
+  })
+  const canPay =
+    allFacturasComplete && allMontosValid && allDivisasComplete && allTipoCambioValid && cuit.trim() !== ''
 
-  const addRow = () => {
-    const nextIndex = rows.length + 1
-    const id = `fe-new-${Date.now()}`
-    setRows((current) => [
-      ...current,
-      {
-        id,
-        destinatario: `Nuevo destinatario ${nextIndex}`,
-        destino: 'Pendiente',
-        nOrden: `ORD-${String(10049 + nextIndex)}`,
-        facturaE: '',
-        montoUsd: 0,
-      },
-    ])
-    setMontoDrafts((current) => ({ ...current, [id]: '0,00' }))
+  const patchRow = (id: string, patch: Partial<FacturaERow>) => {
+    setRows((current) => current.map((item) => (item.id === id ? { ...item, ...patch } : item)))
   }
 
   const goCheckout = () => {
-    if (!allFacturasComplete || !allMontosValid) return
+    if (!canPay) return
     const service = snap?.shippingService ?? 'EMS'
     const priceArs = SHIPPING_SERVICE_PRICES_ARS[service] ?? 15000
     const totalValueUsd = rows.reduce((sum, row) => {
@@ -119,6 +106,8 @@ export function FacturaEPage() {
       return sum + (draft !== undefined ? parseMoneyInput(draft) : row.montoUsd)
     }, 0)
     const countryLabel = COUNTRIES.find((c) => c.value === snap?.country)?.label
+    const representationCostArs =
+      snap !== null && snap.aduanaRepresentation === false ? 16000 : 0
 
     navigate('/checkout', {
       state: {
@@ -134,6 +123,7 @@ export function FacturaEPage() {
           originLabel: snap?.origenDisplayName || 'Correo Argentino',
           destinationLabel: [snap?.destinoCity, countryLabel].filter(Boolean).join(', '),
           orderNumber: snap?.destinoOrderNum || undefined,
+          representationCostArs,
         },
       },
     })
@@ -145,9 +135,7 @@ export function FacturaEPage() {
         <header className={styles.header}>
           <h1 className={styles.title}>Facturación del envío</h1>
           <h2 className={styles.subtitle}>Factura E</h2>
-          <p className={styles.hint}>
-            Para solicitar la Factura E, completá manualmente el CUIT correspondiente.
-          </p>
+          <p className={styles.hint}>{FACTURA_E_CUIT_LEGEND}</p>
           <div className={styles.cuitField}>
             <Input
               id="factura-e-cuit"
@@ -157,12 +145,6 @@ export function FacturaEPage() {
             />
           </div>
         </header>
-
-        <div className={styles.toolbar}>
-          <Button variant="secondary" onClick={addRow}>
-            Agregar ítem
-          </Button>
-        </div>
 
         <div className={styles.tableWrap}>
           <table className={styles.table}>
@@ -174,6 +156,8 @@ export function FacturaEPage() {
                 <th>Nº de orden</th>
                 <th>Factura E</th>
                 <th>Monto</th>
+                <th>Divisa</th>
+                <th>Tipo de cambio</th>
               </tr>
             </thead>
             <tbody>
@@ -233,14 +217,7 @@ export function FacturaEPage() {
                         className={styles.facturaInput}
                         aria-label={`Factura E ${row.destinatario}`}
                         value={row.facturaE}
-                        onChange={(event) => {
-                          const value = event.currentTarget.value
-                          setRows((current) =>
-                            current.map((item) =>
-                              item.id === row.id ? { ...item, facturaE: value } : item,
-                            ),
-                          )
-                        }}
+                        onChange={(event) => patchRow(row.id, { facturaE: event.currentTarget.value })}
                       />
                     </td>
                     <td>
@@ -255,16 +232,30 @@ export function FacturaEPage() {
                             const value = sanitizeMoneyInput(event.currentTarget.value)
                             setMontoDrafts((current) => ({ ...current, [row.id]: value }))
                             if (isMoneyAmount(value, false) === null) {
-                              const parsed = parseMoneyInput(value)
-                              setRows((current) =>
-                                current.map((item) =>
-                                  item.id === row.id ? { ...item, montoUsd: parsed } : item,
-                                ),
-                              )
+                              patchRow(row.id, { montoUsd: parseMoneyInput(value) })
                             }
                           }}
                         />
                       </label>
+                    </td>
+                    <td>
+                      <input
+                        className={styles.facturaInput}
+                        aria-label={`Divisa ${row.destinatario}`}
+                        value={row.divisa}
+                        onChange={(event) => patchRow(row.id, { divisa: event.currentTarget.value })}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        className={styles.facturaInput}
+                        aria-label={`Tipo de cambio ${row.destinatario}`}
+                        inputMode="decimal"
+                        value={row.tipoCambio}
+                        onChange={(event) =>
+                          patchRow(row.id, { tipoCambio: event.currentTarget.value.replace(/[^\d.,]/g, '') })
+                        }
+                      />
                     </td>
                   </tr>
                 )
@@ -274,21 +265,17 @@ export function FacturaEPage() {
         </div>
 
         <div className={styles.footer}>
-          <Button variant="tertiary" onClick={() => navigate('/internacional')}>
+          <Button variant="tertiary" onClick={() => navigate('/propuesta/mis-envios')}>
             Cancelar
           </Button>
           <div className={styles.footerEnd}>
-            <Button variant="secondary" onClick={() => navigate('/internacional')}>
+            <Button variant="secondary" onClick={() => navigate('/propuesta/mis-envios')}>
               Atrás
             </Button>
             <Button variant="secondary" disabled>
               Guardar
             </Button>
-            <Button
-              variant="primary"
-              disabled={!allFacturasComplete || !allMontosValid}
-              onClick={goCheckout}
-            >
+            <Button variant="primary" disabled={!canPay} onClick={goCheckout}>
               Pagar
             </Button>
           </div>
