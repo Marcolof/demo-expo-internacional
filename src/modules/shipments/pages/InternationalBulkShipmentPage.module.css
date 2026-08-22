@@ -26,17 +26,25 @@
 }
 
 /*
- * Misma línea visual que Individual: tabs a la izquierda, ScopeSwitch a la
- * derecha, bordes inferiores alineados (referencia NewShipmentPage).
+ * Misma grilla 2 col que Individual (NewShipmentPage.prin):
+ * tabs a la izquierda, ScopeSwitch a la derecha, centrados en vertical.
+ * El switch NO debe ir a width 100% (si no, baja de fila y se estira).
  */
 .chromeRow {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: center;
   gap: var(--space-4);
   width: 100%;
   margin-bottom: var(--space-5);
+}
+
+/* --bp-tablet (768px) */
+@media (min-width: 768px) {
+  .chromeRow {
+    grid-template-columns: 1fr 1fr;
+    column-gap: 0;
+  }
 }
 
 .loadTabs {
@@ -45,12 +53,18 @@
   margin-bottom: 0;
 }
 
-/* --bp-tablet (768px) */
+/* --bp-tablet (768px) — mismo ratio que NewShipmentPage.loadTabs en la col izquierda */
 @media (min-width: 768px) {
   .loadTabs {
-    width: auto;
-    flex: 0 1 auto;
+    width: 66.6667%;
     margin-left: var(--space-1);
+  }
+}
+
+/* --bp-desktop (1366px) */
+@media (min-width: 1366px) {
+  .loadTabs {
+    width: 33.3333%;
   }
 }
 
@@ -68,16 +82,18 @@
 
 .scopeSwitchDesktopOnly {
   display: none;
-  flex-shrink: 0;
-  width: 100%;
-  max-width: 22rem;
-  margin-bottom: 0;
 }
 
-/* --bp-tablet (768px) */
+/* --bp-tablet (768px) — ancho tipo #infoRe (83% de la col derecha), centrado */
 @media (min-width: 768px) {
   .scopeSwitchDesktopOnly {
     display: flex;
+    width: 83.33333333%;
+    max-width: 83.33333333%;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 0;
+    flex-shrink: 0;
   }
 }
 
