@@ -260,6 +260,7 @@ export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', i
               </p>
               <div className={styles.legend} role="note">
                 <InfoTooltip content={CLASSIFICATION_DISCLAIMER} />
+                <InfoTooltip content={CLASSIFICATION_DISCLAIMER} />
                 <p className={styles.legendText}>{CLASSIFICATION_DISCLAIMER}</p>
               </div>
             </div>
