@@ -5,6 +5,7 @@ import internacionalIcon from '@/assets/icons/internacional.svg'
 import { PageContainer } from '@/shared/layout/PageContainer'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
+import { Modal } from '@/shared/ui/Modal'
 import { Select } from '@/shared/ui/Select'
 import { Tabs, type TabsProps } from '@/shared/ui/Tabs'
 import { ScopeSwitch } from '../components/ScopeSwitch'
@@ -244,6 +245,7 @@ export function PropuestaMisEnviosPage() {
   const [activeTab, setActiveTab] = useState<EnvioTab>('pendientes')
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set())
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+  const [detailRow, setDetailRow] = useState<EnvioRow | null>(null)
   const menuRef = useRef<HTMLTableCellElement>(null)
 
   const [destinatario, setDestinatario] = useState('')
@@ -596,7 +598,12 @@ export function PropuestaMisEnviosPage() {
                                 key={item}
                                 type="button"
                                 className={`${styles.contextMenuItem} ${item === 'Eliminar' ? styles.contextMenuItemDanger : ''}`}
-                                onClick={() => setOpenMenuId(null)}
+                                onClick={() => {
+                                  if (item === 'Ver detalle') {
+                                    setDetailRow(row)
+                                  }
+                                  setOpenMenuId(null)
+                                }}
                               >
                                 {item}
                               </button>
@@ -662,6 +669,60 @@ export function PropuestaMisEnviosPage() {
           <p className={styles.emptyTab}>Todavía no hay envíos de usuario para mostrar.</p>
         )}
       </div>
+
+      <Modal
+        isOpen={detailRow !== null}
+        onClose={() => setDetailRow(null)}
+        title="Detalle del envío"
+        size="md"
+        labelledById="envio-detalle-title"
+        footer={
+          <Button variant="primary" onClick={() => setDetailRow(null)}>
+            Cerrar
+          </Button>
+        }
+      >
+        {detailRow !== null && (
+          <dl className={styles.detailList}>
+            <div className={styles.detailRow}>
+              <dt>N° de orden</dt>
+              <dd>{detailRow.nOrden}</dd>
+            </div>
+            <div className={styles.detailRow}>
+              <dt>Integración</dt>
+              <dd>{detailRow.integracion}</dd>
+            </div>
+            <div className={styles.detailRow}>
+              <dt>Origen</dt>
+              <dd>{detailRow.origen}</dd>
+            </div>
+            <div className={styles.detailRow}>
+              <dt>Destinatario</dt>
+              <dd>{detailRow.destinatario}</dd>
+            </div>
+            <div className={styles.detailRow}>
+              <dt>Destino</dt>
+              <dd>{detailRow.destino}</dd>
+            </div>
+            <div className={styles.detailRow}>
+              <dt>Detalles</dt>
+              <dd>{detailRow.detalles}</dd>
+            </div>
+            <div className={styles.detailRow}>
+              <dt>Estado</dt>
+              <dd>{detailRow.estado}</dd>
+            </div>
+            <div className={styles.detailRow}>
+              <dt>Finalidad comercial</dt>
+              <dd>{detailRow.commercial === true ? 'Sí' : 'No'}</dd>
+            </div>
+            <div className={styles.detailRow}>
+              <dt>Usuario</dt>
+              <dd>{detailRow.usuario}</dd>
+            </div>
+          </dl>
+        )}
+      </Modal>
     </PageContainer>
   )
 }

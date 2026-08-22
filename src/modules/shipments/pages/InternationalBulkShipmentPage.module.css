@@ -14,18 +14,8 @@
 
 .header {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-4);
-  width: 100%;
-}
-
-.headerMain {
-  display: flex;
   flex-direction: column;
-  min-width: 0;
-  flex: 1 1 auto;
+  width: 100%;
 }
 
 .title {
@@ -35,28 +25,38 @@
   color: var(--text-primary);
 }
 
+/*
+ * Misma línea visual que Individual: tabs a la izquierda, ScopeSwitch a la
+ * derecha, bordes inferiores alineados (referencia NewShipmentPage).
+ */
+.chromeRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  width: 100%;
+  margin-bottom: var(--space-5);
+}
+
 .loadTabs {
   width: 100%;
   min-width: max-content;
-  margin-bottom: var(--space-5);
+  margin-bottom: 0;
 }
 
 /* --bp-tablet (768px) */
 @media (min-width: 768px) {
   .loadTabs {
-    width: 66.6667%;
-  }
-}
-
-/* --bp-desktop (1366px) */
-@media (min-width: 1366px) {
-  .loadTabs {
-    width: 33.3333%;
+    width: auto;
+    flex: 0 1 auto;
+    margin-left: var(--space-1);
   }
 }
 
 .scopeSwitchMobileOnly {
   margin-bottom: var(--space-5);
+  max-width: 28rem;
 }
 
 /* --bp-tablet (768px) */
@@ -69,7 +69,9 @@
 .scopeSwitchDesktopOnly {
   display: none;
   flex-shrink: 0;
-  margin-top: var(--space-4);
+  width: 100%;
+  max-width: 22rem;
+  margin-bottom: 0;
 }
 
 /* --bp-tablet (768px) */

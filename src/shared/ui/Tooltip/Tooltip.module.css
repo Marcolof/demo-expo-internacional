@@ -26,6 +26,11 @@
   box-shadow: var(--shadow-dropdown);
 }
 
+/* Posición vía inline style (portal); evita clipping en Modal overflow. */
+.tipPortal {
+  position: fixed;
+}
+
 .top {
   bottom: calc(100% + var(--space-1));
   left: 50%;
