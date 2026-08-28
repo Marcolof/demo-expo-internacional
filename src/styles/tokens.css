@@ -33,7 +33,9 @@
   --grey-300: #d9d9d9; /* fondo deshabilitado */
   --grey-400: #ccc; /* borde de input */
   --grey-500: #afaeae; /* borde inferior input nro orden */
-  --grey-600: #8a8a8a; /* texto deshabilitado / stepper inactivo */
+  /* Figma Text/Disabled (#A7A7A7) — scrape distinto a grey-600; unificar luego si negocio confirma una sola escala. */
+  --grey-550: #a7a7a7;
+  --grey-600: #8a8a8a; /* stepper inactivo / legacy disabled scrape */
   --grey-650: #79747e; /* footer / títulos de gráficos */
   --grey-700: #49454f; /* text-muted */
   --grey-740: #474747; /* input-text-default (Figma: Inputs/Text/input-text-default) */
@@ -45,8 +47,10 @@
   --red-100: #ffd0d0; /* fondo alert-danger / error-msg */
   --red-200: #f5c2c2; /* borde error-msg */
   --red-500: #f03131; /* icon-color-icon-error (Figma) */
-  --red-600: #d32f2f; /* texto error-msg */
-  --red-700: #ed143d; /* help-block */
+  --red-600: #d32f2f; /* texto error-msg (legacy scrape) */
+  --red-700: #ed143d; /* help-block / Field.error */
+  /* Figma Alert danger body (#58151C) — BS5 danger-text-emphasis; unificar rojos luego. */
+  --red-800: #58151c;
   --blue-focus: #2196f3; /* borde de input enfocado */
   --blue-link-accent: #2562ea; /* Text/Link/link-text-accent (Figma) */
   --green-700: #0f5132;
@@ -103,6 +107,7 @@
   --space-8: 2rem; /* 32px */
   --space-10: 2.5rem; /* 40px */
   --space-12: 3rem; /* 48px */
+  --space-13: 3.25rem; /* 52px — Figma spacing-13 */
 
   /* --- Radios ----------------------------------------------------------- */
   --radius-hairline: 1px; /* dropzone de carga masiva */
@@ -195,11 +200,12 @@
   --text-secondary: var(--grey-800);
   --text-muted: var(--grey-700);
   --text-subtle: var(--grey-650);
-  --text-disabled: var(--grey-600);
+  --text-disabled: var(--grey-550); /* Figma Text/Disabled → primitive grey-550 */
   --text-link: var(--correo-blue);
   --text-link-accent: var(--blue-link-accent);
   --text-on-brand: var(--correo-blue);
   --text-inverse: var(--white);
+  --text-error: var(--red-500); /* Figma #F03131 — p. ej. Rango geográfico */
 
   /* --- Bordes ----------------------------------------------------------- */
   --border-default: var(--grey-400);
@@ -212,7 +218,7 @@
 
   /* --- Estado: error ---------------------------------------------------- */
   --feedback-danger-bg: var(--red-100);
-  --feedback-danger-text: var(--red-600);
+  --feedback-danger-text: var(--red-800); /* Figma Alert body · #58151C */
   --feedback-danger-border: var(--red-200);
   --feedback-danger-strong: var(--red-700);
   --feedback-danger-icon: var(--red-500);
