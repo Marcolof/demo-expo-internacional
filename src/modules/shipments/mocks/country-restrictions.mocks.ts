@@ -2,8 +2,8 @@
  * Restricciones de contenido por país de destino (maqueta).
  * Mapea código ISO → IDs de artículos del seed que NO pueden enviarse.
  *
- * Solo aplica cuando shippingAvailable = true; los países sin servicio
- * (Rusia, Cuba, Corea del Norte) se manejan por separado.
+ * Solo aplica cuando `shippingAvailable = true` en `DESTINATION_COUNTRIES_DATA`.
+ * Países sin servicio se resuelven con `isCountryShippingAvailable`.
  *
  * Asignación de ejemplo para demo:
  *   UY — no se puede enviar indumentaria (Remera de algodón · art-001)
