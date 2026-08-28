@@ -47,5 +47,6 @@ export const PACKAGE_GROSS_MAX_WEIGHT_TOOLTIP =
 /** Costo adicional si se desactiva representación ante Aduana. */
 export const ADUANA_WITHOUT_REPRESENTATION_COST_ARS = 16000
 
-export const INFO_VIGENTE_URL = 'https://www.correoargentino.com.ar/información-vigente'
+export const INFO_VIGENTE_PATH = '/informacion-vigente'
+export const INFO_VIGENTE_URL = 'https://www.correoargentino.com.ar/informacion-vigente'
 export const VUCE_URL = 'https://www.vuce.gob.ar/'
