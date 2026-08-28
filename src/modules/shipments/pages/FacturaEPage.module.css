@@ -15,7 +15,10 @@
   max-width: 36rem;
 }
 
-.title {
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   margin: 0;
   color: var(--text-primary);
   font-size: var(--font-size-2xl);
@@ -77,6 +80,11 @@
   width: 2.5rem;
 }
 
+.thTotal {
+  white-space: normal;
+  max-width: 8rem;
+}
+
 .tableRow {
   filter: var(--table-row-drop-shadow);
 }
@@ -88,6 +96,10 @@
   text-align: center;
   vertical-align: middle;
   border: none;
+}
+
+.tableRow td.tdText {
+  text-align: left;
 }
 
 .tableRow td:first-child {
@@ -174,30 +186,22 @@
   outline: none;
 }
 
-.monto {
+.moneyField {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
 }
 
-.montoField {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  max-width: 10rem;
-}
-
-.montoCurrency {
+.moneyCurrency {
   color: var(--text-muted);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
 }
 
-.montoInput {
-  width: 6.5rem;
+.moneyInput {
+  width: 7.5rem;
   height: var(--field-height);
   padding: var(--field-padding);
   border: var(--field-border);
@@ -209,13 +213,18 @@
   text-align: right;
 }
 
-.montoInput:focus {
+.moneyInput:focus {
   border: var(--field-border-focus);
   outline: none;
 }
 
-.montoInvalid {
+.moneyInvalid {
   border-color: var(--feedback-danger-strong);
+}
+
+.moneyReadOnly {
+  background: var(--surface-sunken);
+  color: var(--text-primary);
 }
 
 .footer {
