@@ -36,6 +36,7 @@ export type ArticleKind = 'ARTICLE' | 'DOCUMENT'
 export interface ArticleKindText {
   readonly addButtonLabel: string
   readonly modalTitle: string
+  readonly descriptionLead: string
   readonly descriptionLabel: string
   readonly descriptionHint: string
   readonly emptyStateTitle: string
@@ -47,8 +48,10 @@ export const ARTICLE_KIND_TEXT: Record<ArticleKind, ArticleKindText> = {
   ARTICLE: {
     addButtonLabel: 'Agregar artículo',
     modalTitle: 'Agregar artículo',
+    descriptionLead:
+      'Ingresá el nombre del artículo para ver los códigos de posición arancelaria relacionados. Por ejemplo: «Remera».',
     descriptionLabel: 'Descripción del artículo',
-    descriptionHint: 'Ej.: Remera de algodón.',
+    descriptionHint: 'Ej.: Remera',
     emptyStateTitle: 'Acá vas a ver los artículos que agregues',
     quantityTotalLabel: 'Cantidad de artículos',
     removeActionLabel: 'Eliminar artículo',
@@ -56,6 +59,8 @@ export const ARTICLE_KIND_TEXT: Record<ArticleKind, ArticleKindText> = {
   DOCUMENT: {
     addButtonLabel: 'Agregar documento',
     modalTitle: 'Agregar documento',
+    descriptionLead:
+      'Ingresá el nombre del documento para ver los códigos de posición arancelaria relacionados.',
     descriptionLabel: 'Descripción del documento',
     descriptionHint: 'Ej.: Contrato de compraventa.',
     emptyStateTitle: 'Acá vas a ver los documentos que agregues',
