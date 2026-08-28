@@ -300,8 +300,8 @@ export function InternationalShipmentPage() {
   const [recipientTaxId, setRecipientTaxId]             = useState('123456789001213123')
   const [facturaE, setFacturaE]                         = useState('00001-00000108')
   const [destinoState, setDestinoState]                 = useState('')
-  const [destinoCity, setDestinoCity]                   = useState('Houston')
-  const [destinoPostalCode, setDestinoPostalCode]       = useState('77001')
+  const [destinoCity, setDestinoCity]                   = useState('')
+  const [destinoPostalCode, setDestinoPostalCode]       = useState('')
   const [destinoAddressLines, setDestinoAddressLines]   = useState<string[]>(['901 Bagby st. Tower golden 9°D'])
   const [destinoOrderNum, setDestinoOrderNum]           = useState('')
   const [aduanaRepresentation, setAduanaRepresentation] = useState(true)
@@ -473,8 +473,6 @@ export function InternationalShipmentPage() {
         label: 'Pequeño Paquete',
         description: 'Entrega estimada entre 10 y 30 días hábiles, según el destino.',
         price: '$7.500,00',
-        disabled: pequenoPaqueteDisabled,
-        disabledReason: `El peso del embalaje supera ${PEQUENO_PAQUETE_MAX_WEIGHT_KG} kg.`,
       },
       {
         value: 'EMS_DOCUMENTACION' as const,
@@ -486,7 +484,11 @@ export function InternationalShipmentPage() {
     if (!commercial) {
       return all.filter((svc) => svc.value === 'EMS_DOCUMENTACION')
     }
-    return all.filter((svc) => svc.value !== 'EMS_DOCUMENTACION')
+    return all.filter((svc) => {
+      if (svc.value === 'EMS_DOCUMENTACION') return false
+      if (svc.value === 'PEQUENO_PAQUETE' && pequenoPaqueteDisabled) return false
+      return true
+    })
   }, [commercial, pequenoPaqueteDisabled])
 
   const totalArticles = articles.length
@@ -642,6 +644,7 @@ export function InternationalShipmentPage() {
                     value={country}
                     onChange={(event) => handleCountryChange(event.currentTarget.value)}
                     className={styles.countrySelect}
+                    invalid={country !== '-1' && !countryHasShipping}
                   />
                   {country !== '-1' && (
                     <p className={styles.supportingRange}>
@@ -664,14 +667,12 @@ export function InternationalShipmentPage() {
                     labelPosition="left"
                   />
 
-                  {commercial && (
-                    <button type="button" className={styles.infoLink} onClick={() => setInfoModalOpen(true)}>
-                      Información a tener en cuenta
-                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                        <path d="m7.5 5 5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </button>
-                  )}
+                  <button type="button" className={styles.infoLink} onClick={() => setInfoModalOpen(true)}>
+                    Información a tener en cuenta
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                      <path d="m7.5 5 5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
 
                   <p className={styles.hint}>Detallá la categoría del envío y el contenido del paquete.</p>
 
@@ -946,7 +947,19 @@ export function InternationalShipmentPage() {
           {currentStep === 'Destino' && (
             <div className={styles.form}>
               <section className={styles.section}>
-                <h4 className={styles.sectionTitle}>Destinatario</h4>
+                <div className={styles.destinatarioHeader}>
+                  <h4 className={styles.sectionTitle}>Destinatario</h4>
+                  <div className={styles.orderChipWrap}>
+                    <input
+                      id="destino-order-num"
+                      className={styles.orderChipInput}
+                      placeholder="N° de orden (opcional)"
+                      aria-label="N° de orden (opcional)"
+                      value={destinoOrderNum}
+                      onChange={(event) => setDestinoOrderNum(event.currentTarget.value)}
+                    />
+                  </div>
+                </div>
 
                 <div className={styles.fields}>
                   <div className={styles.twoColRow}>
@@ -1021,6 +1034,13 @@ export function InternationalShipmentPage() {
                 <h4 className={styles.sectionTitle}>Destino</h4>
 
                 <div className={styles.fields}>
+                  <Input
+                    id="destino-country"
+                    label="País de destino"
+                    value={destinoCountryLabel ?? ''}
+                    disabled
+                  />
+
                   <Input
                     id="destino-state"
                     label="Provincia / estado"
@@ -1317,6 +1337,7 @@ export function InternationalShipmentPage() {
 
       <InfoConsiderationsModal
         isOpen={infoModalOpen}
+        variant={commercial ? 'commercial' : 'nonCommercial'}
         onClose={() => setInfoModalOpen(false)}
       />
 
