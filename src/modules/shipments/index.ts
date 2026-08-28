@@ -9,6 +9,7 @@ export { InternationalShipmentPage } from './pages/InternationalShipmentPage'
 export { InternationalBulkShipmentPage } from './pages/InternationalBulkShipmentPage'
 export { FacturaEPage } from './pages/FacturaEPage'
 export { CheckoutPage } from './pages/CheckoutPage'
+export { InformacionVigentePage } from './pages/InformacionVigentePage'
 export { PropuestaMisEnviosPage } from './pages/PropuestaMisEnviosPage'
 
 export { shipmentsScenarios } from './scenarios/shipments.scenarios'
