@@ -104,7 +104,6 @@ export function AddressForm({ values, errors, onChange, disabled = false }: Addr
         value={values.province}
         error={errors.province}
         disabled={disabled}
-        placeholderOption="-"
         placeholderOptionValue=""
         onChange={(event) => {
           onChange('province', event.currentTarget.value)
