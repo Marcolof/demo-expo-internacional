@@ -67,7 +67,6 @@ const PAYMENT_METHODS: readonly CheckoutPaymentMethod[] = [
   'MERCADO_PAGO',
   'SALDO',
   'TARJETA_CREDITO',
-  'CUENTA_CORRIENTE',
 ]
 
 /**
