@@ -1,11 +1,15 @@
+import { cn } from '@/shared/lib/cn'
 import { Button } from '@/shared/ui/Button'
 import { Modal } from '@/shared/ui/Modal'
-import { INFO_VIGENTE_URL, VUCE_URL } from '../constants/summary-detail.constants'
+import { INFO_VIGENTE_PATH, VUCE_URL } from '../constants/summary-detail.constants'
 import styles from './InfoConsiderationsModal.module.css'
+
+export type InfoConsiderationsVariant = 'commercial' | 'nonCommercial'
 
 export interface InfoConsiderationsModalProps {
   readonly isOpen: boolean
   readonly onClose: () => void
+  readonly variant?: InfoConsiderationsVariant
 }
 
 const LETTERED_ITEMS = [
@@ -22,55 +26,90 @@ const BULLETS = [
   'La lista de mercadería que, por razones de seguridad, no pueden ser transportadas por la vía aérea',
 ] as const
 
-export function InfoConsiderationsModal({ isOpen, onClose }: InfoConsiderationsModalProps) {
+function ConsiderationsBullets({ linkLabel }: { readonly linkLabel: string }) {
+  return (
+    <ul className={styles.bullets}>
+      {BULLETS.map((text) => (
+        <li key={text}>
+          {text}{' '}
+          (
+          <a href={INFO_VIGENTE_PATH} target="_blank" rel="noreferrer">
+            {linkLabel}
+          </a>
+          ).
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+export function InfoConsiderationsModal({
+  isOpen,
+  onClose,
+  variant = 'commercial',
+}: InfoConsiderationsModalProps) {
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
       title="Información a tener en cuenta"
       size="xl"
-      className={styles.dialog}
-      bodyClassName={styles.body}
-      footerClassName={styles.footer}
+      className={cn(
+        styles.dialog,
+        variant === 'nonCommercial' ? styles.dialogCompact : styles.dialogTall,
+      )}
+      bodyClassName={cn(styles.body, variant === 'nonCommercial' && styles.bodyCompact)}
+      footerClassName={cn(styles.footer, variant === 'nonCommercial' && styles.footerCompact)}
       footer={
         <Button variant="primary" className={styles.entendido} onClick={onClose}>
           Entendido
         </Button>
       }
     >
-      <p>
-        Te recordamos que la vía postal para la exportación con finalidad comercial no puede ser
-        utilizada si la mercadería que pretendes exportar está:
-      </p>
-
-      <div className={styles.lettered}>
-        {LETTERED_ITEMS.map((item) => (
-          <p key={item}>{item}</p>
-        ))}
-      </div>
-
-      <p>
-        Podés chequear el régimen legal y tributario de tu mercadería en la página de la Ventanilla
-        Única de Comercio Exterior Argentina (VUCE) ingresando su descripción o su posición
-        arancelaria:{' '}
-        <a href={VUCE_URL} target="_blank" rel="noreferrer">
-          {VUCE_URL}
-        </a>
-      </p>
-
-      <p>También revisá y controlá aquí si:</p>
-
-      <ul className={styles.bullets}>
-        {BULLETS.map((text) => (
-          <li key={text}>
-            {text}{' '}
-            <a href={INFO_VIGENTE_URL} target="_blank" rel="noreferrer">
-              (clic aquí)
-            </a>
-            .
-          </li>
-        ))}
-      </ul>
+      {renderBody(variant)}
     </Modal>
   )
+}
+
+function renderBody(variant: InfoConsiderationsVariant) {
+  switch (variant) {
+    case 'commercial':
+      return (
+        <>
+          <p>
+            Te recordamos que la vía postal para la exportación con finalidad comercial no puede ser
+            utilizada si la mercadería que pretendes exportar está:
+          </p>
+
+          <div className={styles.lettered}>
+            {LETTERED_ITEMS.map((item) => (
+              <p key={item}>{item}</p>
+            ))}
+          </div>
+
+          <p>
+            Podés chequear el régimen legal y tributario de tu mercadería en la página de la Ventanilla
+            Única de Comercio Exterior Argentina (VUCE) ingresando su descripción o su posición
+            arancelaria:{' '}
+            <a href={VUCE_URL} target="_blank" rel="noreferrer">
+              {VUCE_URL}
+            </a>
+          </p>
+
+          <p>También revisá y controlá aquí si:</p>
+          <ConsiderationsBullets linkLabel="clic aquí" />
+        </>
+      )
+    case 'nonCommercial':
+      return (
+        <>
+          <p>También revisá y controlá aquí si:</p>
+          <ConsiderationsBullets linkLabel="hacé click acá" />
+        </>
+      )
+    default: {
+      const _exhaustive: never = variant
+      return _exhaustive
+    }
+  }
 }

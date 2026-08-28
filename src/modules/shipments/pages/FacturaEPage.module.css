@@ -200,31 +200,11 @@
   text-transform: uppercase;
 }
 
-.moneyInput {
-  width: 7.5rem;
-  height: var(--field-height);
-  padding: var(--field-padding);
-  border: var(--field-border);
-  border-radius: var(--field-radius);
-  background: var(--field-bg);
-  color: var(--field-text);
-  font-family: var(--font-family-base);
-  font-size: var(--font-size-sm);
-  text-align: right;
-}
-
-.moneyInput:focus {
-  border: var(--field-border-focus);
-  outline: none;
-}
-
-.moneyInvalid {
-  border-color: var(--feedback-danger-strong);
-}
-
-.moneyReadOnly {
-  background: var(--surface-sunken);
+.moneyValue {
   color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .footer {

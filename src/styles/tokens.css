@@ -205,7 +205,7 @@
   --text-link-accent: var(--blue-link-accent);
   --text-on-brand: var(--correo-blue);
   --text-inverse: var(--white);
-  --text-error: var(--red-500); /* Figma #F03131 — p. ej. Rango geográfico */
+  --text-error: var(--red-500); /* Figma #F03131 */
 
   /* --- Bordes ----------------------------------------------------------- */
   --border-default: var(--grey-400);
