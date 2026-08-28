@@ -23,7 +23,13 @@ export interface SelectProps extends NativeSelectProps {
   readonly shape?: 'default' | 'pill'
   readonly className?: string
   /**
-   * Texto de la opción vacía. El original usa `"-"` con value `"-1"`.
+   * Si es `true` (default en formularios), la opción vacía no muestra texto: el label
+   * flotante actúa como placeholder hasta seleccionar. Si es `false`, se muestra
+   * `placeholderOption` como texto de la opción vacía (filtros «Todas…»).
+   */
+  readonly labelAsPlaceholder?: boolean
+  /**
+   * Texto de la opción vacía cuando `labelAsPlaceholder={false}`.
    * Pasar `null` si el select no debe ofrecer opción vacía.
    */
   readonly placeholderOption?: string | null
@@ -33,10 +39,9 @@ export interface SelectProps extends NativeSelectProps {
 /**
  * Desplegable con label flotante.
  *
- * A diferencia del `Input`, el label de un `<select>` está SIEMPRE arriba: el
- * control muestra una opción desde el principio, así que no existe el estado
- * "vacío" que en un input mantiene el label centrado. Es el mismo criterio del
- * CSS original (`.form-floating > .form-select ~ label`).
+ * Con `labelAsPlaceholder` (default), el label reposa centrado hasta foco o valor;
+ * la opción vacía no duplica ese texto. Con `labelAsPlaceholder={false}` el label
+ * queda siempre arriba y la opción vacía muestra el copy (p. ej. filtros).
  */
 export function Select({
   id,
@@ -48,8 +53,11 @@ export function Select({
   tooltip,
   shape = 'default',
   className,
+  labelAsPlaceholder = true,
   placeholderOption = '-',
   placeholderOptionValue = '-1',
+  value,
+  defaultValue,
   onFocus,
   onBlur,
   ...rest
@@ -59,6 +67,11 @@ export function Select({
   const showInvalid = hasError || invalid
   const hasHint = hint !== undefined && hint !== ''
 
+  const resolvedValue = value ?? defaultValue ?? ''
+  const hasEmptyOption = placeholderOption !== null
+  const isEmpty = hasEmptyOption && String(resolvedValue) === String(placeholderOptionValue)
+  const shouldFloatLabel = labelAsPlaceholder ? !isEmpty || isFocused : true
+
   return (
     <Field
       id={id}
@@ -66,18 +79,22 @@ export function Select({
       error={error}
       hint={hint}
       className={className}
-      floatLabel
+      floatLabel={shouldFloatLabel}
       labelActive={isFocused}
+      labelFloatManual
     >
       <select
         id={id}
         title={tooltip}
         aria-invalid={showInvalid || undefined}
         aria-describedby={fieldDescribedBy(id, { hasHint, hasError })}
+        value={value}
+        defaultValue={defaultValue}
         className={cn(
           fieldControlClasses.control,
           shape === 'pill' && fieldControlClasses.controlPill,
           styles.select,
+          labelAsPlaceholder && isEmpty && !isFocused && styles.selectLabelPlaceholder,
           showInvalid && fieldControlClasses.controlInvalid,
         )}
         onFocus={(event) => {
@@ -90,8 +107,10 @@ export function Select({
         }}
         {...rest}
       >
-        {placeholderOption !== null && (
-          <option value={placeholderOptionValue}>{placeholderOption}</option>
+        {hasEmptyOption && (
+          <option value={placeholderOptionValue} hidden={labelAsPlaceholder || undefined}>
+            {labelAsPlaceholder ? '' : placeholderOption}
+          </option>
         )}
         {options.map((option) => (
           <option key={option.value} value={option.value} disabled={option.disabled}>

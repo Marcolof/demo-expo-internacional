@@ -24,13 +24,25 @@ export function computeExportDutiesUsd(totalValueUsd: number): number {
 /** @deprecated Preferí computeExportDutiesUsd; se mantiene en 0 para callers legacy. */
 export const EXPORT_DUTIES_USD = 0
 
-/** Peso máximo de paquete (kg) documentado en UI. */
+/** Tope de peso del contenido declarado (paso Declaración). */
 export const PACKAGE_MAX_WEIGHT_KG = 20
+
+/**
+ * Peso máximo del paquete con embalaje (paso Paquete).
+ * Distinto del tope de contenido declarado: Figma del paso Paquete usa 50 kg.
+ */
+export const PACKAGE_GROSS_MAX_WEIGHT_KG = 50
+
+/** Suma máxima largo + ancho + alto (cm) en el paso Paquete. */
+export const PACKAGE_MAX_SUM_OF_SIDES_CM = 300
 
 export const PACKAGE_MAX_WEIGHT_LABEL = 'Peso máximo (tener en cuenta el peso del embalaje)'
 
 export const PACKAGE_MAX_WEIGHT_TOOLTIP =
   'Peso máximo (tener en cuenta el peso del embalaje). El límite es 20 kg incluyendo embalaje.'
+
+export const PACKAGE_GROSS_MAX_WEIGHT_TOOLTIP =
+  'Peso máximo (tener en cuenta el peso del embalaje). El límite es 50 kg incluyendo embalaje.'
 
 /** Costo adicional si se desactiva representación ante Aduana. */
 export const ADUANA_WITHOUT_REPRESENTATION_COST_ARS = 16000

@@ -14,6 +14,11 @@ export interface FieldProps {
   readonly floatLabel?: boolean
   /** Pinta el label de azul (control enfocado). Sólo aplica con `floatLabel`. */
   readonly labelActive?: boolean
+  /**
+   * En `<select>` `:placeholder-shown` no aplica y el CSS flotaría el label siempre.
+   * Con esto el float queda solo bajo control de `floatLabel` / `.labelFloated`.
+   */
+  readonly labelFloatManual?: boolean
   readonly labelVariant?: FieldLabelVariant
   readonly className?: string
   /** El control. Va ANTES del label: el CSS usa el selector hermano. */
@@ -35,6 +40,7 @@ export function Field({
   hint,
   floatLabel = false,
   labelActive = false,
+  labelFloatManual = false,
   labelVariant = 'default',
   className,
   children,
@@ -58,6 +64,7 @@ export function Field({
           className={cn(
             styles.label,
             labelVariant === 'textarea' && styles.labelTextarea,
+            labelFloatManual && styles.labelFloatManual,
             floatLabel && styles.labelFloated,
             floatLabel && labelActive && styles.labelActive,
           )}

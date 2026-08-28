@@ -6,9 +6,12 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
+  gap: var(--space-4); /* 16px — Figma gap */
   width: 100%;
-  padding: var(--space-8) var(--space-4);
+  max-width: 50rem; /* 800px — Figma empty Masivo */
+  padding: var(--space-13) var(--space-6) var(--space-8);
+  margin-inline: auto;
+  box-sizing: border-box;
   text-align: center;
 }
 
@@ -21,12 +24,27 @@
   height: 80px;
   border-radius: var(--radius-full);
   background-color: var(--surface-sunken);
+  color: var(--correo-yellow);
+}
+
+.iconToneBrand {
+  color: var(--correo-yellow);
+}
+
+.iconToneDisabled {
+  color: var(--text-disabled);
 }
 
 .icon {
   width: 42px;
   height: 42px;
   object-fit: contain;
+}
+
+.iconWrap svg {
+  width: 42px;
+  height: 42px;
+  display: block;
 }
 
 .title {
@@ -41,8 +59,9 @@
 }
 
 .description {
-  max-width: 42ch;
-  color: var(--text-muted);
+  width: 100%;
+  max-width: 48.5rem; /* 776px — Figma empty Masivo description */
+  color: var(--text-disabled);
   font-size: var(--font-size-sm);
   line-height: var(--line-height-normal);
 }

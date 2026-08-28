@@ -29,6 +29,27 @@ function toChangeEvent(value: string): ChangeEvent<HTMLInputElement> {
   } as ChangeEvent<HTMLInputElement>
 }
 
+function fractionDigitsInStep(step: number): number {
+  if (!Number.isFinite(step) || Number.isInteger(step)) return 0
+  const [, fraction = ''] = step.toString().split('.')
+  return fraction.length
+}
+
+/** Evita artefactos de punto flotante al usar los controles +/- (p. ej. 0.1 + 0.2). */
+function snapToStep(value: number, step: number): number {
+  const decimals = fractionDigitsInStep(step)
+  if (decimals === 0) return Math.round(value)
+  const factor = 10 ** decimals
+  return Math.round(value * factor) / factor
+}
+
+function formatCommittedValue(value: number, step: number): string {
+  const snapped = snapToStep(value, step)
+  const decimals = fractionDigitsInStep(step)
+  if (decimals === 0) return String(snapped)
+  return snapped.toFixed(decimals).replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '')
+}
+
 export function NumberInput({
   id,
   label,
@@ -70,7 +91,7 @@ export function NumberInput({
     if (min !== undefined && numValue < min) numValue = min
     if (max !== undefined && numValue > max) numValue = max
 
-    const next = String(numValue)
+    const next = formatCommittedValue(numValue, step)
     setCurrentValue(next)
     if (inputRef.current) inputRef.current.value = next
     onChange?.(toChangeEvent(next))
@@ -117,8 +138,19 @@ export function NumberInput({
           step={step}
           value={currentValue}
           onChange={(e) => {
-            setCurrentValue(e.target.value)
-            onChange?.(e)
+            let next = e.target.value
+            const stepDecimals = fractionDigitsInStep(step)
+            if (stepDecimals > 0 && next.includes('.')) {
+              const fraction = next.replace(',', '.').split('.')[1] ?? ''
+              if (fraction.length > stepDecimals) {
+                const num = parseFloat(next.replace(',', '.'))
+                if (Number.isFinite(num)) {
+                  next = formatCommittedValue(num, step)
+                }
+              }
+            }
+            setCurrentValue(next)
+            onChange?.(toChangeEvent(next))
           }}
           onFocus={(event) => {
             setIsFocused(true)

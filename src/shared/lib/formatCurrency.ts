@@ -45,6 +45,26 @@ export function formatAmountOnly(amount: number): string {
 }
 
 /**
+ * Parsea un importe escrito en es-AR (`1.530,00`, `245,00`) o un decimal
+ * simple (`245.00` / `245`). Devuelve `undefined` si no es un monto válido.
+ */
+export function parseAmountOnly(raw: string): number | undefined {
+  const trimmed = raw.trim()
+  if (trimmed === '') return undefined
+
+  const hasComma = trimmed.includes(',')
+  const normalized = hasComma
+    ? trimmed.replace(/\./g, '').replace(',', '.')
+    : /^\d+\.\d{1,2}$/.test(trimmed)
+      ? trimmed
+      : trimmed.replace(/\./g, '')
+
+  if (!/^\d+(\.\d{1,2})?$/.test(normalized)) return undefined
+  const parsed = Number(normalized)
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined
+}
+
+/**
  * Dólares con el prefijo `"USD"` en lugar del símbolo `$` (declaración de
  * envíos internacionales). `1250` → `"USD 1.250,00"`
  */

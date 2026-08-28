@@ -1,6 +1,6 @@
 /* Avisos de feedback.
- * El tono `danger` replica `.error-msg` de estilos-inputs.css: fondo #ffd0d0,
- * texto #d32f2f, borde #f5c2c2 y radio de 6px — todo vía tokens. */
+ * El tono `danger` replica el Alert de Figma: fondo #ffd0d0, texto #58151c
+ * (primitive red-800), borde #f5c2c2 y radio de 6px — vía tokens. */
 
 .alert {
   display: flex;

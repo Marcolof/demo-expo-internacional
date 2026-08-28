@@ -44,10 +44,10 @@
   top: 20%;
 }
 
-/* Estado flotado. Se aplica por CSS (input con valor / foco) o por clase
- * (`.labelFloated`) cuando el control no puede tener placeholder — el select. */
-.control:not(:placeholder-shown) + .label,
-.control:focus + .label,
+/* Estado flotado. Inputs: CSS vía :placeholder-shown / :focus.
+ * Selects: `:placeholder-shown` no aplica → usar `.labelFloatManual` + `.labelFloated`. */
+.control:not(:placeholder-shown) + .label:not(.labelFloatManual),
+.control:focus + .label:not(.labelFloatManual),
 .labelFloated {
   top: 10px;
   transform: translateY(-110%);
@@ -59,7 +59,7 @@
 
 /* Con valor pero sin foco el label vuelve al gris: sólo se pinta de azul
  * mientras el campo está activo. */
-.control:not(:focus):not(:placeholder-shown) + .label {
+.control:not(:focus):not(:placeholder-shown) + .label:not(.labelFloatManual) {
   color: var(--field-label-color);
 }
 

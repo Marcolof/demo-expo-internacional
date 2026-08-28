@@ -5,13 +5,15 @@ import internacionalIcon from '@/assets/icons/internacional.svg'
 import { PageContainer } from '@/shared/layout/PageContainer'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
-import { Modal } from '@/shared/ui/Modal'
 import { Select } from '@/shared/ui/Select'
 import { Tabs, type TabsProps } from '@/shared/ui/Tabs'
 import { ScopeSwitch } from '../components/ScopeSwitch'
+import { InternationalShipmentDetailModal } from '../components/InternationalShipmentDetailModal'
 import { PROVINCE_OPTIONS } from '../mocks/branches.mocks'
+import { resolveMisEnviosDetail } from '../mocks/international-shipment-detail.mocks'
 import { shipmentsStore, wizardStore } from '../stores/session.store'
 import type { SessionShipment } from '../stores/session.store'
+import type { InternationalShipmentDetail } from '../types/international-shipment-detail.types'
 import styles from './PropuestaMisEnviosPage.module.css'
 
 type EnvioTab = 'pendientes' | 'pagados' | 'usuario'
@@ -245,7 +247,8 @@ export function PropuestaMisEnviosPage() {
   const [activeTab, setActiveTab] = useState<EnvioTab>('pendientes')
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set())
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
-  const [detailRow, setDetailRow] = useState<EnvioRow | null>(null)
+  const [detail, setDetail] = useState<InternationalShipmentDetail | null>(null)
+  const [detailTitle, setDetailTitle] = useState('Detalles del envío internacional')
   const menuRef = useRef<HTMLTableCellElement>(null)
 
   const [destinatario, setDestinatario] = useState('')
@@ -384,6 +387,7 @@ export function PropuestaMisEnviosPage() {
                     value={provincia}
                     onChange={(e) => setProvincia(e.currentTarget.value)}
                     placeholderOption="Todas..."
+                    labelAsPlaceholder={false}
                   />
                   <Input id="filter-sucursal" label="Sucursal de destino" value="" onChange={() => {}} />
                   <Select
@@ -393,6 +397,7 @@ export function PropuestaMisEnviosPage() {
                     value={integracion}
                     onChange={(e) => setIntegracion(e.currentTarget.value)}
                     placeholderOption="Todas..."
+                    labelAsPlaceholder={false}
                   />
                 </div>
                 <Select
@@ -402,6 +407,7 @@ export function PropuestaMisEnviosPage() {
                   value={nOrden}
                   onChange={(e) => setNOrden(e.currentTarget.value)}
                   placeholderOption="Todos..."
+                  labelAsPlaceholder={false}
                 />
               </>
             ) : (
@@ -444,6 +450,7 @@ export function PropuestaMisEnviosPage() {
                     value={provOrigen}
                     onChange={(e) => setProvOrigen(e.currentTarget.value)}
                     placeholderOption="Todas..."
+                    labelAsPlaceholder={false}
                   />
                   <Select
                     id="filter-destino"
@@ -452,6 +459,7 @@ export function PropuestaMisEnviosPage() {
                     value={destinoFilter}
                     onChange={(e) => setDestinoFilter(e.currentTarget.value)}
                     placeholderOption="Todos..."
+                  labelAsPlaceholder={false}
                   />
                   <Select
                     id="filter-integracion-pagados"
@@ -460,6 +468,7 @@ export function PropuestaMisEnviosPage() {
                     value={integracion}
                     onChange={(e) => setIntegracion(e.currentTarget.value)}
                     placeholderOption="Todas..."
+                    labelAsPlaceholder={false}
                   />
                   <Select
                     id="filter-norden-pagados"
@@ -468,6 +477,7 @@ export function PropuestaMisEnviosPage() {
                     value={nOrden}
                     onChange={(e) => setNOrden(e.currentTarget.value)}
                     placeholderOption="Todos..."
+                  labelAsPlaceholder={false}
                   />
                 </div>
               </>
@@ -600,7 +610,13 @@ export function PropuestaMisEnviosPage() {
                                 className={`${styles.contextMenuItem} ${item === 'Eliminar' ? styles.contextMenuItemDanger : ''}`}
                                 onClick={() => {
                                   if (item === 'Ver detalle') {
-                                    setDetailRow(row)
+                                    const tab = activeTab === 'pagados' ? 'pagados' : 'pendientes'
+                                    setDetail(resolveMisEnviosDetail(row, tab, wizardStore.get()))
+                                    setDetailTitle(
+                                      row.scope === 'nacional'
+                                        ? 'Detalles del envío'
+                                        : 'Detalles del envío internacional',
+                                    )
                                   }
                                   setOpenMenuId(null)
                                 }}
@@ -670,59 +686,13 @@ export function PropuestaMisEnviosPage() {
         )}
       </div>
 
-      <Modal
-        isOpen={detailRow !== null}
-        onClose={() => setDetailRow(null)}
-        title="Detalle del envío"
-        size="md"
-        labelledById="envio-detalle-title"
-        footer={
-          <Button variant="primary" onClick={() => setDetailRow(null)}>
-            Cerrar
-          </Button>
-        }
-      >
-        {detailRow !== null && (
-          <dl className={styles.detailList}>
-            <div className={styles.detailRow}>
-              <dt>N° de orden</dt>
-              <dd>{detailRow.nOrden}</dd>
-            </div>
-            <div className={styles.detailRow}>
-              <dt>Integración</dt>
-              <dd>{detailRow.integracion}</dd>
-            </div>
-            <div className={styles.detailRow}>
-              <dt>Origen</dt>
-              <dd>{detailRow.origen}</dd>
-            </div>
-            <div className={styles.detailRow}>
-              <dt>Destinatario</dt>
-              <dd>{detailRow.destinatario}</dd>
-            </div>
-            <div className={styles.detailRow}>
-              <dt>Destino</dt>
-              <dd>{detailRow.destino}</dd>
-            </div>
-            <div className={styles.detailRow}>
-              <dt>Detalles</dt>
-              <dd>{detailRow.detalles}</dd>
-            </div>
-            <div className={styles.detailRow}>
-              <dt>Estado</dt>
-              <dd>{detailRow.estado}</dd>
-            </div>
-            <div className={styles.detailRow}>
-              <dt>Finalidad comercial</dt>
-              <dd>{detailRow.commercial === true ? 'Sí' : 'No'}</dd>
-            </div>
-            <div className={styles.detailRow}>
-              <dt>Usuario</dt>
-              <dd>{detailRow.usuario}</dd>
-            </div>
-          </dl>
-        )}
-      </Modal>
+      <InternationalShipmentDetailModal
+        isOpen={detail !== null}
+        detail={detail}
+        title={detailTitle}
+        labelledById="mis-envios-shipment-detail-title"
+        onClose={() => setDetail(null)}
+      />
     </PageContainer>
   )
 }

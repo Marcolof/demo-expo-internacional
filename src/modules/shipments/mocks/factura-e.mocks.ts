@@ -5,54 +5,51 @@ export interface FacturaERow {
   readonly nOrden: string
   readonly facturaE: string
   readonly montoUsd: number
-  readonly divisa: string
-  readonly tipoCambio: string
+  readonly tipoCambioArs: number
 }
+
+/** Tipo de cambio de maqueta (ARS por USD), alineado al Figma de Facturación. */
+export const FACTURA_E_DEMO_FX_ARS = 1530
 
 /** Filas mock iniciales de Facturación del envío (sesión, sin persistencia). */
 export const FACTURA_E_SEED: readonly FacturaERow[] = [
   {
     id: 'fe-001',
-    destinatario: 'Cliente S.A.',
-    destino: 'Estados Unidos - Miami',
-    nOrden: 'ORD-10050',
-    facturaE: 'FE-0001-00012345',
-    montoUsd: 1500,
-    divisa: 'USD',
-    tipoCambio: '1',
+    destinatario: 'Pampa Grains S.A.',
+    destino: 'Brasil - São Paulo',
+    nOrden: 'ORD-0024871',
+    facturaE: 'FE-0001-00087632',
+    montoUsd: 245,
+    tipoCambioArs: FACTURA_E_DEMO_FX_ARS,
   },
   {
     id: 'fe-002',
-    destinatario: 'Global Parts INC.',
-    destino: 'Uruguay - Montevideo',
-    nOrden: 'ORD-10051',
-    facturaE: 'FE-0001-00012346',
-    montoUsd: 1500,
-    divisa: 'USD',
-    tipoCambio: '1',
+    destinatario: 'Latam Supplies SpA',
+    destino: 'Chile - Santiago',
+    nOrden: 'ORD-0024903',
+    facturaE: 'FE-0001-00087640',
+    montoUsd: 180,
+    tipoCambioArs: FACTURA_E_DEMO_FX_ARS,
   },
   {
     id: 'fe-003',
-    destinatario: 'Env. Int. S.A.',
-    destino: 'Chile - Santiago',
-    nOrden: 'ORD-10052',
-    facturaE: 'FE-0001-00012347',
-    montoUsd: 1500,
-    divisa: 'USD',
-    tipoCambio: '1',
+    destinatario: 'Andes Dairy Co.',
+    destino: 'Uruguay - Montevideo',
+    nOrden: 'ORD-0024910',
+    facturaE: 'FE-0001-00087651',
+    montoUsd: 310,
+    tipoCambioArs: FACTURA_E_DEMO_FX_ARS,
   },
   {
     id: 'fe-004',
-    destinatario: 'Expo INC.',
-    destino: 'España - Madrid',
-    nOrden: 'ORD-10053',
-    facturaE: 'FE-0001-00012348',
-    montoUsd: 1500,
-    divisa: 'USD',
-    tipoCambio: '1',
+    destinatario: 'Patagonia Meats Ltd.',
+    destino: 'Colombia - Bogotá',
+    nOrden: 'ORD-0024915',
+    facturaE: 'FE-0001-00087658',
+    montoUsd: 420,
+    tipoCambioArs: FACTURA_E_DEMO_FX_ARS,
   },
 ]
 
-/** Placeholder hasta copy legal definitivo (D-09). */
 export const FACTURA_E_CUIT_LEGEND =
-  'El CUIT debe coincidir con la factura según el Decreto… (texto pendiente de recibir). Completá los datos requeridos por envío.'
+  'El CUIT debe coincidir con la factura según el Decreto 604/2026'

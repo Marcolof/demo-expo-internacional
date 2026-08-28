@@ -32,6 +32,9 @@ import { getCountryGeographicRangeLabel } from '../constants/geographic-ranges'
 import {
   ADUANA_WITHOUT_REPRESENTATION_COST_ARS,
   computeExportDutiesUsd,
+  PACKAGE_GROSS_MAX_WEIGHT_KG,
+  PACKAGE_GROSS_MAX_WEIGHT_TOOLTIP,
+  PACKAGE_MAX_SUM_OF_SIDES_CM,
   PACKAGE_MAX_WEIGHT_KG,
   PACKAGE_MAX_WEIGHT_LABEL,
   PACKAGE_MAX_WEIGHT_TOOLTIP,
@@ -40,17 +43,16 @@ import { articleTotalPriceUsd, articleTotalWeightKg, ARTICLE_KIND_TEXT } from '.
 import type { ArticleKind, DeclaredArticle } from '../types/article.types'
 import { DECLARED_ARTICLES_SEED, DECLARED_DOCUMENTS_SEED } from '../mocks/articles.mocks'
 import { COUNTRY_CONTENT_RESTRICTIONS } from '../mocks/country-restrictions.mocks'
+import { isCountryShippingAvailable } from '../mocks/countries.mocks'
 import { shipmentsStore, wizardStore } from '../stores/session.store'
 import type { WizardSnapshot } from '../stores/session.store'
 import { REMITENTES_SEED } from '../mocks/remitentes.mocks'
 import { PROVINCE_OPTIONS, getBranchOptions, findBranch, BRANCHES_BY_PROVINCE } from '../mocks/branches.mocks'
-import { FREQUENT_MEASURE_OPTIONS, PHONE_COUNTRY_CODES } from '../mocks/shipments.mocks'
+import { PHONE_COUNTRY_CODES } from '../mocks/shipments.mocks'
+import { PACKAGE_PRODUCT_OPTIONS, findPackageProductPreset } from '../mocks/package-product-presets.mocks'
 import packageOpenIcon from '@/assets/icons/package-open.svg'
 import layout from './NewShipmentPage.module.css'
 import styles from './InternationalShipmentPage.module.css'
-
-/** Países sin servicio de envío internacional disponible (maqueta). */
-const COUNTRIES_WITHOUT_SHIPPING: ReadonlySet<string> = new Set(['RU', 'CU', 'KP'])
 
 /** Países que reciben artículos del seed automáticamente al seleccionarlos. */
 const AUTO_SEED_COUNTRIES: ReadonlySet<string> = new Set([
@@ -78,11 +80,55 @@ const COMMERCIAL_CATEGORIES: readonly SelectOption[] = [
 ]
 
 
-const PACKAGE_MAX_SIDE_CM = 90
+type PackageMeasuresError = 'incomplete' | 'sumExceeded'
+type PackageWeightError = 'incomplete' | 'belowDeclared' | 'aboveMax'
 
 interface PackageValidationErrors {
-  readonly measures?: 'incomplete' | 'oversized'
-  readonly weight?: string
+  readonly measures?: PackageMeasuresError
+  readonly weight?: PackageWeightError
+}
+
+function parsePositiveDecimal(raw: string): number | undefined {
+  const trimmed = raw.trim()
+  if (trimmed === '') return undefined
+  const value = Number(trimmed.replace(',', '.'))
+  if (!Number.isFinite(value) || value <= 0) return undefined
+  return value
+}
+
+function packageMeasuresErrorMessage(kind: PackageMeasuresError): string {
+  switch (kind) {
+    case 'incomplete':
+      return 'Completá el largo, el ancho y el alto del paquete para continuar.'
+    case 'sumExceeded':
+      return `La suma (largo + ancho + alto) debe ser menor o igual a ${PACKAGE_MAX_SUM_OF_SIDES_CM} cm. Si excede estas medidas, Correo Argentino rechazará el paquete y no podrá ser enviado. Revisá las dimensiones ingresadas para continuar.`
+    default: {
+      const _exhaustive: never = kind
+      return _exhaustive
+    }
+  }
+}
+
+function packageWeightErrorMessage(kind: PackageWeightError): string {
+  switch (kind) {
+    case 'incomplete':
+      return 'Completá el peso del paquete para continuar.'
+    case 'belowDeclared':
+      return 'El peso total del paquete incluye el contenido y el embalaje. No puede ser menor al peso total del contenido declarado.'
+    case 'aboveMax':
+      return `El peso debe ser menor o igual a ${PACKAGE_GROSS_MAX_WEIGHT_KG} kg.`
+    default: {
+      const _exhaustive: never = kind
+      return _exhaustive
+    }
+  }
+}
+
+function packageStepErrorMessages(errors: PackageValidationErrors): readonly string[] {
+  const messages: string[] = []
+  if (errors.weight !== undefined) messages.push(packageWeightErrorMessage(errors.weight))
+  if (errors.measures !== undefined) messages.push(packageMeasuresErrorMessage(errors.measures))
+  return messages
 }
 
 function validatePackageStep(
@@ -92,32 +138,26 @@ function validatePackageStep(
   packageWeightKg: string,
   declaredContentWeightKg: number,
 ): PackageValidationErrors {
-  const errors: { measures?: 'incomplete' | 'oversized'; weight?: string } = {}
+  const errors: { measures?: PackageMeasuresError; weight?: PackageWeightError } = {}
 
-  const length = Number(lengthCm.replace(',', '.'))
-  const width  = Number(widthCm.replace(',', '.'))
-  const height = Number(heightCm.replace(',', '.'))
+  const length = parsePositiveDecimal(lengthCm)
+  const width = parsePositiveDecimal(widthCm)
+  const height = parsePositiveDecimal(heightCm)
 
-  const hasValidMeasures =
-    lengthCm.trim() !== '' && widthCm.trim() !== '' && heightCm.trim() !== '' &&
-    Number.isFinite(length) && Number.isFinite(width) && Number.isFinite(height) &&
-    length > 0 && width > 0 && height > 0
-
-  if (!hasValidMeasures) {
+  if (length === undefined || width === undefined || height === undefined) {
     errors.measures = 'incomplete'
-  } else if ([length, width, height].some((side) => side > PACKAGE_MAX_SIDE_CM)) {
-    errors.measures = 'oversized'
+  } else if (length + width + height > PACKAGE_MAX_SUM_OF_SIDES_CM) {
+    errors.measures = 'sumExceeded'
   }
 
-  const weight = Number(packageWeightKg.replace(',', '.'))
-  const hasValidWeight = packageWeightKg.trim() !== '' && Number.isFinite(weight) && weight > 0
+  const weight = parsePositiveDecimal(packageWeightKg)
 
-  if (!hasValidWeight) {
-    errors.weight = 'Completá el peso del paquete para continuar.'
+  if (weight === undefined) {
+    errors.weight = 'incomplete'
   } else if (weight < declaredContentWeightKg) {
-    errors.weight = 'El peso total del paquete incluye el contenido y el embalaje. No puede ser menor al peso total del contenido declarado.'
-  } else if (weight > PACKAGE_MAX_WEIGHT_KG) {
-    errors.weight = `El peso del paquete supera el máximo permitido (${PACKAGE_MAX_WEIGHT_KG} kg) para envíos internacionales.`
+    errors.weight = 'belowDeclared'
+  } else if (weight > PACKAGE_GROSS_MAX_WEIGHT_KG) {
+    errors.weight = 'aboveMax'
   }
 
   return errors
@@ -230,10 +270,10 @@ export function InternationalShipmentPage() {
   /* ── Paso 1: Declaración ─────────────────────────────────────────── */
   const [country, setCountry] = useState('-1')
   const [commercial, setCommercial] = useState(false)
-  const [category, setCategory] = useState('REGALO')
+  const [category, setCategory] = useState('-1')
   const [declarationAccepted, setDeclarationAccepted] = useState(false)
   const [declarationError, setDeclarationError] = useState(false)
-  const [declarationWeightError, setDeclarationWeightError] = useState(false)
+  const [categoryError, setCategoryError] = useState(false)
   const [articles, setArticles] = useState<readonly DeclaredArticle[]>([])
   const [isArticleModalOpen, setArticleModalOpen] = useState(false)
   const [editingArticle, setEditingArticle] = useState<DeclaredArticle | null>(null)
@@ -324,8 +364,9 @@ export function InternationalShipmentPage() {
 
   const setCommercialAndCategory = (next: boolean) => {
     setCommercial(next)
-    setCategory(next ? COMMERCIAL_CATEGORY_VALUE : 'REGALO')
-    // Los artículos se conservan en ambos modos; el seed se carga solo al montar
+    // Comercial: única opción → precargar. No comercial: vacío (label-as-placeholder).
+    setCategory(next ? COMMERCIAL_CATEGORY_VALUE : '-1')
+    if (next) setCategoryError(false)
   }
 
   const handleCountryChange = (value: string) => {
@@ -342,7 +383,9 @@ export function InternationalShipmentPage() {
 
   const requestCategoryChange = (value: string) => {
     if (value === category) return
-    const shouldConfirm = articles.length > 0 && declarationAccepted
+    const isFirstSelection = category === '-1'
+    const shouldConfirm =
+      !isFirstSelection && articles.length > 0 && declarationAccepted
     if (shouldConfirm) {
       setPendingCategory(value)
       return
@@ -354,6 +397,7 @@ export function InternationalShipmentPage() {
     const fromDoc = category === 'DOCUMENTO'
     const toDoc = value === 'DOCUMENTO'
     setCategory(value)
+    setCategoryError(false)
     setDeclarationAccepted(false)
     if (fromDoc || toDoc) {
       setArticles([])
@@ -367,7 +411,7 @@ export function InternationalShipmentPage() {
   }
 
   const selectedCountry = COUNTRIES.find((c) => c.value === country)
-  const countryHasShipping = country === '-1' || !COUNTRIES_WITHOUT_SHIPPING.has(country)
+  const countryHasShipping = isCountryShippingAvailable(country)
 
   const clearError = (key: string) =>
     setStep4Errors((prev) => { const s = new Set(prev); s.delete(key); return s })
@@ -380,6 +424,7 @@ export function InternationalShipmentPage() {
     })
 
   const packageWeightNum = Number(packageWeightKg.replace(',', '.')) || 0
+  const packageErrorList = packageStepErrorMessages(packageErrors)
   const pequenoPaqueteDisabled =
     packageWeightKg.trim() !== '' &&
     Number.isFinite(packageWeightNum) &&
@@ -447,6 +492,7 @@ export function InternationalShipmentPage() {
   const totalArticles = articles.length
   const totalValueUsd = articles.reduce((sum, a) => sum + articleTotalPriceUsd(a), 0)
   const totalWeightKg = articles.reduce((sum, a) => sum + articleTotalWeightKg(a), 0)
+  const weightExceedsMax = totalWeightKg > PACKAGE_MAX_WEIGHT_KG
   const exportDutiesUsd = computeExportDutiesUsd(totalValueUsd)
   const categoryLabel = categoryOptions.find((o) => o.value === category)?.label
   const representationCostArs =
@@ -481,6 +527,16 @@ export function InternationalShipmentPage() {
     setBranchId('-1')
   }
 
+  const handlePackageProductChange = (id: string) => {
+    setFrequentMeasureId(id)
+    const preset = findPackageProductPreset(id)
+    if (preset === undefined) return
+    setLengthCm(String(preset.lengthCm))
+    setWidthCm(String(preset.widthCm))
+    setHeightCm(String(preset.heightCm))
+    setPackageErrors({})
+  }
+
   const buildSnapshot = (): WizardSnapshot => ({
     country, commercial, category, declarationAccepted, articles,
     frequentMeasureId, lengthCm, widthCm, heightCm, packageWeightKg,
@@ -494,14 +550,14 @@ export function InternationalShipmentPage() {
 
   const handleNext = () => {
     if (currentStep === 'Declaración') {
+      if (category === '-1') {
+        setCategoryError(true)
+        return
+      }
       if (!declarationAccepted) { setDeclarationError(true); return }
       if (!countryHasShipping) return
       if (hasRestrictedArticles) return
-      if (totalWeightKg > PACKAGE_MAX_WEIGHT_KG) {
-        setDeclarationWeightError(true)
-        return
-      }
-      setDeclarationWeightError(false)
+      if (weightExceedsMax) return
       setDeclarationError(false)
     }
 
@@ -514,35 +570,40 @@ export function InternationalShipmentPage() {
       }
     }
 
-    if (currentStep === 'Destino') {
-      const errors = runDestinoValidation()
-      if (errors.size > 0) { setStep4Errors(errors); return }
-      setStep4Errors(new Set())
-      const snap = buildSnapshot()
-      const orderNumber =
-        destinoOrderNum.trim() !== ''
-          ? destinoOrderNum.trim()
-          : `ORD-${10049 + shipmentsStore.get().length}`
-      shipmentsStore.add({
-        id: `S-${Date.now()}`,
-        integracion: 'MiCorreo',
-        nOrden: orderNumber,
-        origen: origenDisplayName.trim() || selectedRemitente?.razonSocial || 'Correo Argentino',
-        destinatario: recipientName,
-        destino: [destinoCity, selectedCountry?.label].filter(Boolean).join(', '),
-        detalles: `${packageWeightKg}kg – ${lengthCm}x${widthCm}x${heightCm}cm`,
-        usuario: 'Marco',
-        estado: 'Validado',
-        commercial,
-      })
-      // Comercial: conservar wizard para el paso Factura E desde pendientes.
-      if (commercial) wizardStore.save({ ...snap, destinoOrderNum: orderNumber })
-      else wizardStore.clear()
-      navigate('/propuesta/mis-envios')
+    next()
+  }
+
+  /** Guardar desde Destino (CTA del Resumen). Comercial → Factura E. */
+  const handleSaveDestino = () => {
+    const errors = runDestinoValidation()
+    if (errors.size > 0) {
+      setStep4Errors(errors)
       return
     }
-
-    next()
+    setStep4Errors(new Set())
+    const snap = buildSnapshot()
+    const orderNumber =
+      destinoOrderNum.trim() !== ''
+        ? destinoOrderNum.trim()
+        : `ORD-${10049 + shipmentsStore.get().length}`
+    shipmentsStore.add({
+      id: `S-${Date.now()}`,
+      integracion: 'MiCorreo',
+      nOrden: orderNumber,
+      origen: origenDisplayName.trim() || selectedRemitente?.razonSocial || 'Correo Argentino',
+      destinatario: recipientName,
+      destino: [destinoCity, selectedCountry?.label].filter(Boolean).join(', '),
+      detalles: `${packageWeightKg}kg – ${lengthCm}x${widthCm}x${heightCm}cm`,
+      usuario: 'Marco',
+      estado: 'Validado',
+      commercial,
+    })
+    wizardStore.save({ ...snap, destinoOrderNum: orderNumber })
+    if (commercial) {
+      navigate('/internacional/factura-e')
+      return
+    }
+    navigate('/propuesta/mis-envios')
   }
 
   /* Paso 4 */
@@ -573,18 +634,21 @@ export function InternationalShipmentPage() {
                   <span>Seleccioná el país de destino</span>
                   <InfoTooltip content="Seleccioná el país de destino. Verificá los requisitos de ingreso del país de destino por vía postal para evitar devoluciones." />
                 </h4>
-                <Select
-                  id="destination-country"
-                  label="País de destino"
-                  options={COUNTRIES}
-                  value={country}
-                  onChange={(event) => handleCountryChange(event.currentTarget.value)}
-                />
-                {country !== '-1' && countryHasShipping && (
-                  <p className={styles.supportingRange}>
-                    Rango geográfico: {getCountryGeographicRangeLabel(country)}
-                  </p>
-                )}
+                <div className={styles.countryField}>
+                  <Select
+                    id="destination-country"
+                    label="País de destino"
+                    options={COUNTRIES}
+                    value={country}
+                    onChange={(event) => handleCountryChange(event.currentTarget.value)}
+                    className={styles.countrySelect}
+                  />
+                  {country !== '-1' && (
+                    <p className={styles.supportingRange}>
+                      Rango geográfico: {getCountryGeographicRangeLabel(country)}
+                    </p>
+                  )}
+                </div>
               </section>
 
               <section className={styles.section}>
@@ -618,6 +682,7 @@ export function InternationalShipmentPage() {
                     value={category}
                     onChange={(event) => requestCategoryChange(event.currentTarget.value)}
                     disabled={commercial}
+                    invalid={categoryError}
                   />
 
                   <button
@@ -662,8 +727,12 @@ export function InternationalShipmentPage() {
                       <span className={styles.totalValue}>{formatUsd(exportDutiesUsd)}</span>
                     </div>
                     <div className={styles.totalRow}>
-                      <span className={styles.totalLabel}>Peso total declarado</span>
-                      <span className={styles.totalValue}>{formatWeightKg(totalWeightKg)}</span>
+                      <span className={cn(styles.totalLabel, weightExceedsMax && styles.totalError)}>
+                        Peso total declarado
+                      </span>
+                      <span className={cn(styles.totalValue, weightExceedsMax && styles.totalError)}>
+                        {formatWeightKg(totalWeightKg)}
+                      </span>
                     </div>
                     <div className={styles.totalRow}>
                       <span className={styles.totalLabelWithTip}>
@@ -705,10 +774,10 @@ export function InternationalShipmentPage() {
                     </Alert>
                   )}
 
-                  {declarationWeightError && (
+                  {weightExceedsMax && (
                     <Alert tone="danger">
-                      El peso total declarado supera el máximo permitido ({PACKAGE_MAX_WEIGHT_KG} kg).
-                      Reducí el contenido antes de continuar.
+                      Tus artículos declarados superan el límite de peso de {PACKAGE_MAX_WEIGHT_KG} kg.
+                      Ajustá los pesos ingresados para continuar.
                     </Alert>
                   )}
 
@@ -729,12 +798,13 @@ export function InternationalShipmentPage() {
                 <h4 className={styles.sectionTitle}>Medidas del paquete (cm)</h4>
 
                 <div className={styles.fields}>
+                  {/* Figma: "Medidas frecuentes"; pedido de UI: label+placeholder "Productos". Pendiente unificar. */}
                   <Select
-                    id="package-frequent-measure"
-                    label="Medidas frecuentes"
-                    options={FREQUENT_MEASURE_OPTIONS}
+                    id="package-product-preset"
+                    label="Productos"
+                    options={PACKAGE_PRODUCT_OPTIONS}
                     value={frequentMeasureId}
-                    onChange={(event) => setFrequentMeasureId(event.currentTarget.value)}
+                    onChange={(event) => handlePackageProductChange(event.currentTarget.value)}
                   />
 
                   <div className={styles.measuresRow}>
@@ -775,22 +845,6 @@ export function InternationalShipmentPage() {
                     <span className={styles.totalValue}>{formatWeightKg(totalWeightKg)}</span>
                   </div>
 
-                  {packageErrors.measures === 'incomplete' && (
-                    <Alert tone="danger">
-                      Completá el largo, el ancho y el alto del paquete para continuar.
-                    </Alert>
-                  )}
-                  {packageErrors.measures === 'oversized' && (
-                    <Alert
-                      tone="danger"
-                      title="El paquete supera las medidas máximas permitidas"
-                    >
-                      Uno o más lados superan los {PACKAGE_MAX_SIDE_CM} cm. Si excede estas medidas,
-                      Correo Argentino rechazará el paquete y no podrá ser enviado. Revisá las
-                      dimensiones ingresadas para continuar.
-                    </Alert>
-                  )}
-
                   <Input
                     id="package-weight"
                     label="Peso del paquete (kg)"
@@ -802,14 +856,20 @@ export function InternationalShipmentPage() {
 
                   <div className={styles.totalRow}>
                     <span className={styles.totalLabelWithTip}>
-                      <InfoTooltip content={PACKAGE_MAX_WEIGHT_TOOLTIP} />
+                      <InfoTooltip content={PACKAGE_GROSS_MAX_WEIGHT_TOOLTIP} />
                       <span>{PACKAGE_MAX_WEIGHT_LABEL}</span>
                     </span>
-                    <span className={styles.totalValue}>{PACKAGE_MAX_WEIGHT_KG}kg</span>
+                    <span className={styles.totalValue}>{PACKAGE_GROSS_MAX_WEIGHT_KG}kg</span>
                   </div>
 
-                  {packageErrors.weight !== undefined && (
-                    <Alert tone="danger">{packageErrors.weight}</Alert>
+                  {packageErrorList.length > 0 && (
+                    <Alert tone="danger">
+                      <div className={styles.packageErrorList}>
+                        {packageErrorList.map((message) => (
+                          <p key={message}>{message}</p>
+                        ))}
+                      </div>
+                    </Alert>
                   )}
                 </div>
               </section>
@@ -846,7 +906,10 @@ export function InternationalShipmentPage() {
                     </div>
 
                     <div className={styles.subsection}>
-                      <p className={styles.subsectionTitle}>Sucursal de origen</p>
+                      <p className={styles.subsectionTitleRow}>
+                        <span>Sucursal de imposición</span>
+                        <InfoTooltip content="Oficina donde llevar tu envío." />
+                      </p>
                       <Select
                         id="province"
                         label="Provincia"
@@ -1170,22 +1233,43 @@ export function InternationalShipmentPage() {
                 currentStep={currentStep}
                 unlockedSteps={unlocked}
                 onStepClick={goTo}
-                declaracion={{ categoryLabel, totalArticles, totalValueUsd, totalWeightKg, exportDutiesUsd }}
-                paquete={{ measuresLabel, weightLabel }}
-                origen={{ displayName: origenDisplayName, remitente: selectedRemitente }}
-                destino={{
-                  countryLabel: destinoCountryLabel,
-                  city: destinoCity || undefined,
-                  address: destinoAddressLines[0] || undefined,
-                  shippingService: shippingService ? SHIPPING_SERVICE_LABELS[shippingService] : undefined,
+                declaracion={{
+                  countryLabel: country !== '-1' ? destinoCountryLabel : undefined,
+                  geographicRangeLabel:
+                    country !== '-1' ? getCountryGeographicRangeLabel(country) : undefined,
+                  categoryLabel,
+                  totalArticles,
+                  totalValueUsd,
+                  totalWeightKg,
                 }}
+                paquete={{ measuresLabel, weightLabel }}
+                origen={
+                  unlocked.has('Origen')
+                    ? { displayName: origenDisplayName, remitente: selectedRemitente }
+                    : undefined
+                }
+                destino={
+                  unlocked.has('Destino')
+                    ? {
+                        countryLabel: destinoCountryLabel,
+                        city: destinoCity || undefined,
+                        address: destinoAddressLines[0] || undefined,
+                        shippingService: shippingService
+                          ? SHIPPING_SERVICE_LABELS[shippingService]
+                          : undefined,
+                      }
+                    : undefined
+                }
                 representationCostArs={representationCostArs}
+                onPay={handleSaveDestino}
+                payDisabled={currentStep !== 'Destino'}
+                payLabel="Guardar"
               />
             </div>
           </div>
         </div>
 
-        {/* Cancelar / Atrás / Siguiente|Guardar */}
+        {/* Cancelar / Atrás / Siguiente — en Destino: sin Guardar (va en Resumen) */}
         <div className={layout.navActions}>
           <div className={layout.navActionsInner}>
             <div className={layout.navActionsStart}>
@@ -1199,13 +1283,11 @@ export function InternationalShipmentPage() {
                   Atrás
                 </Button>
               )}
-              <Button
-                variant="primary"
-                size="step"
-                onClick={handleNext}
-              >
-                {currentStep === 'Destino' ? 'Guardar' : 'Siguiente'}
-              </Button>
+              {currentStep !== 'Destino' && (
+                <Button variant="primary" size="step" onClick={handleNext}>
+                  Siguiente
+                </Button>
+              )}
             </div>
           </div>
         </div>

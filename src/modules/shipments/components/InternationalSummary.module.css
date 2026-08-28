@@ -110,6 +110,16 @@
 }
 
 .rowValue {
-  flex-shrink: 0;
-  white-space: nowrap;
+  flex: 0 1 auto;
+  max-width: 58%;
+  text-align: right;
+  white-space: normal;
+}
+
+/* CTA pie del resumen (Guardar / Pagar) — Figma: h 48, padding 12×24 */
+.footerCta {
+  margin-top: auto;
+  min-height: 48px;
+  padding: var(--space-3) var(--space-6);
+  border-radius: 0;
 }

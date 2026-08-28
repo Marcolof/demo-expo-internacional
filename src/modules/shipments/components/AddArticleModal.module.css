@@ -1,7 +1,7 @@
 /*
  * Modal "Agregar artículo" (Figma 10116:13975).
  * El Modal genérico ya aporta backdrop/header/scroll; acá vive sólo el
- * contenido: formulario, disclosure del código armonizado y totales.
+ * contenido: formulario, autocompletado de posición arancelaria y totales.
  */
 
 .form {
@@ -11,13 +11,34 @@
   width: 100%;
 }
 
-/* --- Código armonizado --------------------------------------------------- */
+.intro {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+}
+
+/* El listbox se ancla al control, no al hint que Field renderiza debajo. */
+.autocomplete {
+  position: relative;
+  z-index: var(--z-base);
+  width: 100%;
+}
+
+.autocomplete:focus-within {
+  z-index: var(--z-header);
+}
+
+/* --- Posición arancelaria ----------------------------------------------- */
 
 .codeSection {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
   width: 100%;
+  padding-top: var(--space-2);
+  border-top: var(--border-width-thin) solid var(--border-subtle);
 }
 
 .codeTitle {
@@ -26,61 +47,6 @@
   font-weight: var(--font-weight-semibold);
 }
 
-.codeHint {
-  color: var(--text-muted);
-  font-size: var(--font-size-sm);
-  line-height: var(--line-height-normal);
-}
-
-/* Decorativo: la maqueta no navega a un sitio externo real. */
-.codeLink {
-  color: var(--text-link);
-  font-weight: var(--font-weight-medium);
-}
-
-.disclosureTrigger {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  align-self: flex-start;
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--text-primary);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-}
-
-.disclosureIcon {
-  flex-shrink: 0;
-  transition: transform var(--transition-base);
-}
-
-/* Instrucciones en negro (como la versión inicial); sin caja gris envolvente. */
-.disclosurePanel {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  color: var(--text-primary);
-  font-size: var(--font-size-sm);
-  line-height: var(--line-height-normal);
-}
-
-.disclosurePanel ol {
-  margin: 0;
-  padding-left: 1.1em;
-}
-
-.disclosurePanel p {
-  margin: 0;
-}
-
-.disclosurePanel p + ol {
-  margin-top: calc(var(--space-2) * -1);
-}
-
-/* Leyenda: ícono InfoTooltip a la izquierda + texto; el tooltip lleva el disclaimer. */
 .legend {
   display: flex;
   align-items: flex-start;
@@ -99,20 +65,6 @@
   font-size: var(--font-size-sm);
   line-height: var(--line-height-normal);
   color: var(--text-primary);
-}
-
-.qtyRow {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-3);
-  width: 100%;
-}
-
-/* --bp-mobile-max (767.98px) */
-@media (max-width: 767.98px) {
-  .qtyRow {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* --- Totales calculados --------------------------------------------------- */
@@ -149,14 +101,6 @@
   min-width: 0;
 }
 
-.totalLabelWithTip {
-  display: flex;
-  flex: 1 1 0;
-  align-items: center;
-  gap: var(--space-2);
-  min-width: 0;
-}
-
 .totalValue {
   flex-shrink: 0;
   white-space: nowrap;
@@ -175,13 +119,33 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: var(--space-3);
   width: 100%;
-  max-width: var(--modal-footer-actions-max-width);
-  margin: 0 auto;
 }
 
-.footerActions > * {
-  flex: 1 1 0;
+.footerActionsEnd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-left: auto;
+}
+
+/* --bp-mobile-max (767.98px) */
+@media (max-width: 767.98px) {
+  .footerActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .footerActionsEnd {
+    flex-direction: column;
+    margin-left: 0;
+  }
+
+  .footerActions button,
+  .footerActionsEnd button {
+    width: 100%;
+  }
 }

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import addIcon from '@/assets/icons/add.png'
 import togglerIcon from '@/assets/icons/navbar-toggler.svg'
 import logo from '@/assets/img/CorreoArgentino-MiCorreo.png'
@@ -49,9 +50,10 @@ export function Header() {
 
         {/* #navbarTogglerDemo01 */}
         <div className={styles.main}>
-          <span className={styles.brand}>
+          {/* Demo: reinicia el flujo en `/`. En prod apunta a landing. */}
+          <Link to="/" className={styles.brand} aria-label="Inicio — Nuevo envío">
             <img src={logo} alt="Correo Argentino — MiCorreo" className={styles.brandLogo} />
-          </span>
+          </Link>
 
           <div className={styles.actions}>
             <span className={styles.newShipment}>

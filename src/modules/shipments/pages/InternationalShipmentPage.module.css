@@ -33,9 +33,20 @@
   gap: var(--space-2);
 }
 
+/* Select + Rango geográfico: Figma spacing-2 (8px) entre control y supporting. */
+.countryField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.countryField .countrySelect {
+  margin-bottom: 0; /* anula Field.group (--space-1) para respetar el gap */
+}
+
 .supportingRange {
   margin: 0;
-  color: var(--text-muted);
+  color: var(--text-error);
   font-size: var(--font-size-sm);
 }
 
@@ -153,6 +164,10 @@
   white-space: nowrap;
 }
 
+.totalError {
+  color: var(--text-error);
+}
+
 .djEmphasis {
   color: var(--text-primary);
   font-weight: var(--font-weight-semibold);
@@ -187,6 +202,16 @@
   font-weight: var(--font-weight-regular);
   line-height: 24px;
   color: var(--text-link);
+}
+
+.packageErrorList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.packageErrorList p {
+  margin: 0;
 }
 
 /* --- Paso Origen ----------------------------------------------------------- */
@@ -229,11 +254,18 @@
   width: 100%;
 }
 
-.subsectionTitle {
+.subsectionTitle,
+.subsectionTitleRow {
   margin: 0;
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
+}
+
+.subsectionTitleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 /* Texto descriptivo debajo de subtítulos. */
