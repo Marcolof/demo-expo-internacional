@@ -75,7 +75,6 @@ export function UserForm({
         value={values.role}
         error={errors.role}
         disabled={disabled}
-        placeholderOption="-"
         placeholderOptionValue=""
         hint="El rol define los permisos iniciales. Después podés ajustarlos de a uno."
         onChange={(event) => {
