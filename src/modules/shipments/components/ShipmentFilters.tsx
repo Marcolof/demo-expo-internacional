@@ -60,6 +60,7 @@ export function ShipmentFilters({
       <Select
         id="filtro-estado"
         label="Estado"
+        labelAsPlaceholder={false}
         placeholderOption="Todos"
         placeholderOptionValue=""
         options={STATUS_OPTIONS}
@@ -72,6 +73,7 @@ export function ShipmentFilters({
       <Select
         id="filtro-alcance"
         label="Tipo de envío"
+        labelAsPlaceholder={false}
         placeholderOption="Todos"
         placeholderOptionValue=""
         options={SCOPE_OPTIONS}
