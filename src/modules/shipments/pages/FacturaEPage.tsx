@@ -1,17 +1,24 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PageContainer } from '@/shared/layout/PageContainer'
 import { useScrollToTop } from '@/shared/hooks/useScrollToTop'
 import { useActiveUser } from '@/core/session/activeUser'
-import { formatCuitMask, isMoneyAmount } from '@/shared/lib/validators'
+import { formatCuitMask } from '@/shared/lib/validators'
+import { formatAmountOnly, parseAmountOnly } from '@/shared/lib/formatCurrency'
+import { cn } from '@/shared/lib/cn'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
+import { InfoTooltip } from '@/shared/ui/Tooltip'
 import { COUNTRIES } from '@/shared/lib/countries'
 import {
   FACTURA_E_CUIT_LEGEND,
+  FACTURA_E_DEMO_FX_ARS,
   FACTURA_E_SEED,
   type FacturaERow,
 } from '../mocks/factura-e.mocks'
+import { InternationalShipmentDetailModal } from '../components/InternationalShipmentDetailModal'
+import { resolveFacturaEDetail } from '../mocks/international-shipment-detail.mocks'
+import type { InternationalShipmentDetail } from '../types/international-shipment-detail.types'
 import { wizardStore } from '../stores/session.store'
 import styles from './FacturaEPage.module.css'
 
@@ -36,18 +43,23 @@ const SHIPPING_SERVICE_LABELS: Record<string, string> = {
   EMS_DOCUMENTACION: 'EMS Documentación',
 }
 
-function sanitizeMoneyInput(raw: string): string {
-  const cleaned = raw.replace(/[^\d.,]/g, '')
-  const sep = cleaned.includes(',') ? ',' : cleaned.includes('.') ? '.' : null
-  if (sep === null) return cleaned
-  const [intPart, ...rest] = cleaned.split(sep)
-  const decimals = rest.join('').replace(/[^\d]/g, '').slice(0, 2)
-  return decimals.length > 0 ? `${intPart}${sep}${decimals}` : intPart + (cleaned.endsWith(sep) ? sep : '')
+interface MoneyDrafts {
+  readonly monto: string
+  readonly tipoCambio: string
 }
 
-function parseMoneyInput(raw: string): number {
-  const n = Number(raw.replace(',', '.'))
-  return Number.isFinite(n) ? n : 0
+function sanitizeArAmountInput(raw: string): string {
+  const cleaned = raw.replace(/[^\d.,]/g, '')
+  const comma = cleaned.indexOf(',')
+  if (comma === -1) return cleaned
+  const intPart = cleaned.slice(0, comma).replace(/,/g, '')
+  const decimals = cleaned.slice(comma + 1).replace(/[^\d]/g, '').slice(0, 2)
+  return `${intPart},${decimals}`
+}
+
+function isPositiveAmountDraft(raw: string): boolean {
+  const parsed = parseAmountOnly(raw)
+  return parsed !== undefined && parsed > 0
 }
 
 function buildInitialRows(snap: ReturnType<typeof wizardStore.get>): FacturaERow[] {
@@ -60,12 +72,63 @@ function buildInitialRows(snap: ReturnType<typeof wizardStore.get>): FacturaERow
     destinatario: snap.recipientName || snap.recipientRazonSocial || 'Envío actual',
     destino: [snap.destinoCity, countryLabel].filter(Boolean).join(' - ') || countryLabel,
     nOrden: snap.destinoOrderNum.trim() || 'ORD-10049',
-    facturaE: snap.facturaE || '00001-000000108',
-    montoUsd: totalUsd || 1500,
-    divisa: 'USD',
-    tipoCambio: '1',
+    facturaE: snap.facturaE || 'FE-0001-00000108',
+    montoUsd: totalUsd || 245,
+    tipoCambioArs: FACTURA_E_DEMO_FX_ARS,
   })
   return base
+}
+
+function draftsFromRows(rows: readonly FacturaERow[]): Record<string, MoneyDrafts> {
+  return Object.fromEntries(
+    rows.map((row) => [
+      row.id,
+      {
+        monto: formatAmountOnly(row.montoUsd),
+        tipoCambio: formatAmountOnly(row.tipoCambioArs),
+      },
+    ]),
+  )
+}
+
+interface CurrencyFieldProps {
+  readonly currency: 'USD' | 'ARS'
+  readonly value: string
+  readonly ariaLabel: string
+  readonly invalid?: boolean
+  readonly readOnly?: boolean
+  readonly onChange?: (value: string) => void
+  readonly onBlur?: () => void
+}
+
+function CurrencyField({
+  currency,
+  value,
+  ariaLabel,
+  invalid = false,
+  readOnly = false,
+  onChange,
+  onBlur,
+}: CurrencyFieldProps) {
+  return (
+    <label className={styles.moneyField}>
+      <span className={styles.moneyCurrency}>{currency}</span>
+      <input
+        className={cn(styles.moneyInput, invalid && styles.moneyInvalid, readOnly && styles.moneyReadOnly)}
+        aria-label={ariaLabel}
+        inputMode={readOnly ? undefined : 'decimal'}
+        readOnly={readOnly}
+        tabIndex={readOnly ? -1 : undefined}
+        value={value}
+        onChange={
+          onChange === undefined
+            ? undefined
+            : (event) => onChange(sanitizeArAmountInput(event.currentTarget.value))
+        }
+        onBlur={onBlur}
+      />
+    </label>
+  )
 }
 
 /**
@@ -78,23 +141,52 @@ export function FacturaEPage() {
   const snap = wizardStore.get()
   const [cuit, setCuit] = useState(() => formatCuitMask(user.cuit))
   const [rows, setRows] = useState<readonly FacturaERow[]>(() => buildInitialRows(snap))
-  const [montoDrafts, setMontoDrafts] = useState<Record<string, string>>(() =>
-    Object.fromEntries(buildInitialRows(snap).map((row) => [row.id, row.montoUsd.toFixed(2).replace('.', ',')])),
+  const [drafts, setDrafts] = useState<Record<string, MoneyDrafts>>(() =>
+    draftsFromRows(buildInitialRows(snap)),
   )
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null)
+  const [detail, setDetail] = useState<InternationalShipmentDetail | null>(null)
+
+  useEffect(() => {
+    if (menuOpenId === null) return
+    const close = () => setMenuOpenId(null)
+    document.addEventListener('click', close)
+    return () => document.removeEventListener('click', close)
+  }, [menuOpenId])
 
   const allFacturasComplete = rows.every((row) => row.facturaE.trim() !== '')
-  const allMontosValid = rows.every((row) => isMoneyAmount(montoDrafts[row.id] ?? '', false) === null)
-  const allDivisasComplete = rows.every((row) => row.divisa.trim() !== '')
-  const allTipoCambioValid = rows.every((row) => {
-    const n = Number(row.tipoCambio.replace(',', '.'))
-    return row.tipoCambio.trim() !== '' && Number.isFinite(n) && n > 0
-  })
+  const allMontosValid = rows.every((row) => isPositiveAmountDraft(drafts[row.id]?.monto ?? ''))
+  const allTipoCambioValid = rows.every((row) => isPositiveAmountDraft(drafts[row.id]?.tipoCambio ?? ''))
   const canPay =
-    allFacturasComplete && allMontosValid && allDivisasComplete && allTipoCambioValid && cuit.trim() !== ''
+    allFacturasComplete && allMontosValid && allTipoCambioValid && cuit.trim() !== ''
 
   const patchRow = (id: string, patch: Partial<FacturaERow>) => {
     setRows((current) => current.map((item) => (item.id === id ? { ...item, ...patch } : item)))
+  }
+
+  const patchDraft = (id: string, patch: Partial<MoneyDrafts>) => {
+    setDrafts((current) => {
+      const previous = current[id] ?? { monto: '', tipoCambio: '' }
+      return { ...current, [id]: { ...previous, ...patch } }
+    })
+  }
+
+  const commitAmount = (id: string, field: keyof MoneyDrafts, numericKey: 'montoUsd' | 'tipoCambioArs') => {
+    const raw = drafts[id]?.[field] ?? ''
+    const parsed = parseAmountOnly(raw)
+    if (parsed === undefined) return
+    patchDraft(id, { [field]: formatAmountOnly(parsed) })
+    patchRow(id, { [numericKey]: parsed })
+  }
+
+  const removeRow = (id: string) => {
+    setRows((current) => current.filter((item) => item.id !== id))
+    setDrafts((current) => {
+      const next = { ...current }
+      delete next[id]
+      return next
+    })
+    setMenuOpenId(null)
   }
 
   const goCheckout = () => {
@@ -102,8 +194,8 @@ export function FacturaEPage() {
     const service = snap?.shippingService ?? 'EMS'
     const priceArs = SHIPPING_SERVICE_PRICES_ARS[service] ?? 15000
     const totalValueUsd = rows.reduce((sum, row) => {
-      const draft = montoDrafts[row.id]
-      return sum + (draft !== undefined ? parseMoneyInput(draft) : row.montoUsd)
+      const draft = drafts[row.id]?.monto
+      return sum + (draft !== undefined ? (parseAmountOnly(draft) ?? row.montoUsd) : row.montoUsd)
     }, 0)
     const countryLabel = COUNTRIES.find((c) => c.value === snap?.country)?.label
     const representationCostArs =
@@ -133,8 +225,11 @@ export function FacturaEPage() {
     <PageContainer width="full">
       <div className={styles.page}>
         <header className={styles.header}>
-          <h1 className={styles.title}>Facturación del envío</h1>
-          <h2 className={styles.subtitle}>Factura E</h2>
+          <h1 className={styles.titleRow}>
+            <span>Facturación del envío</span>
+            <InfoTooltip content="Completá el CUIT y los datos de Factura E de cada envío comercial." />
+          </h1>
+          <h2 className={styles.subtitle}>Datos de la factura</h2>
           <p className={styles.hint}>{FACTURA_E_CUIT_LEGEND}</p>
           <div className={styles.cuitField}>
             <Input
@@ -153,28 +248,42 @@ export function FacturaEPage() {
                 <th className={styles.thMenu} aria-label="Acciones" />
                 <th>Destinatario</th>
                 <th>Destino</th>
-                <th>Nº de orden</th>
-                <th>Factura E</th>
+                <th>N° de orden</th>
+                <th>N° de factura</th>
                 <th>Monto</th>
-                <th>Divisa</th>
                 <th>Tipo de cambio</th>
+                <th className={styles.thTotal}>Total en pesos Argentinos</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row) => {
-                const montoRaw = montoDrafts[row.id] ?? String(row.montoUsd)
-                const montoError = isMoneyAmount(montoRaw, false)
+                const draft = drafts[row.id] ?? {
+                  monto: formatAmountOnly(row.montoUsd),
+                  tipoCambio: formatAmountOnly(row.tipoCambioArs),
+                }
+                const montoValue = parseAmountOnly(draft.monto)
+                const fxValue = parseAmountOnly(draft.tipoCambio)
+                const montoInvalid = !isPositiveAmountDraft(draft.monto)
+                const fxInvalid = !isPositiveAmountDraft(draft.tipoCambio)
+                const totalArs =
+                  montoValue !== undefined && fxValue !== undefined ? montoValue * fxValue : 0
+
                 return (
                   <tr
                     key={row.id}
                     className={`${styles.tableRow} ${menuOpenId === row.id ? styles.tableRowMenuOpen : ''}`}
                   >
                     <td className={styles.tdMenu}>
-                      <div className={styles.menuWrap}>
+                      <div
+                        className={styles.menuWrap}
+                        onClick={(event) => event.stopPropagation()}
+                      >
                         <button
                           type="button"
                           className={styles.kebab}
                           aria-label={`Acciones ${row.destinatario}`}
+                          aria-haspopup="menu"
+                          aria-expanded={menuOpenId === row.id}
                           onClick={() =>
                             setMenuOpenId((current) => (current === row.id ? null : row.id))
                           }
@@ -182,79 +291,75 @@ export function FacturaEPage() {
                           ⋮
                         </button>
                         {menuOpenId === row.id && (
-                          <div className={styles.menu}>
+                          <div className={styles.menu} role="menu">
                             <button
                               type="button"
                               className={styles.menuItem}
-                              onClick={() => setMenuOpenId(null)}
+                              role="menuitem"
+                              onClick={() => {
+                                setDetail(resolveFacturaEDetail(row, snap))
+                                setMenuOpenId(null)
+                              }}
                             >
                               Ver detalle
                             </button>
                             <button
                               type="button"
                               className={styles.menuItem}
-                              onClick={() => {
-                                setRows((current) => current.filter((item) => item.id !== row.id))
-                                setMontoDrafts((current) => {
-                                  const next = { ...current }
-                                  delete next[row.id]
-                                  return next
-                                })
-                                setMenuOpenId(null)
-                              }}
+                              role="menuitem"
+                              onClick={() => removeRow(row.id)}
                             >
-                              Quitar
+                              Eliminar
                             </button>
                           </div>
                         )}
                       </div>
                     </td>
-                    <td>{row.destinatario}</td>
-                    <td>{row.destino}</td>
+                    <td className={styles.tdText}>{row.destinatario}</td>
+                    <td className={styles.tdText}>{row.destino}</td>
                     <td>{row.nOrden}</td>
                     <td>
                       <input
                         className={styles.facturaInput}
-                        aria-label={`Factura E ${row.destinatario}`}
+                        aria-label={`N° de factura ${row.destinatario}`}
                         value={row.facturaE}
                         onChange={(event) => patchRow(row.id, { facturaE: event.currentTarget.value })}
                       />
                     </td>
                     <td>
-                      <label className={styles.montoField}>
-                        <span className={styles.montoCurrency}>USD</span>
-                        <input
-                          className={`${styles.montoInput} ${montoError !== null ? styles.montoInvalid : ''}`}
-                          aria-label={`Monto USD ${row.destinatario}`}
-                          inputMode="decimal"
-                          value={montoRaw}
-                          onChange={(event) => {
-                            const value = sanitizeMoneyInput(event.currentTarget.value)
-                            setMontoDrafts((current) => ({ ...current, [row.id]: value }))
-                            if (isMoneyAmount(value, false) === null) {
-                              patchRow(row.id, { montoUsd: parseMoneyInput(value) })
-                            }
-                          }}
-                        />
-                      </label>
-                    </td>
-                    <td>
-                      <input
-                        className={styles.facturaInput}
-                        aria-label={`Divisa ${row.destinatario}`}
-                        value={row.divisa}
-                        onChange={(event) => patchRow(row.id, { divisa: event.currentTarget.value })}
+                      <CurrencyField
+                        currency="USD"
+                        ariaLabel={`Monto USD ${row.destinatario}`}
+                        value={draft.monto}
+                        invalid={montoInvalid}
+                        onChange={(value) => {
+                          patchDraft(row.id, { monto: value })
+                          const parsed = parseAmountOnly(value)
+                          if (parsed !== undefined) patchRow(row.id, { montoUsd: parsed })
+                        }}
+                        onBlur={() => commitAmount(row.id, 'monto', 'montoUsd')}
                       />
                     </td>
                     <td>
-                      <input
-                        className={styles.facturaInput}
-                        aria-label={`Tipo de cambio ${row.destinatario}`}
-                        inputMode="decimal"
-                        value={row.tipoCambio}
-                        onChange={(event) =>
-                          patchRow(row.id, { tipoCambio: event.currentTarget.value.replace(/[^\d.,]/g, '') })
-                        }
+                      <CurrencyField
+                        currency="ARS"
+                        ariaLabel={`Tipo de cambio ${row.destinatario}`}
+                        value={draft.tipoCambio}
+                        invalid={fxInvalid}
+                        onChange={(value) => {
+                          patchDraft(row.id, { tipoCambio: value })
+                          const parsed = parseAmountOnly(value)
+                          if (parsed !== undefined) patchRow(row.id, { tipoCambioArs: parsed })
+                        }}
+                        onBlur={() => commitAmount(row.id, 'tipoCambio', 'tipoCambioArs')}
+                      />
+                    </td>
+                    <td>
+                      <CurrencyField
+                        currency="ARS"
+                        ariaLabel={`Total en pesos ${row.destinatario}`}
+                        value={formatAmountOnly(totalArs)}
+                        readOnly
                       />
                     </td>
                   </tr>
@@ -269,11 +374,8 @@ export function FacturaEPage() {
             Cancelar
           </Button>
           <div className={styles.footerEnd}>
-            <Button variant="secondary" onClick={() => navigate('/propuesta/mis-envios')}>
+            <Button variant="secondary" onClick={() => navigate(-1)}>
               Atrás
-            </Button>
-            <Button variant="secondary" disabled>
-              Guardar
             </Button>
             <Button variant="primary" disabled={!canPay} onClick={goCheckout}>
               Pagar
@@ -281,6 +383,12 @@ export function FacturaEPage() {
           </div>
         </div>
       </div>
+
+      <InternationalShipmentDetailModal
+        isOpen={detail !== null}
+        detail={detail}
+        onClose={() => setDetail(null)}
+      />
     </PageContainer>
   )
 }
