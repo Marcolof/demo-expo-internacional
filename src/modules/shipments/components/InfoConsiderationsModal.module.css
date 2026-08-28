@@ -1,8 +1,17 @@
-/* Modal info — alto Figma 723px, pero nunca más alto que el viewport.
- * El scroll queda en `.body` del Modal compartido. */
+/* Modal info: ancho Figma 600px. El no comercial crece con el texto (sin scroll). */
 
 .dialog {
-  max-height: min(45.1875rem, calc(100vh - var(--space-8)));
+  width: 37.5rem; /* 600px */
+  max-width: min(37.5rem, calc(100vw - var(--space-8)));
+}
+
+.dialog.dialogCompact {
+  height: auto;
+  max-height: none;
+  overflow: visible;
+}
+
+.dialogTall {
   max-height: min(45.1875rem, calc(100dvh - var(--space-8)));
 }
 
@@ -12,9 +21,26 @@
   line-height: 1;
 }
 
+.body > h5 {
+  text-align: center;
+}
+
 .body p {
   margin: 0;
   line-height: var(--line-height-normal);
+}
+
+.bodyCompact {
+  flex: 0 0 auto;
+  min-height: auto;
+  overflow: visible;
+  gap: var(--space-3);
+  padding-bottom: var(--space-3);
+}
+
+.footerCompact {
+  padding-top: var(--space-2);
+  padding-bottom: var(--space-4);
 }
 
 .body a {
