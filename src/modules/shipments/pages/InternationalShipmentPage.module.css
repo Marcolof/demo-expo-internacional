@@ -22,6 +22,7 @@
 /* Título de sección: "Seleccioná el país…" / "Declaración jurada…" (18px). */
 .sectionTitle,
 .sectionTitleRow {
+  margin: 0;
   color: var(--text-primary);
   font-size: 1.125rem; /* 18px */
   font-weight: var(--font-weight-semibold);
@@ -46,7 +47,7 @@
 
 .supportingRange {
   margin: 0;
-  color: var(--text-error);
+  color: var(--text-muted);
   font-size: var(--font-size-sm);
 }
 
@@ -278,19 +279,32 @@
 
 /* --- Paso Destino ---------------------------------------------------------- */
 
+.destinatarioHeader {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  align-items: baseline;
+  width: 100%;
+}
+
 .orderChipWrap {
-  display: flex;
-  align-self: flex-start;
+  justify-self: end;
+  width: fit-content;
+  max-width: 100%;
 }
 
 .orderChipInput {
-  min-width: 0;
+  display: block;
+  width: 13.75rem;
+  max-width: 100%;
   padding: var(--space-1) 0;
   border: 0;
   border-bottom: var(--border-width-thin) solid var(--border-default);
   background: transparent;
   color: var(--text-primary);
-  font: inherit;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  text-align: right;
 }
 
 .orderChipInput::placeholder {
@@ -298,7 +312,7 @@
 }
 
 .orderChipInput:focus-visible {
-  border-color: var(--color-accent);
+  border-bottom-color: var(--border-focus);
   outline: none;
 }
 
