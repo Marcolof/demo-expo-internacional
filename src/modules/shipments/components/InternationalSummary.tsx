@@ -1,12 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/shared/ui/Button'
 import { Stepper } from '@/shared/ui/Stepper'
 import { cn } from '@/shared/lib/cn'
 import { formatAmountOnly, formatUsd, formatWeightKg } from '@/shared/lib/formatCurrency'
-import {
-  EXPORT_DUTIES_USD,
-  SUMMARY_DETAIL_ROWS,
-} from '../constants/summary-detail.constants'
+import { SUMMARY_DETAIL_ROWS } from '../constants/summary-detail.constants'
 import type { Remitente } from '../types/remitente.types'
 import styles from './InternationalSummary.module.css'
 
@@ -15,6 +12,12 @@ export const INTERNATIONAL_STEPS = ['Declaración', 'Paquete', 'Origen', 'Destin
 export type InternationalStep = (typeof INTERNATIONAL_STEPS)[number]
 
 const INTL_STEPPER_STEPS = INTERNATIONAL_STEPS.map((id) => ({ id, label: id }))
+
+const SUMMARY_SECTIONS = ['Declaración', 'Paquete', 'Origen', 'Destino', 'Detalle'] as const
+
+function allSummarySectionsOpen(): ReadonlySet<string> {
+  return new Set(SUMMARY_SECTIONS)
+}
 
 export interface SummaryRow {
   readonly label: string
@@ -25,31 +28,32 @@ const EMPTY = '-'
 
 /** Datos en curso del paso Declaración, para reflejarlos en el resumen. */
 export interface DeclaracionSummaryData {
+  readonly countryLabel?: string
+  readonly geographicRangeLabel?: string
   readonly categoryLabel?: string
   readonly totalArticles: number
   readonly totalValueUsd: number
   readonly totalWeightKg: number
-  readonly exportDutiesUsd?: number
 }
 
 function declaracionRows(data?: DeclaracionSummaryData): readonly SummaryRow[] {
   if (data === undefined) {
     return [
+      { label: 'País', value: EMPTY },
+      { label: 'Rango geográfico', value: EMPTY },
       { label: 'Categoría de envío', value: EMPTY },
       { label: 'Cantidad de artículos', value: EMPTY },
       { label: 'Valor total declarado', value: EMPTY },
-      { label: 'Derechos de Exportación', value: EMPTY },
       { label: 'Peso total declarado', value: EMPTY },
     ]
   }
 
-  const duties = data.exportDutiesUsd ?? EXPORT_DUTIES_USD
-
   return [
+    { label: 'País', value: data.countryLabel ?? EMPTY },
+    { label: 'Rango geográfico', value: data.geographicRangeLabel ?? EMPTY },
     { label: 'Categoría de envío', value: data.categoryLabel ?? EMPTY },
     { label: 'Cantidad de artículos', value: String(data.totalArticles) },
     { label: 'Valor total declarado', value: formatUsd(data.totalValueUsd) },
-    { label: 'Derechos de Exportación', value: formatUsd(duties) },
     { label: 'Peso total declarado', value: formatWeightKg(data.totalWeightKg) },
   ]
 }
@@ -75,8 +79,13 @@ export interface PaqueteSummaryData {
   readonly weightLabel?: string
 }
 
-function paqueteRows(data?: PaqueteSummaryData): readonly SummaryRow[] | undefined {
-  if (data === undefined) return undefined
+function paqueteRows(data?: PaqueteSummaryData): readonly SummaryRow[] {
+  if (data === undefined) {
+    return [
+      { label: 'Medidas', value: EMPTY },
+      { label: 'Peso', value: EMPTY },
+    ]
+  }
 
   return [
     { label: 'Medidas', value: data.measuresLabel ?? EMPTY },
@@ -89,8 +98,14 @@ export interface OrigenSummaryData {
   readonly remitente?: Remitente
 }
 
-function origenRows(data?: OrigenSummaryData | Remitente): readonly SummaryRow[] | undefined {
-  if (data === undefined) return undefined
+function origenRows(data?: OrigenSummaryData | Remitente): readonly SummaryRow[] {
+  const empty: readonly SummaryRow[] = [
+    { label: 'Nombre y apellido / Razón social', value: EMPTY },
+    { label: 'Dirección', value: EMPTY },
+    { label: 'Remitente', value: EMPTY },
+  ]
+
+  if (data === undefined) return empty
 
   // Compat: aceptar Remitente directo (API previa) u objeto OrigenSummaryData.
   const isRemitente = 'razonSocial' in data && 'cuit' in data
@@ -99,7 +114,7 @@ function origenRows(data?: OrigenSummaryData | Remitente): readonly SummaryRow[]
     ? (data as Remitente).razonSocial
     : ((data as OrigenSummaryData).displayName?.trim() || remitente?.razonSocial)
 
-  if (remitente === undefined && (displayName === undefined || displayName === '')) return undefined
+  if (remitente === undefined && (displayName === undefined || displayName === '')) return empty
 
   return [
     { label: 'Nombre y apellido / Razón social', value: displayName ?? EMPTY },
@@ -116,8 +131,14 @@ export interface DestinoSummaryData {
   readonly shippingService?: string
 }
 
-function destinoRows(data?: DestinoSummaryData): readonly SummaryRow[] | undefined {
-  if (data === undefined) return undefined
+function destinoRows(data?: DestinoSummaryData): readonly SummaryRow[] {
+  if (data === undefined) {
+    return [
+      { label: 'País de destino', value: EMPTY },
+      { label: 'Ciudad', value: EMPTY },
+      { label: 'Dirección', value: EMPTY },
+    ]
+  }
 
   const rows: SummaryRow[] = [
     { label: 'País de destino', value: data.countryLabel ?? EMPTY },
@@ -196,10 +217,12 @@ export interface InternationalSummaryProps {
   readonly destino?: DestinoSummaryData
   /** Costo de representación (0 si no comercial o con representación). */
   readonly representationCostArs?: number
-  /** Callback del botón "Pagar". Sin definir, el botón no se muestra (flujo Guardar). */
+  /** Callback del CTA inferior del resumen. El botón se muestra siempre. */
   readonly onPay?: () => void
-  /** Label del CTA de pago (Pagar / Finalizar). */
+  /** Label del CTA de pago (Pagar / Guardar). */
   readonly payLabel?: string
+  /** El CTA permanece visible pero inactivo hasta el último paso completo. */
+  readonly payDisabled?: boolean
 }
 
 /**
@@ -218,12 +241,18 @@ export function InternationalSummary({
   representationCostArs = 0,
   onPay,
   payLabel = 'Pagar',
+  payDisabled = false,
 }: InternationalSummaryProps) {
   const origenSectionRows = origenRows(origen)
   const destinoSectionRows = destinoRows(destino)
-  const [open, setOpen] = useState<ReadonlySet<string>>(
-    new Set(origenSectionRows !== undefined ? ['Declaración', 'Origen'] : ['Declaración']),
+  const [open, setOpen] = useState<ReadonlySet<string>>(() =>
+    currentStep === 'Destino' ? allSummarySectionsOpen() : new Set(['Declaración']),
   )
+
+  useEffect(() => {
+    if (currentStep !== 'Destino') return
+    setOpen(allSummarySectionsOpen())
+  }, [currentStep])
 
   const toggle = (id: string) => {
     setOpen((current) => {
@@ -295,11 +324,16 @@ export function InternationalSummary({
         />
       </div>
 
-      {onPay !== undefined && (
-        <Button variant="primary" shape="square" fullWidth onClick={onPay}>
-          {payLabel}
-        </Button>
-      )}
+      <Button
+        variant="primary"
+        shape="square"
+        fullWidth
+        className={styles.footerCta}
+        disabled={payDisabled || onPay === undefined}
+        onClick={onPay}
+      >
+        {payLabel}
+      </Button>
     </div>
   )
 }
