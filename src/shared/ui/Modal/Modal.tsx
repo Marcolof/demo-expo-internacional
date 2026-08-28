@@ -15,6 +15,8 @@ export interface ModalProps {
   readonly size?: ModalSize
   /** `false` quita la X y bloquea Escape / clic en el fondo (modal obligatorio). */
   readonly closable?: boolean
+  /** Cerrar al pulsar el fondo. Por defecto `true` si `closable`. */
+  readonly closeOnBackdrop?: boolean
   readonly centered?: boolean
   readonly labelledById?: string
   /** Clase extra sobre el diálogo (p. ej. alto Figma). */
@@ -53,6 +55,7 @@ export function Modal({
   footer,
   size = 'md',
   closable = true,
+  closeOnBackdrop = true,
   centered = false,
   labelledById,
   className,
@@ -90,7 +93,7 @@ export function Modal({
     <div
       className={styles.backdrop}
       onClick={(event) => {
-        if (event.target === event.currentTarget && closable) onClose()
+        if (event.target === event.currentTarget && closable && closeOnBackdrop) onClose()
       }}
     >
       <div
