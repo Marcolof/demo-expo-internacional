@@ -38,6 +38,15 @@ export const PACKAGE_PRODUCT_OPTIONS: readonly SelectOption[] = PACKAGE_PRODUCT_
   (preset) => ({ value: preset.id, label: preset.label }),
 )
 
+/** Oculta productos cuyo tope es menor al peso declarado en el paso anterior. */
+export function packageProductOptionsForDeclaredWeight(
+  declaredWeightKg: number,
+): readonly SelectOption[] {
+  return PACKAGE_PRODUCT_PRESETS.filter((preset) => declaredWeightKg <= preset.maxWeightKg).map(
+    (preset) => ({ value: preset.id, label: preset.label }),
+  )
+}
+
 export function findPackageProductPreset(id: string): PackageProductPreset | undefined {
   return PACKAGE_PRODUCT_PRESETS.find((preset) => preset.id === id)
 }
