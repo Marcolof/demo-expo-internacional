@@ -3,30 +3,18 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { PageContainer } from '@/shared/layout/PageContainer'
 import { Button } from '@/shared/ui/Button'
 import { RadioGroup } from '@/shared/ui/Checkbox'
+import { useFeatureFlag } from '@/shared/hooks/useFeatureFlag'
 import { useScrollToTop } from '@/shared/hooks/useScrollToTop'
+import { EmptyState } from '@/shared/ui/EmptyState'
 import { useToast } from '@/shared/ui/Toast'
 import { CheckoutItemsTable } from '../components/CheckoutItemsTable'
 import { CheckoutTotalsPanel } from '../components/CheckoutTotalsPanel'
 import { CHECKOUT_ITEMS_INTERNATIONAL, CHECKOUT_PICKUP_FEE } from '../mocks/checkout.mocks'
 import { CHECKOUT_PAYMENT_METHOD_LABELS, checkoutTotals } from '../types/checkout.types'
 import type { CheckoutPaymentMethod, CheckoutItem, InternationalCheckoutItem } from '../types/checkout.types'
-import { wizardStore } from '../stores/session.store'
+import type { IntlCheckoutState } from '../lib/intl-checkout-state'
+import { wizardStore, markWizardShipmentPaid } from '../stores/session.store'
 import styles from './CheckoutPage.module.css'
-
-interface IntlCheckoutState {
-  readonly service: string
-  readonly servicePriceArs: number
-  readonly serviceLabel: string
-  readonly totalValueUsd: number
-  readonly packageWeightKg: number
-  readonly lengthCm: number
-  readonly widthCm: number
-  readonly heightCm: number
-  readonly originLabel: string
-  readonly destinationLabel: string
-  readonly orderNumber?: string
-  readonly representationCostArs?: number
-}
 
 function buildIntlItem(s: IntlCheckoutState): InternationalCheckoutItem {
   const priceArs = s.servicePriceArs
@@ -70,38 +58,52 @@ const PAYMENT_METHODS: readonly CheckoutPaymentMethod[] = [
 ]
 
 /**
- * Checkout internacional: sólo ítems intl (seed de 5 destinos + el del usuario).
- * "Atrás" no limpia el wizard — conserva datos del envío no guardado.
- * Pagar: mock success → Mis envíos (revisión 2 / supersede ADR-006).
+ * Checkout internacional: carrito vacío hasta cotizar.
+ * Los ítems seed vuelven con el flag `CHECKOUT_SEED_ITEMS`.
+ * "Atrás" no limpia el wizard. Pagar comercial → Factura E; si no → Mis envíos.
  */
 export function CheckoutPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const { showToast } = useToast()
+  const showSeedItems = useFeatureFlag('CHECKOUT_SEED_ITEMS')
   useScrollToTop()
   const [paymentMethod, setPaymentMethod] = useState<CheckoutPaymentMethod>('TARJETA_CREDITO')
   const [paying, setPaying] = useState(false)
 
-  const intlState = (location.state as { intl?: IntlCheckoutState } | null)?.intl
+  const locationState = location.state as {
+    intl?: IntlCheckoutState
+    commercial?: boolean
+  } | null
+  const intlState = locationState?.intl
 
   const items: readonly CheckoutItem[] = useMemo(() => {
-    const seed = [...CHECKOUT_ITEMS_INTERNATIONAL]
-    if (intlState !== undefined) {
-      return [buildIntlItem(intlState), ...seed]
-    }
-    return seed
-  }, [intlState])
+    const quoted = intlState !== undefined ? [buildIntlItem(intlState)] : []
+    if (!showSeedItems) return quoted
+    return [...quoted, ...CHECKOUT_ITEMS_INTERNATIONAL]
+  }, [intlState, showSeedItems])
 
   const totals = checkoutTotals(items, CHECKOUT_PICKUP_FEE)
+  const canPay = items.length > 0 && !paying
 
   const handlePay = () => {
-    if (paying) return
+    if (!canPay) return
     setPaying(true)
-    // Mock de pago: éxito determinístico para la maqueta.
+    const commercial =
+      intlState?.commercial === true ||
+      locationState?.commercial === true ||
+      wizardStore.get()?.commercial === true
     window.setTimeout(() => {
+      if (commercial) {
+        navigate('/internacional/factura-e', {
+          state: intlState !== undefined ? { intl: intlState } : undefined,
+        })
+        return
+      }
+      markWizardShipmentPaid()
       wizardStore.clear()
       showToast('Pago simulado con éxito.', 'success')
-      navigate('/propuesta/mis-envios', { state: { paymentResult: 'success' } })
+      navigate('/propuesta/mis-envios', { state: { paymentResult: 'success', tab: 'pagados' } })
     }, 400)
   }
 
@@ -113,7 +115,15 @@ export function CheckoutPage() {
           <p className={styles.itemsCount}>Ítems cotizados: {items.length}</p>
         </div>
 
-        <CheckoutItemsTable items={items} />
+        {items.length === 0 ? (
+          <EmptyState
+            className={styles.empty}
+            title="No hay ítems cotizados"
+            description="Cotizá un envío pendiente para verlo acá y continuar el pago."
+          />
+        ) : (
+          <CheckoutItemsTable items={items} />
+        )}
 
         <div className={styles.bottom}>
           <section className={styles.payment}>
@@ -139,7 +149,7 @@ export function CheckoutPage() {
             Atrás
           </Button>
 
-          <Button variant="primary" disabled={paying} onClick={handlePay}>
+          <Button variant="primary" disabled={!canPay} onClick={handlePay}>
             {paying ? 'Procesando…' : 'Pagar'}
           </Button>
         </div>
