@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { formatUsd, formatWeightKg } from '@/shared/lib/formatCurrency'
 import { cn } from '@/shared/lib/cn'
+import { computeExportDutiesUsd } from '../constants/summary-detail.constants'
 import { ARTICLE_KIND_TEXT, articleTotalPriceUsd, articleTotalWeightKg } from '../types/article.types'
 import type { ArticleKind, DeclaredArticle } from '../types/article.types'
 import styles from './ArticleAccordionItem.module.css'
@@ -15,6 +16,8 @@ export interface ArticleAccordionItemProps {
   readonly invalid?: boolean
   /** "Documento" (doc funcional §5.5) cambia el ícono y el texto de "Eliminar". */
   readonly kind?: ArticleKind
+  /** Si es true, muestra el derecho de exportación debajo del total en dólares. */
+  readonly commercial?: boolean
 }
 
 /**
@@ -87,9 +90,11 @@ export function ArticleAccordionItem({
   defaultOpen = false,
   invalid = false,
   kind = 'ARTICLE',
+  commercial = false,
 }: ArticleAccordionItemProps) {
   const [open, setOpen] = useState(defaultOpen)
   const text = ARTICLE_KIND_TEXT[kind]
+  const totalUsd = articleTotalPriceUsd(article)
 
   return (
     <div className={cn(styles.card, invalid && styles.cardInvalid)}>
@@ -113,8 +118,14 @@ export function ArticleAccordionItem({
             </div>
             <div className={styles.row}>
               <span className={styles.rowLabel}>Total en dólares</span>
-              <span className={styles.rowValue}>{formatUsd(articleTotalPriceUsd(article))}</span>
+              <span className={styles.rowValue}>{formatUsd(totalUsd)}</span>
             </div>
+            {commercial && (
+            <div className={styles.row}>
+              <span className={styles.rowLabel}>Derecho de exportación</span>
+              <span className={styles.rowValue}>{formatUsd(computeExportDutiesUsd(totalUsd))}</span>
+            </div>
+            )}
             <div className={styles.row}>
               <span className={styles.rowLabel}>Peso unitario</span>
               <span className={styles.rowValue}>{formatWeightKg(article.unitWeightKg)}</span>

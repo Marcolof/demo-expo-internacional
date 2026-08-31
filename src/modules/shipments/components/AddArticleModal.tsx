@@ -3,7 +3,6 @@ import { formatUsd, formatWeightKg } from '@/shared/lib/formatCurrency'
 import { Alert } from '@/shared/ui/Alert'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
-import { NumberInput } from '@/shared/ui/NumberInput'
 import { Modal } from '@/shared/ui/Modal'
 import { InfoTooltip } from '@/shared/ui/Tooltip'
 import {
@@ -31,6 +30,8 @@ export interface AddArticleModalProps {
   readonly kind?: ArticleKind
   /** Cuando se pasa, el modal abre en modo "editar" pre-poblando los campos. */
   readonly initialValues?: DeclaredArticleInput
+  /** Si es false, no se muestra ni suma el derecho de exportación. */
+  readonly commercial?: boolean
 }
 
 interface FormState {
@@ -159,7 +160,7 @@ function formFromValues(values: DeclaredArticleInput | undefined): FormState {
 /**
  * Modal "Agregar artículo" del paso Declaración (Figma node 10116:13975).
  */
-export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', initialValues }: AddArticleModalProps) {
+export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', initialValues, commercial = false }: AddArticleModalProps) {
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [submitted, setSubmitted] = useState(false)
   const [suggestionsOpen, setSuggestionsOpen] = useState(false)
@@ -210,8 +211,6 @@ export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', i
   const totalPriceUsd = canComputeTotals ? normalizedQuantity * unitPrice : 0
   const totalWeightKg = canComputeTotals ? normalizedQuantity * unitWeight : 0
   const exportDutiesUsd = computeExportDutiesUsd(totalPriceUsd)
-  const quantityStep = requiresIntegerQuantity ? 1 : 0.01
-  const quantityMin = requiresIntegerQuantity ? 1 : 0.01
   const unitOfMeasureLabel = form.unitOfMeasure.trim() === '' ? '-' : form.unitOfMeasure
 
   const setField = (field: keyof FormState) => (value: string) => setForm((current) => ({ ...current, [field]: value }))
@@ -386,11 +385,10 @@ export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', i
           </div>
         </div>
 
-        <NumberInput
+        <Input
           id="article-quantity"
           label="Cantidad"
-          min={quantityMin}
-          step={quantityStep}
+          inputMode="decimal"
           value={form.quantity}
           onChange={handleQuantityChange}
           onBlur={handleQuantityBlur}
@@ -424,10 +422,12 @@ export function AddArticleModal({ isOpen, onClose, onSubmit, kind = 'ARTICLE', i
             <span className={styles.totalLabel}>Unidad de medida</span>
             <span className={styles.totalValue}>{unitOfMeasureLabel}</span>
           </div>
+          {commercial && (
           <div className={styles.totalRow}>
             <span className={styles.totalLabel}>Derecho de exportación</span>
             <span className={styles.totalValue}>{formatUsd(exportDutiesUsd)}</span>
           </div>
+          )}
           <div className={styles.totalRow}>
             <span className={styles.totalLabel}>Precio total en dólares</span>
             <span className={styles.totalValue}>{formatUsd(totalPriceUsd)}</span>

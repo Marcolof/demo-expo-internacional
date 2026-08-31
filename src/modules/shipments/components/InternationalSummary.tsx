@@ -34,6 +34,7 @@ export interface DeclaracionSummaryData {
   readonly totalArticles: number
   readonly totalValueUsd: number
   readonly totalWeightKg: number
+  readonly exportDutiesUsd?: number
 }
 
 function declaracionRows(data?: DeclaracionSummaryData): readonly SummaryRow[] {
@@ -52,23 +53,34 @@ function declaracionRows(data?: DeclaracionSummaryData): readonly SummaryRow[] {
     { label: 'País', value: data.countryLabel ?? EMPTY },
     { label: 'Rango geográfico', value: data.geographicRangeLabel ?? EMPTY },
     { label: 'Categoría de envío', value: data.categoryLabel ?? EMPTY },
+    ...(data.exportDutiesUsd !== undefined
+      ? [{ label: 'Derechos de exportación', value: formatUsd(data.exportDutiesUsd) }]
+      : []),
     { label: 'Cantidad de artículos', value: String(data.totalArticles) },
     { label: 'Valor total declarado', value: formatUsd(data.totalValueUsd) },
     { label: 'Peso total declarado', value: formatWeightKg(data.totalWeightKg) },
   ]
 }
 
-function detalleRows(representationCostArs: number): readonly SummaryRow[] {
+function detalleRows(representationCostArs: number, postalServicePriceArs: number): readonly SummaryRow[] {
+  const delivery = postalServicePriceArs
+  const taxes = SUMMARY_DETAIL_ROWS.find((row) => row.label === 'Tributos incluidos')?.amountArs ?? 0
+  const total = postalServicePriceArs + delivery + representationCostArs + taxes
+
   return SUMMARY_DETAIL_ROWS.map((row) => {
-    if (row.label === 'Costos de representación') {
-      return {
-        label: row.label,
-        value: `$${formatAmountOnly(representationCostArs)}`,
-      }
-    }
-    return {
-      label: row.label,
-      value: `$${formatAmountOnly(row.amountArs)}`,
+    switch (row.label) {
+      case 'Servicio Postal':
+        return { label: row.label, value: `$${formatAmountOnly(postalServicePriceArs)}` }
+      case 'Servicio de Entrega':
+        return { label: row.label, value: `$${formatAmountOnly(delivery)}` }
+      case 'Costos de representación':
+        return { label: row.label, value: `$${formatAmountOnly(representationCostArs)}` }
+      case 'Tributos incluidos':
+        return { label: row.label, value: `$${formatAmountOnly(taxes)}` }
+      case 'Total':
+        return { label: row.label, value: `$${formatAmountOnly(total)}` }
+      default:
+        return { label: row.label, value: `$${formatAmountOnly(row.amountArs)}` }
     }
   })
 }
@@ -217,6 +229,8 @@ export interface InternationalSummaryProps {
   readonly destino?: DestinoSummaryData
   /** Costo de representación (0 si no comercial o con representación). */
   readonly representationCostArs?: number
+  /** Precio del servicio postal elegido (Detalle). */
+  readonly postalServicePriceArs?: number
   /** Callback del CTA inferior del resumen. El botón se muestra siempre. */
   readonly onPay?: () => void
   /** Label del CTA de pago (Pagar / Guardar). */
@@ -239,6 +253,7 @@ export function InternationalSummary({
   origen,
   destino,
   representationCostArs = 0,
+  postalServicePriceArs = 10000,
   onPay,
   payLabel = 'Pagar',
   payDisabled = false,
@@ -320,7 +335,7 @@ export function InternationalSummary({
           title="Detalle"
           open={open.has('Detalle')}
           onToggle={() => toggle('Detalle')}
-          rows={detalleRows(representationCostArs)}
+          rows={detalleRows(representationCostArs, postalServicePriceArs)}
         />
       </div>
 

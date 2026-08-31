@@ -11,6 +11,7 @@ import { ScopeSwitch } from '../components/ScopeSwitch'
 import { InternationalShipmentDetailModal } from '../components/InternationalShipmentDetailModal'
 import { PROVINCE_OPTIONS } from '../mocks/branches.mocks'
 import { resolveMisEnviosDetail } from '../mocks/international-shipment-detail.mocks'
+import { buildIntlCheckoutStateFromWizard } from '../lib/intl-checkout-state'
 import { shipmentsStore, wizardStore } from '../stores/session.store'
 import type { SessionShipment } from '../stores/session.store'
 import type { InternationalShipmentDetail } from '../types/international-shipment-detail.types'
@@ -33,6 +34,7 @@ interface EnvioRow {
   readonly usuario: string
   readonly estado: string
   readonly commercial?: boolean
+  readonly paid?: boolean
   readonly fecha?: string
   readonly seguimiento?: string
   readonly direccion?: string
@@ -188,7 +190,7 @@ const MENU_PAGADOS = ['Ver detalle', 'Duplicar', 'Eliminar'] as const
 function sessionToRow(s: SessionShipment): EnvioRow {
   return {
     id: s.id,
-    scope: s.commercial !== undefined ? 'internacional' : 'internacional',
+    scope: 'internacional',
     integracion: s.integracion,
     nOrden: s.nOrden,
     origen: s.origen,
@@ -198,6 +200,10 @@ function sessionToRow(s: SessionShipment): EnvioRow {
     usuario: s.usuario,
     estado: s.estado,
     commercial: s.commercial,
+    paid: s.paid === true,
+    fecha: s.fecha,
+    seguimiento: s.seguimiento,
+    direccion: s.direccion,
   }
 }
 
@@ -242,9 +248,12 @@ function CopyIcon() {
 
 export function PropuestaMisEnviosPage() {
   const navigate = useNavigate()
-  useLocation()
+  const location = useLocation()
   const [listScope, setListScope] = useState<EnvioScope>('internacional')
-  const [activeTab, setActiveTab] = useState<EnvioTab>('pendientes')
+  const [activeTab, setActiveTab] = useState<EnvioTab>(() => {
+    const tab = (location.state as { tab?: string } | null)?.tab
+    return tab === 'pagados' ? 'pagados' : 'pendientes'
+  })
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set())
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
   const [detail, setDetail] = useState<InternationalShipmentDetail | null>(null)
@@ -269,32 +278,50 @@ export function PropuestaMisEnviosPage() {
     setSessionRows(shipmentsStore.get().map(sessionToRow))
   }, [])
 
+  const sessionPendientes = useMemo(
+    () => sessionRows.filter((row) => row.paid !== true),
+    [sessionRows],
+  )
+  const sessionPagados = useMemo(
+    () => sessionRows.filter((row) => row.paid === true),
+    [sessionRows],
+  )
+
   const pendientesRows = useMemo(
     () =>
-      [...sessionRows, ...ENVIOS_PENDIENTES_SEED].filter(
+      [...sessionPendientes, ...ENVIOS_PENDIENTES_SEED].filter(
         (row) => row.show !== false && row.scope === listScope,
       ),
-    [sessionRows, listScope],
+    [sessionPendientes, listScope],
+  )
+  const pagadosRows = useMemo(
+    () =>
+      [...sessionPagados, ...ENVIOS_PAGADOS_SEED].filter(
+        (row) => row.show !== false && row.scope === listScope,
+      ),
+    [sessionPagados, listScope],
   )
 
   const [visiblePendientes, setVisiblePendientes] = useState<readonly EnvioRow[]>(() =>
-    [...shipmentsStore.get().map(sessionToRow), ...ENVIOS_PENDIENTES_SEED].filter(
-      (row) => row.show !== false && row.scope === 'internacional',
-    ),
+    [
+      ...shipmentsStore.get().filter((item) => item.paid !== true).map(sessionToRow),
+      ...ENVIOS_PENDIENTES_SEED,
+    ].filter((row) => row.show !== false && row.scope === 'internacional'),
   )
   const [visiblePagados, setVisiblePagados] = useState<readonly EnvioRow[]>(() =>
-    ENVIOS_PAGADOS_SEED.filter((row) => row.show !== false && row.scope === 'internacional'),
+    [
+      ...shipmentsStore.get().filter((item) => item.paid === true).map(sessionToRow),
+      ...ENVIOS_PAGADOS_SEED,
+    ].filter((row) => row.show !== false && row.scope === 'internacional'),
   )
 
   const visibleRows = activeTab === 'pagados' ? visiblePagados : visiblePendientes
 
   useEffect(() => {
-    const filterByScope = (rows: readonly EnvioRow[]) =>
-      rows.filter((row) => row.show !== false && row.scope === listScope)
-    setVisiblePendientes(filterByScope([...sessionRows, ...ENVIOS_PENDIENTES_SEED]))
-    setVisiblePagados(filterByScope(ENVIOS_PAGADOS_SEED))
+    setVisiblePendientes(pendientesRows)
+    setVisiblePagados(pagadosRows)
     setSelectedIds(new Set())
-  }, [listScope, sessionRows])
+  }, [pendientesRows, pagadosRows])
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -334,7 +361,7 @@ export function PropuestaMisEnviosPage() {
     setFechaHasta('')
     setProvOrigen('-1')
     setDestinoFilter('-1')
-    if (activeTab === 'pagados') setVisiblePagados(ENVIOS_PAGADOS_SEED)
+    if (activeTab === 'pagados') setVisiblePagados(pagadosRows)
     else setVisiblePendientes(pendientesRows)
     setSelectedIds(new Set())
   }
@@ -510,14 +537,21 @@ export function PropuestaMisEnviosPage() {
                     disabled={selectedIds.size === 0}
                     onClick={() => {
                       const selected = visibleRows.filter((row) => selectedIds.has(row.id))
-                      const anyCommercial =
+                      const snap = wizardStore.get()
+                      const fromWizard = buildIntlCheckoutStateFromWizard(snap)
+                      const commercial =
                         selected.some((row) => row.commercial === true) ||
-                        wizardStore.get()?.commercial === true
-                      if (anyCommercial) {
-                        navigate('/internacional/factura-e')
-                        return
-                      }
-                      navigate('/checkout')
+                        snap?.commercial === true
+                      const intl =
+                        fromWizard === undefined
+                          ? undefined
+                          : { ...fromWizard, commercial }
+                      navigate('/checkout', {
+                        state: {
+                          commercial,
+                          ...(intl !== undefined ? { intl } : {}),
+                        },
+                      })
                     }}
                   >
                     Cotizar
