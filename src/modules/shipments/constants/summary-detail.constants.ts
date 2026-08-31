@@ -24,14 +24,27 @@ export function computeExportDutiesUsd(totalValueUsd: number): number {
 /** @deprecated Preferí computeExportDutiesUsd; se mantiene en 0 para callers legacy. */
 export const EXPORT_DUTIES_USD = 0
 
+export const SHIPPING_SERVICE_PRICES_ARS: Readonly<Record<string, number>> = {
+  EMS: 15000,
+  ENCOMIENDA: 10000,
+  PEQUENO_PAQUETE: 7500,
+  EMS_DOCUMENTACION: 8000,
+}
+
 /** Tope de peso del contenido declarado (paso Declaración). */
 export const PACKAGE_MAX_WEIGHT_KG = 20
 
 /**
  * Peso máximo del paquete con embalaje (paso Paquete).
- * Distinto del tope de contenido declarado: Figma del paso Paquete usa 50 kg.
+ * Mismo tope que el contenido declarado: 20 kg.
  */
-export const PACKAGE_GROSS_MAX_WEIGHT_KG = 50
+export const PACKAGE_GROSS_MAX_WEIGHT_KG = PACKAGE_MAX_WEIGHT_KG
+
+/**
+ * Margen de embalaje para Peso Total Aforado (artículos + esta constante).
+ * Placeholder hasta que negocio defina el valor o un porcentaje.
+ */
+export const PACKAGE_PACKING_ALLOWANCE_KG = 0
 
 /** Suma máxima largo + ancho + alto (cm) en el paso Paquete. */
 export const PACKAGE_MAX_SUM_OF_SIDES_CM = 300
@@ -42,7 +55,7 @@ export const PACKAGE_MAX_WEIGHT_TOOLTIP =
   'Peso máximo (tener en cuenta el peso del embalaje). El límite es 20 kg incluyendo embalaje.'
 
 export const PACKAGE_GROSS_MAX_WEIGHT_TOOLTIP =
-  'Peso máximo (tener en cuenta el peso del embalaje). El límite es 50 kg incluyendo embalaje.'
+  'Peso máximo (tener en cuenta el peso del embalaje). El límite es 20 kg incluyendo embalaje.'
 
 /** Costo adicional si se desactiva representación ante Aduana. */
 export const ADUANA_WITHOUT_REPRESENTATION_COST_ARS = 16000
