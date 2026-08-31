@@ -23,6 +23,8 @@ export type FeatureFlag =
   | 'PICKUP_ORIGIN'
   /** Muestra la barra de herramientas de demostración. */
   | 'DEMO_TOOLBAR'
+  /** Muestra ítems seed en checkout (apagado: carrito vacío hasta cotizar). */
+  | 'CHECKOUT_SEED_ITEMS'
 
 export const FEATURE_FLAGS: readonly FeatureFlag[] = [
   'INTERNATIONAL_SHIPMENTS',
@@ -33,6 +35,7 @@ export const FEATURE_FLAGS: readonly FeatureFlag[] = [
   'HARMONIZED_CODE_REQUIRED',
   'PICKUP_ORIGIN',
   'DEMO_TOOLBAR',
+  'CHECKOUT_SEED_ITEMS',
 ]
 
 export const FEATURE_FLAG_LABELS: Record<FeatureFlag, string> = {
@@ -44,6 +47,7 @@ export const FEATURE_FLAG_LABELS: Record<FeatureFlag, string> = {
   HARMONIZED_CODE_REQUIRED: 'Código armonizado obligatorio',
   PICKUP_ORIGIN: 'Origen Pick Up',
   DEMO_TOOLBAR: 'Barra de demostración',
+  CHECKOUT_SEED_ITEMS: 'Ítems mock de checkout',
 }
 
 export type FeatureFlagState = Readonly<Record<FeatureFlag, boolean>>
@@ -65,6 +69,7 @@ export const DEFAULT_FEATURE_FLAGS: FeatureFlagState = {
   HARMONIZED_CODE_REQUIRED: true,
   PICKUP_ORIGIN: true,
   DEMO_TOOLBAR: true,
+  CHECKOUT_SEED_ITEMS: false,
 }
 
 export function isFeatureEnabled(state: FeatureFlagState, flag: FeatureFlag): boolean {

@@ -38,6 +38,7 @@ import {
   PACKAGE_MAX_WEIGHT_KG,
   PACKAGE_MAX_WEIGHT_LABEL,
   PACKAGE_MAX_WEIGHT_TOOLTIP,
+  SHIPPING_SERVICE_PRICES_ARS,
 } from '../constants/summary-detail.constants'
 import { articleTotalPriceUsd, articleTotalWeightKg, ARTICLE_KIND_TEXT } from '../types/article.types'
 import type { ArticleKind, DeclaredArticle } from '../types/article.types'
@@ -49,7 +50,7 @@ import type { WizardSnapshot } from '../stores/session.store'
 import { REMITENTES_SEED } from '../mocks/remitentes.mocks'
 import { PROVINCE_OPTIONS, getBranchOptions, findBranch, BRANCHES_BY_PROVINCE } from '../mocks/branches.mocks'
 import { PHONE_COUNTRY_CODES } from '../mocks/shipments.mocks'
-import { PACKAGE_PRODUCT_OPTIONS, findPackageProductPreset } from '../mocks/package-product-presets.mocks'
+import { findPackageProductPreset, packageProductOptionsForDeclaredWeight } from '../mocks/package-product-presets.mocks'
 import packageOpenIcon from '@/assets/icons/package-open.svg'
 import layout from './NewShipmentPage.module.css'
 import styles from './InternationalShipmentPage.module.css'
@@ -114,14 +115,29 @@ function packageWeightErrorMessage(kind: PackageWeightError): string {
     case 'incomplete':
       return 'Completá el peso del paquete para continuar.'
     case 'belowDeclared':
-      return 'El peso total del paquete incluye el contenido y el embalaje. No puede ser menor al peso total del contenido declarado.'
+      return 'El peso del paquete no puede ser menor al Peso Total de Artículos.'
     case 'aboveMax':
-      return `El peso debe ser menor o igual a ${PACKAGE_GROSS_MAX_WEIGHT_KG} kg.`
+      return `El Peso Total Aforado debe ser menor o igual a ${PACKAGE_GROSS_MAX_WEIGHT_KG} kg.`
     default: {
       const _exhaustive: never = kind
       return _exhaustive
     }
   }
+}
+
+function validatePackageWeight(
+  packageWeightKg: string,
+  declaredContentWeightKg: number,
+  requireComplete: boolean,
+): PackageWeightError | undefined {
+  const trimmed = packageWeightKg.trim()
+  if (trimmed === '') return requireComplete ? 'incomplete' : undefined
+
+  const weight = parsePositiveDecimal(packageWeightKg)
+  if (weight === undefined) return requireComplete ? 'incomplete' : undefined
+  if (weight < declaredContentWeightKg) return 'belowDeclared'
+  if (weight > PACKAGE_GROSS_MAX_WEIGHT_KG) return 'aboveMax'
+  return undefined
 }
 
 function packageStepErrorMessages(errors: PackageValidationErrors): readonly string[] {
@@ -150,15 +166,8 @@ function validatePackageStep(
     errors.measures = 'sumExceeded'
   }
 
-  const weight = parsePositiveDecimal(packageWeightKg)
-
-  if (weight === undefined) {
-    errors.weight = 'incomplete'
-  } else if (weight < declaredContentWeightKg) {
-    errors.weight = 'belowDeclared'
-  } else if (weight > PACKAGE_GROSS_MAX_WEIGHT_KG) {
-    errors.weight = 'aboveMax'
-  }
+  const weight = validatePackageWeight(packageWeightKg, declaredContentWeightKg, true)
+  if (weight !== undefined) errors.weight = weight
 
   return errors
 }
@@ -206,12 +215,18 @@ function validateDestinoFields(params: {
 
 const PEQUENO_PAQUETE_MAX_WEIGHT_KG = 2
 
+const PACKAGE_PRESET_TO_SERVICE: Record<string, 'EMS' | 'ENCOMIENDA' | 'PEQUENO_PAQUETE'> = {
+  'pequeno-paquete': 'PEQUENO_PAQUETE',
+  encomienda: 'ENCOMIENDA',
+  'encomienda-ems': 'EMS',
+}
+
 const REMITENTE_OPTIONS: readonly SelectOption[] = REMITENTES_SEED.map((r) => ({
   value: r.cuit,
   label: `${r.razonSocial} | ${r.direccionRemitente}`,
 }))
 
-const ADDRESS_LINE_MAX = 90
+const ADDRESS_LINE_MAX = 50
 
 function MinusCircleIcon() {
   return (
@@ -423,12 +438,22 @@ export function InternationalShipmentPage() {
       commercial, aduanaRepresentation, asistireYo, representanteName, representanteCuil,
     })
 
+  const totalArticles = articles.length
+  const totalValueUsd = articles.reduce((sum, a) => sum + articleTotalPriceUsd(a), 0)
+  const totalWeightKg = articles.reduce((sum, a) => sum + articleTotalWeightKg(a), 0)
+  const weightExceedsMax = totalWeightKg > PACKAGE_MAX_WEIGHT_KG
+
   const packageWeightNum = Number(packageWeightKg.replace(',', '.')) || 0
   const packageErrorList = packageStepErrorMessages(packageErrors)
   const pequenoPaqueteDisabled =
-    packageWeightKg.trim() !== '' &&
-    Number.isFinite(packageWeightNum) &&
-    packageWeightNum > PEQUENO_PAQUETE_MAX_WEIGHT_KG
+    totalWeightKg > PEQUENO_PAQUETE_MAX_WEIGHT_KG ||
+    (packageWeightKg.trim() !== '' &&
+      Number.isFinite(packageWeightNum) &&
+      packageWeightNum > PEQUENO_PAQUETE_MAX_WEIGHT_KG)
+  const packageProductOptions = useMemo(
+    () => packageProductOptionsForDeclaredWeight(totalWeightKg),
+    [totalWeightKg],
+  )
 
   useEffect(() => {
     if (!commercial) {
@@ -443,6 +468,13 @@ export function InternationalShipmentPage() {
       setShippingService('EMS')
     }
   }, [commercial, shippingService, pequenoPaqueteDisabled])
+
+  useEffect(() => {
+    const preset = findPackageProductPreset(frequentMeasureId)
+    if (preset !== undefined && totalWeightKg > preset.maxWeightKg) {
+      setFrequentMeasureId('-1')
+    }
+  }, [frequentMeasureId, totalWeightKg])
 
   const articleKind: ArticleKind = category === 'DOCUMENTO' ? 'DOCUMENT' : 'ARTICLE'
   const canAddArticle = country !== '-1' && category !== '-1' && countryHasShipping
@@ -491,10 +523,6 @@ export function InternationalShipmentPage() {
     })
   }, [commercial, pequenoPaqueteDisabled])
 
-  const totalArticles = articles.length
-  const totalValueUsd = articles.reduce((sum, a) => sum + articleTotalPriceUsd(a), 0)
-  const totalWeightKg = articles.reduce((sum, a) => sum + articleTotalWeightKg(a), 0)
-  const weightExceedsMax = totalWeightKg > PACKAGE_MAX_WEIGHT_KG
   const exportDutiesUsd = computeExportDutiesUsd(totalValueUsd)
   const categoryLabel = categoryOptions.find((o) => o.value === category)?.label
   const representationCostArs =
@@ -536,6 +564,10 @@ export function InternationalShipmentPage() {
     setLengthCm(String(preset.lengthCm))
     setWidthCm(String(preset.widthCm))
     setHeightCm(String(preset.heightCm))
+    const mappedService = PACKAGE_PRESET_TO_SERVICE[preset.id]
+    if (commercial && mappedService !== undefined) {
+      setShippingService(mappedService)
+    }
     setPackageErrors({})
   }
 
@@ -575,7 +607,7 @@ export function InternationalShipmentPage() {
     next()
   }
 
-  /** Guardar desde Destino (CTA del Resumen). Comercial → Factura E. */
+  /** Guardar desde Destino (CTA del Resumen). Siempre Mis envíos / Pendientes. */
   const handleSaveDestino = () => {
     const errors = runDestinoValidation()
     if (errors.size > 0) {
@@ -601,10 +633,6 @@ export function InternationalShipmentPage() {
       commercial,
     })
     wizardStore.save({ ...snap, destinoOrderNum: orderNumber })
-    if (commercial) {
-      navigate('/internacional/factura-e')
-      return
-    }
     navigate('/propuesta/mis-envios')
   }
 
@@ -705,6 +733,7 @@ export function InternationalShipmentPage() {
                           key={article.id}
                           article={article}
                           kind={articleKind}
+                          commercial={commercial}
                           onRemove={removeArticle}
                           onEdit={(a) => { setEditingArticle(a); setArticleModalOpen(true) }}
                           defaultOpen={index === articles.length - 1}
@@ -723,10 +752,12 @@ export function InternationalShipmentPage() {
                       <span className={styles.totalLabel}>Valor total declarado</span>
                       <span className={styles.totalValue}>{formatUsd(totalValueUsd)}</span>
                     </div>
+                    {commercial && (
                     <div className={styles.totalRow}>
                       <span className={styles.totalLabel}>Derechos de exportación</span>
                       <span className={styles.totalValue}>{formatUsd(exportDutiesUsd)}</span>
                     </div>
+                    )}
                     <div className={styles.totalRow}>
                       <span className={cn(styles.totalLabel, weightExceedsMax && styles.totalError)}>
                         Peso total declarado
@@ -803,7 +834,7 @@ export function InternationalShipmentPage() {
                   <Select
                     id="package-product-preset"
                     label="Productos"
-                    options={PACKAGE_PRODUCT_OPTIONS}
+                    options={packageProductOptions}
                     value={frequentMeasureId}
                     onChange={(event) => handlePackageProductChange(event.currentTarget.value)}
                   />
@@ -841,17 +872,19 @@ export function InternationalShipmentPage() {
                     </button>
                   </div>
 
-                  <div className={styles.totalRow}>
-                    <span className={styles.totalLabel}>Peso total de artículos/documentos declarados</span>
-                    <span className={styles.totalValue}>{formatWeightKg(totalWeightKg)}</span>
-                  </div>
-
                   <Input
                     id="package-weight"
                     label="Peso del paquete (kg)"
                     inputMode="decimal"
                     value={packageWeightKg}
-                    onChange={(event) => { setPackageWeightKg(event.currentTarget.value); setPackageErrors((e) => ({ ...e, weight: undefined })) }}
+                    onChange={(event) => {
+                      const next = event.currentTarget.value
+                      setPackageWeightKg(next)
+                      setPackageErrors((current) => ({
+                        ...current,
+                        weight: validatePackageWeight(next, totalWeightKg, false),
+                      }))
+                    }}
                     invalid={packageErrors.weight !== undefined}
                   />
 
@@ -861,6 +894,16 @@ export function InternationalShipmentPage() {
                       <span>{PACKAGE_MAX_WEIGHT_LABEL}</span>
                     </span>
                     <span className={styles.totalValue}>{PACKAGE_GROSS_MAX_WEIGHT_KG}kg</span>
+                  </div>
+
+                  <div className={styles.totalRow}>
+                    <span className={styles.totalLabel}>Peso Total de Artículos</span>
+                    <span className={styles.totalValue}>{formatWeightKg(totalWeightKg)}</span>
+                  </div>
+
+                  <div className={styles.totalRow}>
+                    <span className={styles.totalLabel}>Peso Total Aforado</span>
+                    <span className={styles.totalValue}>{weightLabel ?? '-'}</span>
                   </div>
 
                   {packageErrorList.length > 0 && (
@@ -1261,6 +1304,7 @@ export function InternationalShipmentPage() {
                   totalArticles,
                   totalValueUsd,
                   totalWeightKg,
+                  exportDutiesUsd: commercial ? exportDutiesUsd : undefined,
                 }}
                 paquete={{ measuresLabel, weightLabel }}
                 origen={
@@ -1281,6 +1325,11 @@ export function InternationalShipmentPage() {
                     : undefined
                 }
                 representationCostArs={representationCostArs}
+                postalServicePriceArs={
+                  shippingService === null
+                    ? 10000
+                    : (SHIPPING_SERVICE_PRICES_ARS[shippingService] ?? 10000)
+                }
                 onPay={handleSaveDestino}
                 payDisabled={currentStep !== 'Destino'}
                 payLabel="Guardar"
@@ -1344,6 +1393,7 @@ export function InternationalShipmentPage() {
       <AddArticleModal
         isOpen={isArticleModalOpen}
         kind={articleKind}
+        commercial={commercial}
         onClose={() => { setArticleModalOpen(false); setEditingArticle(null) }}
         initialValues={editingArticle ?? undefined}
         onSubmit={(input) => {

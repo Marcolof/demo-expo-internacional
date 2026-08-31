@@ -1,8 +1,8 @@
 /**
  * Ítems simulados del checkout.
  * `CHECKOUT_ITEMS` conserva el seed mixto histórico.
- * `CHECKOUT_ITEMS_INTERNATIONAL` es el carrito del flujo internacional
- * (5 destinos distintos + ítem dinámico del usuario).
+ * `CHECKOUT_ITEMS_INTERNATIONAL` es el seed opcional del carrito intl
+ * (flag `CHECKOUT_SEED_ITEMS`). Por defecto el checkout arranca vacío.
  */
 
 import type { Money } from '@/core/types/common'

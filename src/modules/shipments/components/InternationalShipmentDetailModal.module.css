@@ -1,10 +1,17 @@
 .dialog {
   max-width: 68rem;
   width: min(68rem, calc(100vw - var(--space-8)));
+  height: auto;
 }
 
 .body {
   gap: var(--space-5);
+  /* El body scrollea; las secciones no se encogen para “entrar”. */
+  justify-content: flex-start;
+}
+
+.body > * {
+  flex-shrink: 0;
 }
 
 .body > h5 {
@@ -13,7 +20,7 @@
 
 /* Tarjeta Figma: barra de título gris + tabla labels/valores. */
 .card {
-  overflow: hidden;
+  flex-shrink: 0;
   overflow-x: auto;
   background: var(--surface-raised);
   border: var(--border-width-thin) solid var(--border-subtle);
@@ -34,6 +41,7 @@
 .grid {
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
 }
 
 .card .grid + .grid {
@@ -43,6 +51,9 @@
 .headerRow,
 .dataRow {
   display: grid;
+  flex-shrink: 0;
+  align-items: stretch;
+  grid-auto-rows: minmax(min-content, auto);
 }
 
 .headerRow {
@@ -80,10 +91,12 @@
 .th,
 .td {
   min-width: 0;
-  padding: var(--space-2) var(--space-3);
+  height: auto;
+  padding: var(--space-3) var(--space-3);
   text-align: left;
   color: var(--text-primary);
   border-right: var(--border-width-thin) solid var(--border-subtle);
+  overflow: visible;
 }
 
 .th:last-child,
@@ -101,12 +114,13 @@
 
 .td {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   gap: var(--space-2);
-  min-height: 2.5rem;
+  min-height: 2.75rem;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-regular);
-  line-height: 1.3;
+  line-height: 1.4;
   word-break: break-word;
   background: var(--surface-raised);
 }

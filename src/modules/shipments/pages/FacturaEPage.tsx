@@ -9,6 +9,7 @@ import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
 import { InfoTooltip } from '@/shared/ui/Tooltip'
 import { COUNTRIES } from '@/shared/lib/countries'
+import { useToast } from '@/shared/ui/Toast'
 import {
   FACTURA_E_CUIT_LEGEND,
   FACTURA_E_DEMO_FX_ARS,
@@ -19,29 +20,8 @@ import { InternationalShipmentDetailModal } from '../components/InternationalShi
 import { resolveFacturaEDetail } from '../mocks/international-shipment-detail.mocks'
 import { articleTotalPriceUsd } from '../types/article.types'
 import type { InternationalShipmentDetail } from '../types/international-shipment-detail.types'
-import { wizardStore } from '../stores/session.store'
+import { wizardStore, markWizardShipmentPaid } from '../stores/session.store'
 import styles from './FacturaEPage.module.css'
-
-const SHIPPING_SERVICE_PRICES_ARS: Record<string, number> = {
-  EMS: 15000,
-  ENCOMIENDA: 10000,
-  PEQUENO_PAQUETE: 7500,
-  EMS_DOCUMENTACION: 8000,
-}
-
-const SHIPPING_SERVICE_TO_POSTAL: Record<string, string> = {
-  EMS: 'EMS_PAQUETERIA',
-  ENCOMIENDA: 'ENCOMIENDA_INTERNACIONAL',
-  PEQUENO_PAQUETE: 'PEQUENO_PAQUETE',
-  EMS_DOCUMENTACION: 'EMS_DOCUMENTACION',
-}
-
-const SHIPPING_SERVICE_LABELS: Record<string, string> = {
-  EMS: 'EMS Paquetería',
-  ENCOMIENDA: 'Encomienda Internacional',
-  PEQUENO_PAQUETE: 'Pequeño Paquete',
-  EMS_DOCUMENTACION: 'EMS Documentación',
-}
 
 function buildInitialRows(snap: ReturnType<typeof wizardStore.get>): FacturaERow[] {
   const base = [...FACTURA_E_SEED]
@@ -75,11 +55,13 @@ function MoneyValue({ currency, amount }: MoneyValueProps) {
 }
 
 /**
- * Paso intermedio Factura E (flujo comercial).
+ * Factura E (flujo comercial, después de pagar en checkout).
  * Monto, tipo de cambio y total ARS vienen del envío y no se editan acá.
+ * Pagar cierra el flujo y vuelve a Mis envíos / Pagados.
  */
 export function FacturaEPage() {
   const navigate = useNavigate()
+  const { showToast } = useToast()
   const { user } = useActiveUser()
   useScrollToTop()
   const snap = wizardStore.get()
@@ -106,33 +88,12 @@ export function FacturaEPage() {
     setMenuOpenId(null)
   }
 
-  const goCheckout = () => {
+  const handlePay = () => {
     if (!canPay) return
-    const service = snap?.shippingService ?? 'EMS'
-    const priceArs = SHIPPING_SERVICE_PRICES_ARS[service] ?? 15000
-    const totalValueUsd = rows.reduce((sum, row) => sum + row.montoUsd, 0)
-    const countryLabel = COUNTRIES.find((c) => c.value === snap?.country)?.label
-    const representationCostArs =
-      snap !== null && snap.aduanaRepresentation === false ? 16000 : 0
-
-    navigate('/checkout', {
-      state: {
-        intl: {
-          service: SHIPPING_SERVICE_TO_POSTAL[service] ?? 'EMS_PAQUETERIA',
-          servicePriceArs: priceArs,
-          serviceLabel: SHIPPING_SERVICE_LABELS[service] ?? 'EMS Paquetería',
-          totalValueUsd,
-          packageWeightKg: Number(snap?.packageWeightKg) || 0,
-          lengthCm: Number(snap?.lengthCm) || 0,
-          widthCm: Number(snap?.widthCm) || 0,
-          heightCm: Number(snap?.heightCm) || 0,
-          originLabel: snap?.origenDisplayName || 'Correo Argentino',
-          destinationLabel: [snap?.destinoCity, countryLabel].filter(Boolean).join(', '),
-          orderNumber: snap?.destinoOrderNum || undefined,
-          representationCostArs,
-        },
-      },
-    })
+    markWizardShipmentPaid()
+    showToast('Pago simulado con éxito.', 'success')
+    wizardStore.clear()
+    navigate('/propuesta/mis-envios', { state: { paymentResult: 'success', tab: 'pagados' } })
   }
 
   return (
@@ -251,7 +212,7 @@ export function FacturaEPage() {
             <Button variant="secondary" onClick={() => navigate(-1)}>
               Atrás
             </Button>
-            <Button variant="primary" disabled={!canPay} onClick={goCheckout}>
+            <Button variant="primary" disabled={!canPay} onClick={handlePay}>
               Pagar
             </Button>
           </div>
