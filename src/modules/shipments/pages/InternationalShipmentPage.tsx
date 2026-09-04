@@ -47,6 +47,8 @@ import { COUNTRY_CONTENT_RESTRICTIONS } from '../mocks/country-restrictions.mock
 import { isCountryShippingAvailable } from '../mocks/countries.mocks'
 import { shipmentsStore, wizardStore } from '../stores/session.store'
 import type { WizardSnapshot } from '../stores/session.store'
+import { originFavoritesStore } from '../stores/origin-favorites.store'
+import { postalServiceFromPackagePreset } from '../lib/package-to-postal-service'
 import { REMITENTES_SEED } from '../mocks/remitentes.mocks'
 import { PROVINCE_OPTIONS, getBranchOptions, findBranch, BRANCHES_BY_PROVINCE } from '../mocks/branches.mocks'
 import { PHONE_COUNTRY_CODES } from '../mocks/shipments.mocks'
@@ -83,10 +85,12 @@ const COMMERCIAL_CATEGORIES: readonly SelectOption[] = [
 
 type PackageMeasuresError = 'incomplete' | 'sumExceeded'
 type PackageWeightError = 'incomplete' | 'belowDeclared' | 'aboveMax'
+type PackageProductError = 'aboveProductMax'
 
 interface PackageValidationErrors {
   readonly measures?: PackageMeasuresError
   readonly weight?: PackageWeightError
+  readonly product?: PackageProductError
 }
 
 function parsePositiveDecimal(raw: string): number | undefined {
@@ -140,10 +144,20 @@ function validatePackageWeight(
   return undefined
 }
 
-function packageStepErrorMessages(errors: PackageValidationErrors): readonly string[] {
+function packageProductErrorMessage(maxWeightKg: number): string {
+  return `El producto seleccionado admite hasta ${maxWeightKg} kg. Ajustá el peso del paquete o elegí otro producto.`
+}
+
+function packageStepErrorMessages(
+  errors: PackageValidationErrors,
+  productMaxWeightKg?: number,
+): readonly string[] {
   const messages: string[] = []
   if (errors.weight !== undefined) messages.push(packageWeightErrorMessage(errors.weight))
   if (errors.measures !== undefined) messages.push(packageMeasuresErrorMessage(errors.measures))
+  if (errors.product === 'aboveProductMax' && productMaxWeightKg !== undefined) {
+    messages.push(packageProductErrorMessage(productMaxWeightKg))
+  }
   return messages
 }
 
@@ -215,12 +229,6 @@ function validateDestinoFields(params: {
 
 const PEQUENO_PAQUETE_MAX_WEIGHT_KG = 2
 
-const PACKAGE_PRESET_TO_SERVICE: Record<string, 'EMS' | 'ENCOMIENDA' | 'PEQUENO_PAQUETE'> = {
-  'pequeno-paquete': 'PEQUENO_PAQUETE',
-  encomienda: 'ENCOMIENDA',
-  'encomienda-ems': 'EMS',
-}
-
 const REMITENTE_OPTIONS: readonly SelectOption[] = REMITENTES_SEED.map((r) => ({
   value: r.cuit,
   label: `${r.razonSocial} | ${r.direccionRemitente}`,
@@ -273,12 +281,17 @@ function PlusCircleIcon() {
 
 export function InternationalShipmentPage() {
   const navigate = useNavigate()
+  const { user: activeUser } = useActiveUser()
+  const selfRepresentanteName = userFullName(activeUser)
+  const selfRepresentanteCuil = formatCuitMask(activeUser.cuit)
+
   const {
     current: currentStep,
     currentIndex,
     unlocked,
     goTo,
     next,
+    skipTo,
     back,
   } = useStepFlow(INTERNATIONAL_STEPS, 'Declaración')
 
@@ -302,9 +315,25 @@ export function InternationalShipmentPage() {
   const [packageErrors, setPackageErrors] = useState<PackageValidationErrors>({})
 
   /* ── Paso 3: Origen ──────────────────────────────────────────────── */
-  const [remitenteCuit, setRemitenteCuit] = useState(REMITENTES_SEED[0]?.cuit ?? '')
-  const [province, setProvince] = useState('BA')
-  const [branchId, setBranchId] = useState('BA-001')
+  const initialFavorites = originFavoritesStore.get()
+  const [remitenteCuit, setRemitenteCuit] = useState(
+    initialFavorites.rememberRemitente && initialFavorites.remitenteCuit !== ''
+      ? initialFavorites.remitenteCuit
+      : (REMITENTES_SEED[0]?.cuit ?? ''),
+  )
+  const [province, setProvince] = useState(
+    initialFavorites.rememberBranch && initialFavorites.province !== ''
+      ? initialFavorites.province
+      : 'BA',
+  )
+  const [branchId, setBranchId] = useState(
+    initialFavorites.rememberBranch && initialFavorites.branchId !== ''
+      ? initialFavorites.branchId
+      : 'BA-001',
+  )
+  const [rememberRemitente, setRememberRemitente] = useState(initialFavorites.rememberRemitente)
+  const [rememberBranch, setRememberBranch] = useState(initialFavorites.rememberBranch)
+  const [origenDisplayName, setOrigenDisplayName] = useState(() => userFullName(activeUser))
 
   /* ── Paso 4: Destino ─────────────────────────────────────────────── */
   const [recipientName, setRecipientName]               = useState('Juan Perez')
@@ -327,12 +356,7 @@ export function InternationalShipmentPage() {
   const [step4Errors, setStep4Errors]                   = useState<ReadonlySet<string>>(new Set())
   const [infoModalOpen, setInfoModalOpen] = useState(false)
   const [pendingCategory, setPendingCategory] = useState<string | null>(null)
-  const [origenDisplayName, setOrigenDisplayName] = useState('')
   const [asistireYo, setAsistireYo] = useState(true)
-
-  const { user: activeUser } = useActiveUser()
-  const selfRepresentanteName = userFullName(activeUser)
-  const selfRepresentanteCuil = formatCuitMask(activeUser.cuit)
 
   /* ── Restaurar wizard desde store al volver del checkout ─────────── */
   useEffect(() => {
@@ -349,7 +373,11 @@ export function InternationalShipmentPage() {
     setHeightCm(snap.heightCm)
     setPackageWeightKg(snap.packageWeightKg)
     setRemitenteCuit(snap.remitenteCuit)
-    setOrigenDisplayName(snap.origenDisplayName ?? '')
+    setOrigenDisplayName(
+      snap.origenDisplayName.trim() !== ''
+        ? snap.origenDisplayName
+        : userFullName(activeUser),
+    )
     setProvince(snap.province)
     setBranchId(snap.branchId)
     setRecipientName(snap.recipientName)
@@ -369,7 +397,9 @@ export function InternationalShipmentPage() {
     setRepresentanteName(snap.representanteName)
     setRepresentanteCuil(snap.representanteCuil)
     setShippingService(snap.shippingService)
-    if (snap.currentStep !== 'Declaración') goTo(snap.currentStep as Parameters<typeof goTo>[0])
+    if (snap.currentStep !== 'Declaración') {
+      skipTo(snap.currentStep as Parameters<typeof skipTo>[0])
+    }
   // Solo al montar
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -444,7 +474,11 @@ export function InternationalShipmentPage() {
   const weightExceedsMax = totalWeightKg > PACKAGE_MAX_WEIGHT_KG
 
   const packageWeightNum = Number(packageWeightKg.replace(',', '.')) || 0
-  const packageErrorList = packageStepErrorMessages(packageErrors)
+  const selectedPackagePreset = findPackageProductPreset(frequentMeasureId)
+  const packageErrorList = packageStepErrorMessages(
+    packageErrors,
+    selectedPackagePreset?.maxWeightKg,
+  )
   const pequenoPaqueteDisabled =
     totalWeightKg > PEQUENO_PAQUETE_MAX_WEIGHT_KG ||
     (packageWeightKg.trim() !== '' &&
@@ -471,7 +505,8 @@ export function InternationalShipmentPage() {
 
   useEffect(() => {
     const preset = findPackageProductPreset(frequentMeasureId)
-    if (preset !== undefined && totalWeightKg > preset.maxWeightKg) {
+    if (preset === undefined) return
+    if (totalWeightKg > preset.maxWeightKg) {
       setFrequentMeasureId('-1')
     }
   }, [frequentMeasureId, totalWeightKg])
@@ -491,25 +526,25 @@ export function InternationalShipmentPage() {
       {
         value: 'EMS' as const,
         label: 'EMS Paquetería',
-        description: 'Entrega estimada entre 2 y 8 días hábiles, según el destino.',
+        description: 'Entrega estimada entre 2 y 8 días hábiles, según el destino. Hasta 20kg.',
         price: '$15.000,00',
       },
       {
         value: 'ENCOMIENDA' as const,
         label: 'Encomienda Internacional',
-        description: 'Entrega estimada entre 7 y 21 días hábiles, según el destino.',
+        description: 'Entrega estimada entre 7 y 20 días hábiles, según el destino. Hasta 20kg.',
         price: '$10.000,00',
       },
       {
         value: 'PEQUENO_PAQUETE' as const,
         label: 'Pequeño Paquete',
-        description: 'Entrega estimada entre 10 y 30 días hábiles, según el destino.',
+        description: 'Entrega estimada entre 7 y 20 días hábiles, según el destino. Hasta 2kg.',
         price: '$7.500,00',
       },
       {
         value: 'EMS_DOCUMENTACION' as const,
         label: 'EMS Documentación',
-        description: 'Solo para envíos sin fines comerciales. Entrega estimada entre 2 y 8 días hábiles.',
+        description: 'Entrega estimada entre 2 y 7 días hábiles, según el destino. Hasta 20kg.',
         price: '$8.000,00',
       },
     ]
@@ -564,11 +599,37 @@ export function InternationalShipmentPage() {
     setLengthCm(String(preset.lengthCm))
     setWidthCm(String(preset.widthCm))
     setHeightCm(String(preset.heightCm))
-    const mappedService = PACKAGE_PRESET_TO_SERVICE[preset.id]
+    const mappedService = postalServiceFromPackagePreset(preset.id)
     if (commercial && mappedService !== undefined) {
-      setShippingService(mappedService)
+      const pequenoInvalidForWeight =
+        mappedService === 'PEQUENO_PAQUETE' &&
+        packageWeightKg.trim() !== '' &&
+        packageWeightNum > PEQUENO_PAQUETE_MAX_WEIGHT_KG
+      if (!pequenoInvalidForWeight) {
+        setShippingService(mappedService)
+      }
     }
     setPackageErrors({})
+  }
+
+  const persistOriginFavorites = () => {
+    originFavoritesStore.persistFromOrigen({
+      rememberRemitente,
+      remitenteCuit,
+      rememberBranch,
+      province,
+      branchId,
+    })
+  }
+
+  const handleRememberRemitenteChange = (checked: boolean) => {
+    setRememberRemitente(checked)
+    originFavoritesStore.setRemitente(checked, remitenteCuit)
+  }
+
+  const handleRememberBranchChange = (checked: boolean) => {
+    setRememberBranch(checked)
+    originFavoritesStore.setBranch(checked, province, branchId)
   }
 
   const buildSnapshot = (): WizardSnapshot => ({
@@ -597,11 +658,47 @@ export function InternationalShipmentPage() {
 
     if (currentStep === 'Paquete') {
       const errs = validatePackageStep(lengthCm, widthCm, heightCm, packageWeightKg, totalWeightKg)
-      setPackageErrors(errs)
-      if (errs.measures !== undefined || errs.weight !== undefined) return
-      if (shippingService === 'PEQUENO_PAQUETE' && packageWeightNum > PEQUENO_PAQUETE_MAX_WEIGHT_KG) {
+      const preset = findPackageProductPreset(frequentMeasureId)
+      const packageWeightValue = parsePositiveDecimal(packageWeightKg)
+      if (
+        preset !== undefined &&
+        packageWeightValue !== undefined &&
+        packageWeightValue > preset.maxWeightKg
+      ) {
+        setPackageErrors({ ...errs, product: 'aboveProductMax' })
         return
       }
+      setPackageErrors(errs)
+      if (errs.measures !== undefined || errs.weight !== undefined) return
+
+      // R3-05: alinear Destino al producto, sin forzar Pequeño Paquete si el peso lo invalida
+      const mappedService = postalServiceFromPackagePreset(frequentMeasureId)
+      if (commercial && mappedService !== undefined) {
+        const pequenoInvalidForWeight =
+          mappedService === 'PEQUENO_PAQUETE' &&
+          packageWeightNum > PEQUENO_PAQUETE_MAX_WEIGHT_KG
+        if (!pequenoInvalidForWeight) {
+          setShippingService(mappedService)
+        }
+      }
+
+      // R3-03: ambos favoritos → hidratar Origen y saltar a Destino
+      if (originFavoritesStore.canSkipOrigen()) {
+        const fav = originFavoritesStore.get()
+        if (fav.remitenteCuit !== '') setRemitenteCuit(fav.remitenteCuit)
+        if (fav.province !== '') setProvince(fav.province)
+        if (fav.branchId !== '') setBranchId(fav.branchId)
+        setRememberRemitente(true)
+        setRememberBranch(true)
+        skipTo('Destino')
+        return
+      }
+      next()
+      return
+    }
+
+    if (currentStep === 'Origen') {
+      persistOriginFavorites()
     }
 
     next()
@@ -945,7 +1042,19 @@ export function InternationalShipmentPage() {
                         label="Remitente"
                         options={REMITENTE_OPTIONS}
                         value={remitenteCuit}
-                        onChange={(event) => setRemitenteCuit(event.currentTarget.value)}
+                        onChange={(event) => {
+                          const nextCuit = event.currentTarget.value
+                          setRemitenteCuit(nextCuit)
+                          if (rememberRemitente) {
+                            originFavoritesStore.setRemitente(true, nextCuit)
+                          }
+                        }}
+                      />
+                      <Checkbox
+                        id="remember-remitente"
+                        label="Utilizar este remitente para próximos envíos internacionales."
+                        checked={rememberRemitente}
+                        onChange={handleRememberRemitenteChange}
                       />
                     </div>
 
@@ -959,15 +1068,32 @@ export function InternationalShipmentPage() {
                         label="Provincia"
                         options={PROVINCE_OPTIONS}
                         value={province}
-                        onChange={(event) => handleProvinceChange(event.currentTarget.value)}
+                        onChange={(event) => {
+                          handleProvinceChange(event.currentTarget.value)
+                          if (rememberBranch) {
+                            originFavoritesStore.setBranch(true, event.currentTarget.value, '-1')
+                          }
+                        }}
                       />
                       <Select
                         id="branch"
                         label="Sucursal de origen"
                         options={branchOptions}
                         value={branchId}
-                        onChange={(event) => setBranchId(event.currentTarget.value)}
+                        onChange={(event) => {
+                          const nextBranch = event.currentTarget.value
+                          setBranchId(nextBranch)
+                          if (rememberBranch) {
+                            originFavoritesStore.setBranch(true, province, nextBranch)
+                          }
+                        }}
                         disabled={province === '-1'}
+                      />
+                      <Checkbox
+                        id="remember-branch"
+                        label="Utilizar esta sucursal para próximos envíos internacionales."
+                        checked={rememberBranch}
+                        onChange={handleRememberBranchChange}
                       />
                     </div>
                   </div>
@@ -1115,8 +1241,7 @@ export function InternationalShipmentPage() {
                   <div className={styles.addressSection}>
                     <p className={styles.subsectionTitle}>Dirección</p>
                     <p className={styles.fieldNote}>
-                      Ingresá la dirección de entrega tal como debe figurar en el envío. Incluí
-                      calle, número y datos adicionales como piso, departamento, torre o edificio.
+                      Ingresá la dirección de entrega y los datos adicionales que correspondan.
                     </p>
 
                     {destinoAddressLines.map((line, index) => (
