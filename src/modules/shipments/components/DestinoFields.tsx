@@ -62,8 +62,7 @@ export function DestinoFields({
       <div className={styles.addressLines}>
         <h5 className={styles.addressTitle}>Dirección</h5>
         <p className={styles.addressDescription}>
-          Ingresá la dirección de entrega tal como debe figurar en el envío. Incluí calle, número y datos
-          adicionales como piso, departamento, torre o edificio.
+          Ingresá la dirección de entrega y los datos adicionales que correspondan.
         </p>
 
         {addressLines.map((line, index) => (
