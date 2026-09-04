@@ -74,10 +74,10 @@ export const POSTAL_SERVICE_DELIVERY_TIMES: Record<PostalService, string> = {
   PAQAR_HOY: 'En el día*',
   PAQAR_EXPRESO: 'De 1 a 3 días hábiles*',
   PAQAR_CLASICO: 'De 2 a 5 días hábiles*',
-  EMS_PAQUETERIA: 'Entrega estimada entre 2 y 8 días hábiles, según el destino.',
-  ENCOMIENDA_INTERNACIONAL: 'Entrega estimada entre 7 y 20 días hábiles, según el destino.',
-  PEQUENO_PAQUETE: 'Entrega estimada entre 7 y 20 días hábiles, según el destino.',
-  EMS_DOCUMENTACION: 'Entrega estimada entre 2 y 7 días hábiles, según el destino.',
+  EMS_PAQUETERIA: 'Entrega estimada entre 2 y 8 días hábiles, según el destino. Hasta 20kg.',
+  ENCOMIENDA_INTERNACIONAL: 'Entrega estimada entre 7 y 20 días hábiles, según el destino. Hasta 20kg.',
+  PEQUENO_PAQUETE: 'Entrega estimada entre 7 y 20 días hábiles, según el destino. Hasta 2kg.',
+  EMS_DOCUMENTACION: 'Entrega estimada entre 2 y 7 días hábiles, según el destino. Hasta 20kg.',
 }
 
 /** Modalidad de entrega en destino. */
