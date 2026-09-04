@@ -10,6 +10,8 @@ import { useState } from 'react'
  * - `next()` desbloquea y activa el paso siguiente (si existe).
  * - `goTo(step)` sólo mueve el activo entre pasos ya desbloqueados — no
  *   permite saltar a uno futuro todavía no alcanzado.
+ * - `skipTo(step)` desbloquea todos los pasos hasta `step` (inclusive) y lo
+ *   activa — p. ej. Paquete → Destino dejando Origen visitables.
  */
 export function useStepFlow<T extends string>(steps: readonly T[], initialStep: T) {
   const [current, setCurrent] = useState<T>(initialStep)
@@ -28,11 +30,25 @@ export function useStepFlow<T extends string>(steps: readonly T[], initialStep: 
     setCurrent(nextStep)
   }
 
+  const skipTo = (step: T) => {
+    const targetIndex = steps.indexOf(step)
+    if (targetIndex === -1) return
+    setUnlocked((prev) => {
+      const nextSet = new Set(prev)
+      for (let i = 0; i <= targetIndex; i++) {
+        const s = steps[i]
+        if (s !== undefined) nextSet.add(s)
+      }
+      return nextSet
+    })
+    setCurrent(step)
+  }
+
   const back = () => {
     const previousStep = steps[currentIndex - 1]
     if (previousStep === undefined) return
     setCurrent(previousStep)
   }
 
-  return { current, currentIndex, unlocked, goTo, next, back } as const
+  return { current, currentIndex, unlocked, goTo, next, skipTo, back } as const
 }
