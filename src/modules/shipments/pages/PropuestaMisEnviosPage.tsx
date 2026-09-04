@@ -101,7 +101,7 @@ const ENVIOS_PENDIENTES_SEED: readonly EnvioRow[] = [
   {
     id: 'E-003',
     scope: 'nacional',
-    integracion: 'Correo',
+    integracion: 'MiCorreo',
     nOrden: 'ORD-10047',
     origen: 'Suc. – Cdp CABA – Sur',
     destinatario: 'Juan Perez',
@@ -114,7 +114,7 @@ const ENVIOS_PENDIENTES_SEED: readonly EnvioRow[] = [
   {
     id: 'E-004',
     scope: 'nacional',
-    integracion: 'Correo',
+    integracion: 'MiCorreo',
     nOrden: 'ORD-10048',
     origen: 'Descripción de material genérico.',
     destinatario: 'Juan Perez',
@@ -163,7 +163,7 @@ const ENVIOS_PAGADOS_SEED: readonly EnvioRow[] = [
   {
     id: 'P-003',
     scope: 'internacional',
-    integracion: 'Correo',
+    integracion: 'MiCorreo',
     nOrden: 'ORD-20012',
     origen: 'Suc. Retiro',
     destinatario: 'Global Parts INC.',
