@@ -2,6 +2,9 @@
  * Store de sesión en memoria (module-level).
  * Persiste mientras el tab del navegador esté abierto — sin DB, sin
  * sessionStorage, sin serialización.
+ *
+ * Excepción (revisión 3): favoritos de Origen viven en
+ * `origin-favorites.store.ts` (localStorage) para sobrevivir sesiones.
  */
 
 /* ── Envíos guardados (Mis Envíos) ───────────────────────────────── */
